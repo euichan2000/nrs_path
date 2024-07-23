@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(nrs_vision_rviz)
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  geometry_msgs
+  message_generation
+  visualization_msgs
+  moveit_ros_planning_interface
+)
+find_package(CGAL REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+
+add_message_files(
+  FILES
+  Waypoint.msg
+  Waypoints.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+  std_msgs
+)
+
+
+catkin_package(
+  CATKIN_DEPENDS
+  message_runtime
+  EXPORTED_TARGETS ${PROJECT_NAME}_generate_messages_cpp
+)
+
+
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${CGAL_INCLUDE_DIRS}
+)
+
+add_executable(visualize_mesh src/visualize_mesh.cpp)
+target_link_libraries(visualize_mesh ${catkin_LIBRARIES})
+
+add_executable(point_publisher src/point_publisher.cpp)
+target_link_libraries(point_publisher ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
+
+add_executable(keyboard_listener src/keyboard_listener.cpp)
+target_link_libraries(keyboard_listener ${catkin_LIBRARIES})
+
+add_executable(path_visualizer src/path_visualizer.cpp)
+add_dependencies(path_visualizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(path_visualizer ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
+
+add_executable(moveit_planner src/moveit_planner.cpp)
+add_dependencies(moveit_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(moveit_planner ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(VR_Path_Planning src/VR_Path_Planning.cpp)
+add_dependencies(VR_Path_Planning ${catkin_EXPORTED_TARGETS})
+target_link_libraries(VR_Path_Planning ${catkin_LIBRARIES} ${CGAL_LIBRARIES} ${Boost_LIBRARIES})

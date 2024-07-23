@@ -1,0 +1,57 @@
+<launch>
+
+  <!-- specify the planning pipeline -->
+  <arg name="pipeline" default="ompl" />
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+  <!-- By default, we will load or override the robot_description -->
+  <arg name="load_robot_description" default="true"/>
+
+
+    <!-- URDF 파일을 로드하여 robot_description 설정 -->
+    <param name="robot_description" command="$(find xacro)/xacro '$(find ur_description)/urdf/ur10.xacro'" />
+    <!-- SRDF 파일을 로드하여 robot_description_semantic 설정 -->
+    <param name="robot_description_semantic" textfile="$(find ur10_moveit_config)/config/ur10.srdf" />
+
+    <!-- RViz 실행 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_vision_rviz)/config/rviz_config.rviz" />
+
+    <!-- Mesh 시각화 노드 -->
+    <node name="visualize_mesh" pkg="nrs_vision_rviz" type="visualize_mesh" output="screen" />
+    <!-- 클릭한 점들을 publish하는 노드 -->
+    <node name="point_publisher" pkg="nrs_vision_rviz" type="point_publisher" output="screen" />
+    <!-- 경로를 계산하고 시각화하는 노드 -->
+    <node name="path_visualizer" pkg="nrs_vision_rviz" type="path_visualizer" output="screen" />  
+    <!-- 키보드 입력을 기다리는 노드 추가 -->
+    <node name="keyboard_listener" pkg="nrs_vision_rviz" type="keyboard_listener" output="screen" />
+    <!-- MoveIt을 사용하여 UR10 로봇 경로 계획 및 실행하는 노드 실행 -->
+    <node name="moveit_planner" pkg="nrs_vision_rviz" type="moveit_planner" output="screen" />
+
+    <!-- MoveIt 서버 실행 -->
+    <!-- <include file="$(find ur10_moveit_config)/launch/moveit_planning_execution.launch" /> -->
+
+    <!-- robot_state_publisher 실행 -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <param name="publish_frequency" type="double" value="50.0"/>
+        <!-- <param name="tf_prefix" value="0 0 1.0 0 0 0" /> 초기 위치와 자세 설정 -->
+    </node>
+
+    <!-- Joint state publisher 실행 -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen" >
+    <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+  </node>
+    <!-- Static transform publisher 추가 -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map" args="0 0 0 0 0 0 map base_link" />
+ 
+
+  <!-- Run the main MoveIt! executable without trajectory execution (we do not have controllers configured by default) -->
+  <include file="$(find ur10_moveit_config)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="true"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="pipeline" value="$(arg pipeline)"/>
+    <arg name="load_robot_description" value="$(arg load_robot_description)"/>
+  </include>
+
+</launch>
