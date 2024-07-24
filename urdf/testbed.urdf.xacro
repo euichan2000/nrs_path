@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot name="ur10_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find ur_description)/urdf/ur10.xacro" />
+  
+  <!-- Define the testbed link -->
+  <link name="testbed_link">
+    <visual>
+      <geometry>
+        <box size="0.84 1.24 0.9"/> <!-- 840mm x 1240mm x 900mm -->
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.84 1.24 0.9"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="100"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="33.33" ixy="0.0" ixz="0.0" iyy="33.33" iyz="0.0" izz="33.33"/>
+    </inertial>
+  </link>
+
+  <!-- Define a fixed joint to attach the testbed to the base link -->
+  <joint name="testbed_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="testbed_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+</robot>

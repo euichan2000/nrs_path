@@ -1,7 +1,7 @@
 <launch>
 
   <!-- specify the planning pipeline -->
-  <arg name="pipeline" default="ompl" />
+  <arg name="pipeline" default="chomp" />
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
   <!-- By default, we will load or override the robot_description -->
@@ -9,7 +9,7 @@
 
 
     <!-- URDF 파일을 로드하여 robot_description 설정 -->
-    <param name="robot_description" command="$(find xacro)/xacro '$(find ur_description)/urdf/ur10.xacro'" />
+    <param name="robot_description" command="$(find xacro)/xacro '$(find nrs_vision_rviz)/urdf/testbed.urdf.xacro'" />
     <!-- SRDF 파일을 로드하여 robot_description_semantic 설정 -->
     <param name="robot_description_semantic" textfile="$(find ur10_moveit_config)/config/ur10.srdf" />
 
@@ -33,16 +33,15 @@
     <!-- robot_state_publisher 실행 -->
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
         <param name="publish_frequency" type="double" value="50.0"/>
-        <!-- <param name="tf_prefix" value="0 0 1.0 0 0 0" /> 초기 위치와 자세 설정 -->
     </node>
+
+     <!-- Static transform publisher 추가 -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map" args="0 0 0 3.1415926535897931 0 0 map base_link" />
 
     <!-- Joint state publisher 실행 -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen" >
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
   </node>
-    <!-- Static transform publisher 추가 -->
-    <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map" args="0 0 0 0 0 0 map base_link" />
- 
 
   <!-- Run the main MoveIt! executable without trajectory execution (we do not have controllers configured by default) -->
   <include file="$(find ur10_moveit_config)/launch/move_group.launch">

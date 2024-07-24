@@ -9,6 +9,9 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nrs_vision_rviz/Waypoints.h>
 #include <nrs_vision_rviz/Waypoint.h>
+#include <moveit/planning_scene/planning_scene.h>
+#include <moveit/robot_state/conversions.h>
+#include <moveit/trajectory_processing/trajectory_tools.h>
 
 std::vector<geometry_msgs::Pose> waypoints_poses;
 bool path_received = false;
@@ -67,8 +70,29 @@ void addCollisionObject(moveit::planning_interface::PlanningSceneInterface &plan
 
     std::vector<moveit_msgs::CollisionObject> collision_objects;
     collision_objects.push_back(collision_object);
-
     planning_scene_interface.addCollisionObjects(collision_objects);
+}
+
+bool isPathValid(moveit::planning_interface::MoveGroupInterface &move_group, moveit::planning_interface::PlanningSceneInterface &planning_scene_interface, const moveit_msgs::RobotTrajectory &trajectory)
+{
+    planning_scene::PlanningScenePtr planning_scene(new planning_scene::PlanningScene(move_group.getRobotModel()));
+    planning_scene->getCurrentStateNonConst().setVariablePositions(move_group.getCurrentJointValues());
+
+    collision_detection::CollisionRequest collision_request;
+    collision_detection::CollisionResult collision_result;
+
+    for (const auto &point : trajectory.joint_trajectory.points)
+    {
+        robot_state::RobotState &robot_state = planning_scene->getCurrentStateNonConst();
+        robot_state.setJointGroupPositions(move_group.getName(), point.positions);
+        planning_scene->checkCollision(collision_request, collision_result, robot_state);
+
+        if (collision_result.collision)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -82,8 +106,20 @@ int main(int argc, char **argv)
     moveit::planning_interface::MoveGroupInterface move_group("manipulator");
     move_group.setPlanningTime(45.0);
 
+    // 초기 위치 설정
+    std::map<std::string, double> initial_pose;
+    initial_pose["shoulder_pan_joint"] = 0.0 * M_PI / 180;
+    initial_pose["shoulder_lift_joint"] = -90.0 * M_PI / 180;
+    initial_pose["elbow_joint"] = 0.0 * M_PI / 180;
+    initial_pose["wrist_1_joint"] = 0.0 * M_PI / 180;
+    initial_pose["wrist_2_joint"] = 0.0 * M_PI / 180;
+    initial_pose["wrist_3_joint"] = 0.0 * M_PI / 180;
+
+    move_group.setJointValueTarget(initial_pose);
+    move_group.move();
+
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-    addCollisionObject(planning_scene_interface);
+    // addCollisionObject(planning_scene_interface);
 
     // RViz에서 Trajectory를 시각화하기 위해 디스플레이 트래젝트리 퍼블리셔 설정
     ros::Publisher display_publisher = nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
@@ -102,14 +138,26 @@ int main(int argc, char **argv)
             ROS_INFO("Visualizing plan (Cartesian path) (%.2f%% achieved)", fraction * 100.0);
 
             // 계획된 경로를 실행 및 시각화
-            moveit::planning_interface::MoveGroupInterface::Plan plan;
-            plan.trajectory_ = trajectory;
-            move_group.execute(plan);
+            if (fraction > 0.0)
+            {
+                moveit::planning_interface::MoveGroupInterface::Plan plan;
+                plan.trajectory_ = trajectory;
 
-            display_trajectory.trajectory_start = plan.start_state_;
-            display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
-            display_trajectory.trajectory.push_back(plan.trajectory_);
-            // display_publisher.publish(display_trajectory);
+                // Check for collisions
+                if (isPathValid(move_group, planning_scene_interface, trajectory))
+                {
+                    move_group.execute(plan);
+
+                    display_trajectory.trajectory_start = plan.start_state_;
+                    display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
+                    display_trajectory.trajectory.push_back(plan.trajectory_);
+                    display_publisher.publish(display_trajectory);
+                }
+                else
+                {
+                    ROS_ERROR("Computed path is in collision. Aborting plan execution.");
+                }
+            }
 
             waypoints_poses.clear();
             path_received = false;
