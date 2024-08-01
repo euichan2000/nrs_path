@@ -8,7 +8,7 @@ int main(int argc, char** argv)
     ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "map";
+    marker.header.frame_id = "base_link";
     marker.header.stamp = ros::Time::now();
     marker.ns = "mesh";
     marker.id = 0;

@@ -12,21 +12,85 @@
 #include <moveit/planning_scene/planning_scene.h>
 #include <moveit/robot_state/conversions.h>
 #include <moveit/trajectory_processing/trajectory_tools.h>
+#include <fstream> // 파일 입출력 라이브러리
+#include <tf2/LinearMath/Transform.h>
 
 std::vector<geometry_msgs::Pose> waypoints_poses;
 bool path_received = false;
 
+void saveWaypointsToFile(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
+{
+    std::ofstream file("/home/nrs/catkin_ws/src/nrs_vision_rviz/waypoints/waypoints.txt");
+    if (!file.is_open())
+    {
+        ROS_ERROR("Failed to open waypoints file for writing");
+        return;
+    }
+
+    for (const auto &waypoint : msg->waypoints)
+    {
+        file << waypoint.point.x << " "
+             << waypoint.point.y << " "
+             << waypoint.point.z << " "
+             << waypoint.normal.x << " "
+             << waypoint.normal.y << " "
+             << waypoint.normal.z << std::endl;
+    }
+
+    file.close();
+    ROS_INFO("Waypoints saved to waypoints.txt");
+}
+
+geometry_msgs::Pose applyTooltipTransform(const geometry_msgs::Pose &pose, const tf2::Transform &tooltip_transform)
+{
+    tf2::Transform waypoint_transform;
+    tf2::fromMsg(pose, waypoint_transform);
+    tf2::Transform final_transform = waypoint_transform * tooltip_transform;
+
+    geometry_msgs::Pose final_pose;
+    final_pose.position.x = final_transform.getOrigin().x();
+    final_pose.position.y = final_transform.getOrigin().y();
+    final_pose.position.z = final_transform.getOrigin().z();
+    final_pose.orientation = tf2::toMsg(final_transform.getRotation());
+    return final_pose;
+}
+
 void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
 {
     waypoints_poses.clear();
-    for (const auto &waypoint : msg->waypoints)
+
+    // 툴팁 변환 정의 (wrist_3_link에 상대적인 위치 및 방향)
+    tf2::Transform tooltip_transform;
+    tooltip_transform.setOrigin(tf2::Vector3(-0.03, 0.0, -0.115)); // 툴팁의 위치 (필요시 변경)
+    tf2::Quaternion tooltip_orientation;
+    tooltip_orientation.setRPY(0.0, 0.0, M_PI_2); // 툴팁의 회전 (필요시 변경)
+    tooltip_transform.setRotation(tooltip_orientation);
+
+    for (size_t i = 0; i < msg->waypoints.size(); ++i)
     {
         geometry_msgs::Pose target_pose;
-        target_pose.position = waypoint.point;
+        target_pose.position = msg->waypoints[i].point;
 
-        // End effector가 항상 표면에 수직하도록 orientation 설정
-        tf2::Vector3 z_axis(waypoint.normal.x, waypoint.normal.y, waypoint.normal.z);
-        tf2::Vector3 x_axis(1, 0, 0); // 기본 x 방향
+        // z_axis는 웨이포인트의 표면 법선 벡터입니다.
+        tf2::Vector3 z_axis(msg->waypoints[i].normal.x, msg->waypoints[i].normal.y, msg->waypoints[i].normal.z);
+
+        // x_axis는 경로의 진행 방향을 나타냅니다.
+        tf2::Vector3 x_axis;
+        if (i < msg->waypoints.size() - 1)
+        {
+            tf2::Vector3 next_point(msg->waypoints[i + 1].point.x, msg->waypoints[i + 1].point.y, msg->waypoints[i + 1].point.z);
+            tf2::Vector3 current_point(msg->waypoints[i].point.x, msg->waypoints[i].point.y, msg->waypoints[i].point.z);
+            x_axis = (next_point - current_point).normalized();
+        }
+        else
+        {
+            // 마지막 웨이포인트의 경우, 이전 웨이포인트와의 방향을 사용합니다.
+            tf2::Vector3 prev_point(msg->waypoints[i - 1].point.x, msg->waypoints[i - 1].point.y, msg->waypoints[i - 1].point.z);
+            tf2::Vector3 current_point(msg->waypoints[i].point.x, msg->waypoints[i].point.y, msg->waypoints[i].point.z);
+            x_axis = (current_point - prev_point).normalized();
+        }
+
+        // y_axis는 x_axis와 z_axis의 외적입니다.
         tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
         x_axis = y_axis.cross(z_axis).normalized();
 
@@ -38,61 +102,14 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
         tf2::Quaternion orientation;
         orientation_matrix.getRotation(orientation);
         target_pose.orientation = tf2::toMsg(orientation);
-        waypoints_poses.push_back(target_pose);
-        // ROS_INFO("waypoints_poses Size: %zu", waypoints_poses.size());
+
+        // 툴팁 변환을 적용하여 최종 목표 자세를 계산
+        geometry_msgs::Pose final_pose = applyTooltipTransform(target_pose, tooltip_transform);
+        waypoints_poses.push_back(final_pose);
     }
     path_received = true;
-}
 
-void addCollisionObject(moveit::planning_interface::PlanningSceneInterface &planning_scene_interface)
-{
-    moveit_msgs::CollisionObject collision_object;
-    collision_object.header.frame_id = "base_link";
-    collision_object.id = "mesh_object";
-
-    // Define a pose for the mesh (assuming it's located at (0, 0, 0) with no rotation)
-    geometry_msgs::Pose mesh_pose;
-    mesh_pose.position.x = 0.0;
-    mesh_pose.position.y = 0.0;
-    mesh_pose.position.z = 0.0;
-    mesh_pose.orientation.w = 1.0;
-
-    // Load mesh from file
-    shapes::Mesh *m = shapes::createMeshFromResource("package://nrs_vision_rviz/mesh/lid_wrap.stl");
-    shape_msgs::Mesh mesh_msg;
-    shapes::ShapeMsg mesh_msg_shape;
-    shapes::constructMsgFromShape(m, mesh_msg_shape);
-    mesh_msg = boost::get<shape_msgs::Mesh>(mesh_msg_shape);
-
-    collision_object.meshes.push_back(mesh_msg);
-    collision_object.mesh_poses.push_back(mesh_pose);
-    collision_object.operation = collision_object.ADD;
-
-    std::vector<moveit_msgs::CollisionObject> collision_objects;
-    collision_objects.push_back(collision_object);
-    planning_scene_interface.addCollisionObjects(collision_objects);
-}
-
-bool isPathValid(moveit::planning_interface::MoveGroupInterface &move_group, moveit::planning_interface::PlanningSceneInterface &planning_scene_interface, const moveit_msgs::RobotTrajectory &trajectory)
-{
-    planning_scene::PlanningScenePtr planning_scene(new planning_scene::PlanningScene(move_group.getRobotModel()));
-    planning_scene->getCurrentStateNonConst().setVariablePositions(move_group.getCurrentJointValues());
-
-    collision_detection::CollisionRequest collision_request;
-    collision_detection::CollisionResult collision_result;
-
-    for (const auto &point : trajectory.joint_trajectory.points)
-    {
-        robot_state::RobotState &robot_state = planning_scene->getCurrentStateNonConst();
-        robot_state.setJointGroupPositions(move_group.getName(), point.positions);
-        planning_scene->checkCollision(collision_request, collision_result, robot_state);
-
-        if (collision_result.collision)
-        {
-            return false;
-        }
-    }
-    return true;
+    saveWaypointsToFile(msg);
 }
 
 int main(int argc, char **argv)
@@ -108,18 +125,15 @@ int main(int argc, char **argv)
 
     // 초기 위치 설정
     std::map<std::string, double> initial_pose;
-    initial_pose["shoulder_pan_joint"] = 0.0 * M_PI / 180;
-    initial_pose["shoulder_lift_joint"] = -90.0 * M_PI / 180;
-    initial_pose["elbow_joint"] = 0.0 * M_PI / 180;
-    initial_pose["wrist_1_joint"] = 0.0 * M_PI / 180;
-    initial_pose["wrist_2_joint"] = 0.0 * M_PI / 180;
-    initial_pose["wrist_3_joint"] = 0.0 * M_PI / 180;
+    initial_pose["shoulder_pan_joint"] = 10.71 * M_PI / 180;
+    initial_pose["shoulder_lift_joint"] = -55.43 * M_PI / 180;
+    initial_pose["elbow_joint"] = -135.87 * M_PI / 180;
+    initial_pose["wrist_1_joint"] = -74.46 * M_PI / 180;
+    initial_pose["wrist_2_joint"] = 88.39 * M_PI / 180;
+    initial_pose["wrist_3_joint"] = 0.58 * M_PI / 180;
 
     move_group.setJointValueTarget(initial_pose);
     move_group.move();
-
-    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-    // addCollisionObject(planning_scene_interface);
 
     // RViz에서 Trajectory를 시각화하기 위해 디스플레이 트래젝트리 퍼블리셔 설정
     ros::Publisher display_publisher = nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
@@ -144,19 +158,13 @@ int main(int argc, char **argv)
                 plan.trajectory_ = trajectory;
 
                 // Check for collisions
-                if (isPathValid(move_group, planning_scene_interface, trajectory))
-                {
-                    move_group.execute(plan);
 
-                    display_trajectory.trajectory_start = plan.start_state_;
-                    display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
-                    display_trajectory.trajectory.push_back(plan.trajectory_);
-                    display_publisher.publish(display_trajectory);
-                }
-                else
-                {
-                    ROS_ERROR("Computed path is in collision. Aborting plan execution.");
-                }
+                move_group.execute(plan);
+
+                display_trajectory.trajectory_start = plan.start_state_;
+                display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
+                display_trajectory.trajectory.push_back(plan.trajectory_);
+                display_publisher.publish(display_trajectory);
             }
 
             waypoints_poses.clear();

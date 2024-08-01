@@ -36,7 +36,7 @@ public:
     {
 
         // mesh 파일 로드
-        std::string mesh_file = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
+        std::string mesh_file = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
         std::ifstream input(mesh_file, std::ios::binary);
 
         if (!input || !read_stl_file(input, tmesh))
@@ -152,7 +152,7 @@ public:
         std::vector<Point_3> complete_path;
         std::vector<Point_3> path_segment;
 
-        line_strip.header.frame_id = "map";
+        line_strip.header.frame_id = "base_link";
         line_strip.header.stamp = ros::Time::now();
         line_strip.ns = "path";
         line_strip.action = visualization_msgs::Marker::ADD;
