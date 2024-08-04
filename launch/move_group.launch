@@ -1,4 +1,7 @@
 <launch>
+  <arg name="pipeline" default="chomp"/>
+  <!-- load robot models -->
+  <arg name="load_robot_description" default="true" />
 
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
@@ -12,13 +15,13 @@
   <arg     if="$(arg info)" name="command_args" value="--debug" />
 
   <!-- move_group settings -->
-  <arg name="pipeline" default="ompl" />
   <arg name="allow_trajectory_execution" default="true"/>
   <arg name="fake_execution" default="false"/>
+  <arg name="fake_execution_type" default="interpolate" /> 
   <arg name="max_safe_path_cost" default="1"/>
   <arg name="jiggle_fraction" default="0.05" />
   <arg name="publish_monitored_planning_scene" default="true"/>
-
+  <arg name="moveit_manage_controllers" default="true"/>
   <arg name="capabilities" default=""/>
   <arg name="disable_capabilities" default=""/>
   <!-- load these non-default MoveGroup capabilities (space seperated) -->
@@ -37,22 +40,27 @@
                 " />
   -->
 
-  <arg name="load_robot_description" default="true" />
   <!-- load URDF, SRDF and joint_limits configuration -->
   <include file="$(find nrs_vision_rviz)/launch/planning_context.launch">
     <arg name="load_robot_description" value="$(arg load_robot_description)" />
   </include>
+  <!-- Planning Pipelines -->
+  <group ns="move_group/planning_pipelines">
 
-  <!-- Planning Functionality -->
-  <include ns="move_group" file="$(find nrs_vision_rviz)/launch/planning_pipeline.launch.xml">
-    <arg name="pipeline" value="$(arg pipeline)" />
-  </include>
+    <!-- OMPL -->
+    <include ns="ompl" file="$(find nrs_vision_rviz)/launch/ompl_planning_pipeline.launch.xml"/>
+    <!-- CHOMP -->
+    <include ns="chomp" file="$(find nrs_vision_rviz)/launch/chomp_planning_pipeline.launch.xml"/>
+    <!-- Pilz Industrial Motion-->
+    <include ns="pilz_industrial_motion_planner" file="$(find nrs_vision_rviz)/launch/pilz_industrial_motion_planner_planning_pipeline.launch.xml"/>
+  </group>
 
   <!-- Trajectory Execution Functionality -->
   <include ns="move_group" file="$(find nrs_vision_rviz)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
-    <arg name="moveit_manage_controllers" value="true" />
+    <arg name="moveit_manage_controllers" value="$(arg moveit_manage_controllers)" />
     <arg name="moveit_controller_manager" value="ur10" unless="$(arg fake_execution)"/>
     <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
+    <arg name="fake_execution_type" value="$(arg fake_execution_type)" />
   </include>
 
   <!-- Sensors Functionality -->
@@ -68,6 +76,7 @@
     <param name="allow_trajectory_execution" value="$(arg allow_trajectory_execution)"/>
     <param name="max_safe_path_cost" value="$(arg max_safe_path_cost)"/>
     <param name="jiggle_fraction" value="$(arg jiggle_fraction)" />
+    <param name="default_planning_pipeline" value="$(arg pipeline)" />
     <param name="capabilities" value="$(arg capabilities)"/>
     <param name="disable_capabilities" value="$(arg disable_capabilities)"/>
 
