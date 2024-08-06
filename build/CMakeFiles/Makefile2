@@ -55,6 +55,7 @@ CMAKE_BINARY_DIR = /home/nrs/catkin_ws/src/nrs_vision_rviz/build
 # The main recursive "all" target.
 all: CMakeFiles/VR_Path_Planning.dir/all
 all: CMakeFiles/path_visualizer.dir/all
+all: CMakeFiles/test_path_visualizer.dir/all
 all: CMakeFiles/nrs_vision_rviz_generate_messages.dir/all
 all: CMakeFiles/visualize_mesh.dir/all
 all: CMakeFiles/keyboard_listener.dir/all
@@ -77,6 +78,7 @@ clean: CMakeFiles/nrs_vision_rviz_gennodejs.dir/clean
 clean: CMakeFiles/nrs_vision_rviz_genlisp.dir/clean
 clean: CMakeFiles/nrs_vision_rviz_geneus.dir/clean
 clean: CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir/clean
+clean: CMakeFiles/test_path_visualizer.dir/clean
 clean: CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints.dir/clean
 clean: CMakeFiles/nrs_vision_rviz_generate_messages.dir/clean
 clean: CMakeFiles/nrs_vision_rviz_generate_messages_nodejs.dir/clean
@@ -615,6 +617,33 @@ CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir/clean:
 .PHONY : CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/test_path_visualizer.dir
+
+# All Build rule for target.
+CMakeFiles/test_path_visualizer.dir/all:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/depend
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=31,32 "Built target test_path_visualizer"
+.PHONY : CMakeFiles/test_path_visualizer.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_path_visualizer.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/test_path_visualizer.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles 0
+.PHONY : CMakeFiles/test_path_visualizer.dir/rule
+
+# Convenience name for target.
+test_path_visualizer: CMakeFiles/test_path_visualizer.dir/rule
+
+.PHONY : test_path_visualizer
+
+# clean rule for target.
+CMakeFiles/test_path_visualizer.dir/clean:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/clean
+.PHONY : CMakeFiles/test_path_visualizer.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints.dir
 
 # All Build rule for target.
@@ -790,7 +819,7 @@ CMakeFiles/std_srvs_generate_messages_eus.dir/clean:
 CMakeFiles/visualize_mesh.dir/all:
 	$(MAKE) -f CMakeFiles/visualize_mesh.dir/build.make CMakeFiles/visualize_mesh.dir/depend
 	$(MAKE) -f CMakeFiles/visualize_mesh.dir/build.make CMakeFiles/visualize_mesh.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=31,32 "Built target visualize_mesh"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=33,34 "Built target visualize_mesh"
 .PHONY : CMakeFiles/visualize_mesh.dir/all
 
 # Build rule for subdir invocation for target.

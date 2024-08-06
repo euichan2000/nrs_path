@@ -109,13 +109,20 @@ int main(int argc, char **argv)
     move_group.setPlanningTime(45.0);
 
     // 초기 위치 설정
-    std::map<std::string, double> initial_pose;
+    std::map<std::string, double> initial_pose, home_pose;
     initial_pose["shoulder_pan_joint"] = 10.71 * M_PI / 180;
     initial_pose["shoulder_lift_joint"] = -55.43 * M_PI / 180;
     initial_pose["elbow_joint"] = -135.87 * M_PI / 180;
     initial_pose["wrist_1_joint"] = -74.46 * M_PI / 180;
     initial_pose["wrist_2_joint"] = 88.39 * M_PI / 180;
     initial_pose["wrist_3_joint"] = 0.58 * M_PI / 180;
+
+    home_pose["shoulder_pan_joint"] = 10.71 * M_PI / 180;
+    home_pose["shoulder_lift_joint"] = -90.43 * M_PI / 180;
+    home_pose["elbow_joint"] = 0.0 * M_PI / 180;
+    home_pose["wrist_1_joint"] = -74.46 * M_PI / 180;
+    home_pose["wrist_2_joint"] = 88.39 * M_PI / 180;
+    home_pose["wrist_3_joint"] = 0.58 * M_PI / 180;
 
     move_group.setJointValueTarget(initial_pose);
     move_group.move();

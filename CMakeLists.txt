@@ -60,3 +60,6 @@ target_link_libraries(moveit_planner ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(VR_Path_Planning src/VR_Path_Planning.cpp)
 add_dependencies(VR_Path_Planning ${catkin_EXPORTED_TARGETS})
 target_link_libraries(VR_Path_Planning ${catkin_LIBRARIES} ${CGAL_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(test_path_visualizer src/test_path_visualizer.cpp)
+target_link_libraries(test_path_visualizer ${catkin_LIBRARIES})

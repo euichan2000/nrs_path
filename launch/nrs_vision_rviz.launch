@@ -8,7 +8,7 @@
   <node name="path_visualizer" pkg="nrs_vision_rviz" type="path_visualizer" output="screen" />
   <node name="keyboard_listener" pkg="nrs_vision_rviz" type="keyboard_listener" output="screen" />
   <node name="moveit_planner" pkg="nrs_vision_rviz" type="moveit_planner" output="screen" />
-
+  <node name="test_path_visualizer" pkg="nrs_vision_rviz" type="test_path_visualizer" output="screen" />
   <!-- Static transform publisher -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map"
         args="0 0 0 0 0 0 map base_link" />

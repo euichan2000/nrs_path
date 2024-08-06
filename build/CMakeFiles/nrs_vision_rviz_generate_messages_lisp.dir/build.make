@@ -67,8 +67,8 @@ devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoint.lisp: /opt/ros/noetic/s
 devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: /opt/ros/noetic/lib/genlisp/gen_lisp.py
 devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: ../msg/Waypoints.msg
 devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: /opt/ros/noetic/share/geometry_msgs/msg/Vector3.msg
-devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: ../msg/Waypoint.msg
 devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
+devel/share/common-lisp/ros/nrs_vision_rviz/msg/Waypoints.lisp: ../msg/Waypoint.msg
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating Lisp code from nrs_vision_rviz/Waypoints.msg"
 	catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genlisp/cmake/../../../lib/genlisp/gen_lisp.py /home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg -Inrs_vision_rviz:/home/nrs/catkin_ws/src/nrs_vision_rviz/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p nrs_vision_rviz -o /home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/share/common-lisp/ros/nrs_vision_rviz/msg
 

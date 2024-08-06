@@ -130,7 +130,8 @@
 						112,
 						113,
 						114,
-						115
+						115,
+						116
 					]
 				},
 				{
@@ -308,7 +309,8 @@
 						112,
 						113,
 						114,
-						115
+						115,
+						116
 					]
 				},
 				{
@@ -1012,6 +1014,13 @@
 					"id" : "std_srvs_generate_messages_py::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-std_srvs_generate_messages_py-Debug-5a3a7906e24b3f8c6c0d.json",
 					"name" : "std_srvs_generate_messages_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "test_path_visualizer::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-test_path_visualizer-Debug-b00e4af1d56dcfe2834a.json",
+					"name" : "test_path_visualizer",
 					"projectIndex" : 0
 				},
 				{

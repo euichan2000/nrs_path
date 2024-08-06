@@ -259,6 +259,19 @@ nrs_vision_rviz_generate_messages_cpp/fast:
 .PHONY : nrs_vision_rviz_generate_messages_cpp/fast
 
 #=============================================================================
+# Target rules for targets named test_path_visualizer
+
+# Build rule for target.
+test_path_visualizer: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_path_visualizer
+.PHONY : test_path_visualizer
+
+# fast build rule for target.
+test_path_visualizer/fast:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/build
+.PHONY : test_path_visualizer/fast
+
+#=============================================================================
 # Target rules for targets named _nrs_vision_rviz_generate_messages_check_deps_Waypoints
 
 # Build rule for target.
@@ -1810,6 +1823,33 @@ src/point_publisher.cpp.s:
 	$(MAKE) -f CMakeFiles/point_publisher.dir/build.make CMakeFiles/point_publisher.dir/src/point_publisher.cpp.s
 .PHONY : src/point_publisher.cpp.s
 
+src/test_path_visualizer.o: src/test_path_visualizer.cpp.o
+
+.PHONY : src/test_path_visualizer.o
+
+# target to build an object file
+src/test_path_visualizer.cpp.o:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.o
+.PHONY : src/test_path_visualizer.cpp.o
+
+src/test_path_visualizer.i: src/test_path_visualizer.cpp.i
+
+.PHONY : src/test_path_visualizer.i
+
+# target to preprocess a source file
+src/test_path_visualizer.cpp.i:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.i
+.PHONY : src/test_path_visualizer.cpp.i
+
+src/test_path_visualizer.s: src/test_path_visualizer.cpp.s
+
+.PHONY : src/test_path_visualizer.s
+
+# target to generate assembly for a file
+src/test_path_visualizer.cpp.s:
+	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.s
+.PHONY : src/test_path_visualizer.cpp.s
+
 src/visualize_mesh.o: src/visualize_mesh.cpp.o
 
 .PHONY : src/visualize_mesh.o
@@ -1854,6 +1894,7 @@ help:
 	@echo "... nrs_vision_rviz_geneus"
 	@echo "... list_install_components"
 	@echo "... nrs_vision_rviz_generate_messages_cpp"
+	@echo "... test_path_visualizer"
 	@echo "... _nrs_vision_rviz_generate_messages_check_deps_Waypoints"
 	@echo "... nrs_vision_rviz_generate_messages"
 	@echo "... nrs_vision_rviz_generate_messages_nodejs"
@@ -1981,6 +2022,9 @@ help:
 	@echo "... src/point_publisher.o"
 	@echo "... src/point_publisher.i"
 	@echo "... src/point_publisher.s"
+	@echo "... src/test_path_visualizer.o"
+	@echo "... src/test_path_visualizer.i"
+	@echo "... src/test_path_visualizer.s"
 	@echo "... src/visualize_mesh.o"
 	@echo "... src/visualize_mesh.i"
 	@echo "... src/visualize_mesh.s"
