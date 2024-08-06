@@ -52,10 +52,10 @@
   <link name="workpiece">
     <visual>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/fenda_wrap.stl"/>
+        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl"/>
       </geometry>
-      <material name="gray">
-        <color rgba="0.5 0.5 0.5 1.0" />
+      <material name="light_blue">
+        <color rgba="0.57 0.81 0.92 1.0" />
       </material>
     </visual>
     <!-- <collision>

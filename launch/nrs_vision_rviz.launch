@@ -1,7 +1,4 @@
 <launch>
-  <!-- Set execution mode for fake execution controllers -->
-  <arg name="fake_execution_type" default="interpolate" />
-
   <!-- Launch RViz with a specified configuration file -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_vision_rviz)/config/rviz_config.rviz" />
 
@@ -14,29 +11,28 @@
 
   <!-- Static transform publisher -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map"
-    args="0 0 0 0 0 0 map base_link" />
+        args="0 0 0 0 0 0 map base_link" />
 
   <!-- Joint state publisher -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"
-    output="screen">
+        output="screen">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
   </node>
 
   <!-- Robot state publisher -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
-    output="screen">
+        output="screen">
+    <!-- <param name="publish_frequency" type="double" value="50.0" /> -->
   </node>
 
   <!-- MoveIt! executable without trajectory execution -->
   <include file="$(find nrs_vision_rviz)/launch/move_group.launch">
     <arg name="allow_trajectory_execution" value="true" />
     <arg name="fake_execution" value="true" />
-    <arg name="fake_execution_type" value="interpolate" />
     <arg name="info" value="true" />
     <arg name="debug" value="false" />
-    <arg name="pipeline" value="pilz_industrial_motion_planner" />
+    <arg name="pipeline" value="ompl" />
     <arg name="load_robot_description" value="true" />
-
   </include>
 
 

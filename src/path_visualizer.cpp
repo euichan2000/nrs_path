@@ -36,7 +36,7 @@ public:
     {
 
         // mesh 파일 로드
-        std::string mesh_file = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
+        std::string mesh_file = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
         std::ifstream input(mesh_file, std::ios::binary);
 
         if (!input || !read_stl_file(input, tmesh))

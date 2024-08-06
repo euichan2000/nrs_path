@@ -73,23 +73,8 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
 
         // z_axis는 웨이포인트의 표면 법선 벡터입니다.
         tf2::Vector3 z_axis(msg->waypoints[i].normal.x, msg->waypoints[i].normal.y, msg->waypoints[i].normal.z);
-
         // x_axis는 경로의 진행 방향을 나타냅니다.
-        tf2::Vector3 x_axis;
-        if (i < msg->waypoints.size() - 1)
-        {
-            tf2::Vector3 next_point(msg->waypoints[i + 1].point.x, msg->waypoints[i + 1].point.y, msg->waypoints[i + 1].point.z);
-            tf2::Vector3 current_point(msg->waypoints[i].point.x, msg->waypoints[i].point.y, msg->waypoints[i].point.z);
-            x_axis = (next_point - current_point).normalized();
-        }
-        else
-        {
-            // 마지막 웨이포인트의 경우, 이전 웨이포인트와의 방향을 사용합니다.
-            tf2::Vector3 prev_point(msg->waypoints[i - 1].point.x, msg->waypoints[i - 1].point.y, msg->waypoints[i - 1].point.z);
-            tf2::Vector3 current_point(msg->waypoints[i].point.x, msg->waypoints[i].point.y, msg->waypoints[i].point.z);
-            x_axis = (current_point - prev_point).normalized();
-        }
-
+        tf2::Vector3 x_axis(1, 0, 0); // 기본 x 방향
         // y_axis는 x_axis와 z_axis의 외적입니다.
         tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
         x_axis = y_axis.cross(z_axis).normalized();
@@ -160,6 +145,9 @@ int main(int argc, char **argv)
                 // Check for collisions
 
                 move_group.execute(plan);
+                move_group.setJointValueTarget(initial_pose);
+                move_group.move();
+
 
                 display_trajectory.trajectory_start = plan.start_state_;
                 display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
