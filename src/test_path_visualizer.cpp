@@ -40,9 +40,11 @@ namespace og = ompl::geometric;
 
 // 전역 변수 선언
 ros::Publisher waypoints_pub;
+ros::Publisher marker_pub;
 std::vector<geometry_msgs::Point> clicked_points;
 Triangle_mesh tmesh;
 Tree *tree;
+Surface_mesh_shortest_path *shortest_paths;
 nrs_vision_rviz::Waypoints waypoints_msg;
 bool new_waypoints = false;
 
@@ -71,6 +73,30 @@ void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
     new_waypoints = true; // 새로운 waypoint가 추가될 때 플래그를 true로 설정
 }
 
+bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
+{
+    std::vector<Kernel::Point_3> points;
+    std::vector<std::array<std::size_t, 3>> triangles;
+    if (!CGAL::read_STL(input, points, triangles))
+    {
+        ROS_ERROR("Failed to read STL file.");
+        return false;
+    }
+
+    std::map<std::size_t, vertex_descriptor> index_to_vertex;
+    for (std::size_t i = 0; i < points.size(); ++i)
+    {
+        index_to_vertex[i] = mesh.add_vertex(points[i]);
+    }
+
+    for (const auto &t : triangles)
+    {
+        mesh.add_face(index_to_vertex[t[0]], index_to_vertex[t[1]], index_to_vertex[t[2]]);
+    }
+    ROS_INFO("Successfully read STL file.");
+    return true;
+}
+
 bool locate_face_and_point(const Point_3 &point, face_descriptor &face, Surface_mesh_shortest_path::Barycentric_coordinates &location)
 {
     if (tmesh.faces().empty())
@@ -88,14 +114,130 @@ bool locate_face_and_point(const Point_3 &point, face_descriptor &face, Surface_
     return true;
 }
 
-std::vector<geometry_msgs::Point> omplPlanAndSimplify(const std::vector<geometry_msgs::Point> &points)
+void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
+{
+    visualization_msgs::Marker path_marker;
+    path_marker.header.frame_id = "base_link";
+    path_marker.header.stamp = ros::Time::now();
+    path_marker.ns = ns;
+    path_marker.id = id;
+    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
+    path_marker.action = visualization_msgs::Marker::ADD;
+    path_marker.pose.orientation.w = 1.0;
+    path_marker.scale.x = 0.005;
+    path_marker.color.r = r;
+    path_marker.color.g = g;
+    path_marker.color.b = b;
+    path_marker.color.a = a;
+
+    for (const auto &point : path)
+    {
+        path_marker.points.push_back(point);
+    }
+
+    marker_pub.publish(path_marker);
+}
+
+std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geometry_msgs::Point> &points)
+{
+    std::vector<geometry_msgs::Point> projected_points;
+
+    for (const auto &point : points)
+    {
+        Point_3 query(point.x, point.y, point.z + 0.01);
+        auto closest_point = tree->closest_point(query);
+
+        geometry_msgs::Point ros_point;
+        ros_point.x = closest_point.x();
+        ros_point.y = closest_point.y();
+        ros_point.z = closest_point.z();
+
+        projected_points.push_back(ros_point);
+    }
+
+    return projected_points;
+}
+
+std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points)
+{
+    std::vector<nrs_vision_rviz::Waypoint> waypoints;
+
+    for (const auto &point : points)
+    {
+        Point_3 cgal_point(point.x, point.y, point.z);
+        face_descriptor face;
+        Surface_mesh_shortest_path::Barycentric_coordinates location;
+
+        if (!locate_face_and_point(cgal_point, face, location))
+        {
+            ROS_ERROR("Failed to locate face and point");
+            continue;
+        }
+
+        Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
+
+        nrs_vision_rviz::Waypoint waypoint_msg;
+        waypoint_msg.point.x = point.x;
+        waypoint_msg.point.y = point.y;
+        waypoint_msg.point.z = point.z;
+
+        waypoint_msg.normal.x = -normal.x();
+        waypoint_msg.normal.y = -normal.y();
+        waypoint_msg.normal.z = -normal.z();
+
+        waypoints.push_back(waypoint_msg);
+    }
+
+    return waypoints;
+}
+
+void generate_Geodesic_Path(const std::vector<geometry_msgs::Point> &points)
+{
+
+    std::vector<Point_3> complete_path;
+    std::vector<Point_3> path_segment;
+
+    for (size_t i = 1; i < points.size(); ++i)
+    {
+        Point_3 start(points[i - 1].x, points[i - 1].y, points[i - 1].z);
+        Point_3 end(points[i].x, points[i].y, points[i].z);
+
+        face_descriptor start_face, end_face;
+        Surface_mesh_shortest_path::Barycentric_coordinates start_location, end_location;
+
+        locate_face_and_point(start, start_face, start_location);
+        locate_face_and_point(end, end_face, end_location);
+        shortest_paths->add_source_point(end_face, end_location);
+        shortest_paths->shortest_path_points_to_source_points(start_face, start_location, std::back_inserter(path_segment));
+        shortest_paths->remove_all_source_points();
+        complete_path.clear();
+        complete_path.insert(complete_path.end(), path_segment.begin(), path_segment.end());
+        shortest_paths->remove_all_source_points();
+    }
+
+    std::vector<geometry_msgs::Point> path_points;
+    for (const auto &point : complete_path)
+    {
+        geometry_msgs::Point ros_point;
+        ros_point.x = point.x();
+        ros_point.y = point.y();
+        ros_point.z = point.z();
+        path_points.push_back(ros_point);
+    }
+
+    ROS_INFO("Generated geodesic path with %zu points", path_points.size());
+    visualizePath(path_points, "geodesic_path", 0, 0.0, 1.0, 0.0, 1.0);
+    waypoints_msg.waypoints = convertToWaypoints(path_points);
+}
+
+void generate_B_Splin_Path(const std::vector<geometry_msgs::Point> &points)
 {
     unsigned int maxSteps = 2;
     double minChange = std::numeric_limits<double>::epsilon();
     std::vector<geometry_msgs::Point> smooth_path;
 
     if (points.size() < 2)
-        return smooth_path;
+        return;
 
     auto state_space(std::make_shared<ob::RealVectorStateSpace>(3));
     ob::RealVectorBounds bounds(3);
@@ -158,85 +300,41 @@ std::vector<geometry_msgs::Point> omplPlanAndSimplify(const std::vector<geometry
         p.z = state->values[2];
         smooth_path.push_back(p);
     }
-
-    return smooth_path;
+    std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
+    visualizePath(projected_path, "B_spline_path", 1, 0.0, 1.0, 0.0, 1.0);
+    waypoints_msg.waypoints = convertToWaypoints(projected_path);
 }
 
-bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
+void generate_Catmull_Rom_Path(const std::vector<geometry_msgs::Point> &points)
 {
-    std::vector<Kernel::Point_3> points;
-    std::vector<std::array<std::size_t, 3>> triangles;
-    if (!CGAL::read_STL(input, points, triangles))
+    std::vector<geometry_msgs::Point> smooth_path;
+    if (points.size() < 4)
+        return; // Need at least 4 points for Catmull-Rom spline
+
+    for (size_t i = 1; i < points.size() - 2; ++i)
     {
-        ROS_ERROR("Failed to read STL file.");
-        return false;
-    }
+        geometry_msgs::Point p0 = points[i - 1];
+        geometry_msgs::Point p1 = points[i];
+        geometry_msgs::Point p2 = points[i + 1];
+        geometry_msgs::Point p3 = points[i + 2];
 
-    std::map<std::size_t, vertex_descriptor> index_to_vertex;
-    for (std::size_t i = 0; i < points.size(); ++i)
-    {
-        index_to_vertex[i] = mesh.add_vertex(points[i]);
-    }
-
-    for (const auto &t : triangles)
-    {
-        mesh.add_face(index_to_vertex[t[0]], index_to_vertex[t[1]], index_to_vertex[t[2]]);
-    }
-    ROS_INFO("Successfully read STL file.");
-    return true;
-}
-
-std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geometry_msgs::Point> &points)
-{
-    std::vector<geometry_msgs::Point> projected_points;
-
-    for (const auto &point : points)
-    {
-        Point_3 query(point.x, point.y, point.z + 0.01);
-        auto closest_point = tree->closest_point(query);
-
-        geometry_msgs::Point ros_point;
-        ros_point.x = closest_point.x();
-        ros_point.y = closest_point.y();
-        ros_point.z = closest_point.z();
-
-        projected_points.push_back(ros_point);
-    }
-
-    return projected_points;
-}
-
-std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points)
-{
-    std::vector<nrs_vision_rviz::Waypoint> waypoints;
-
-    for (const auto &point : points)
-    {
-        Point_3 cgal_point(point.x, point.y, point.z);
-        face_descriptor face;
-        Surface_mesh_shortest_path::Barycentric_coordinates location;
-
-        if (!locate_face_and_point(cgal_point, face, location))
+        for (double t = 0; t <= 1; t += 0.05)
         {
-            ROS_ERROR("Failed to locate face and point");
-            continue;
+            double t2 = t * t;
+            double t3 = t2 * t;
+
+            geometry_msgs::Point p;
+            p.x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+            p.y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+            p.z = 0.5 * ((2 * p1.z) + (-p0.z + p2.z) * t + (2 * p0.z - 5 * p1.z + 4 * p2.z - p3.z) * t2 + (-p0.z + 3 * p1.z - 3 * p2.z + p3.z) * t3);
+
+            smooth_path.push_back(p);
         }
-
-        Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
-
-        nrs_vision_rviz::Waypoint waypoint_msg;
-        waypoint_msg.point.x = point.x;
-        waypoint_msg.point.y = point.y;
-        waypoint_msg.point.z = point.z;
-
-        waypoint_msg.normal.x = -normal.x();
-        waypoint_msg.normal.y = -normal.y();
-        waypoint_msg.normal.z = -normal.z();
-
-        waypoints.push_back(waypoint_msg);
     }
 
-    return waypoints;
+    std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
+    visualizePath(projected_path, "Catmull_Rom_path", 2, 0.0, 0.0, 1.0, 1.0);
+    waypoints_msg.waypoints = convertToWaypoints(projected_path);
 }
 
 int main(int argc, char **argv)
@@ -244,73 +342,26 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "test_path_visualizer");
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
-    ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+    marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
     ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
 
     std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
     std::ifstream input(mesh_file_path, std::ios::binary);
-    if (!input || !read_stl_file(input, tmesh))
-    {
-        ROS_ERROR("Error: cannot read the file %s", mesh_file_path.c_str());
-        return EXIT_FAILURE;
-    }
+    read_stl_file(input, tmesh);
 
     tree = new Tree(tmesh.faces().begin(), tmesh.faces().end(), tmesh);
     tree->accelerate_distance_queries();
+    shortest_paths = new Surface_mesh_shortest_path(tmesh);
 
     ros::Rate r(30);
 
     while (ros::ok())
     {
         ros::spinOnce();
-
         if (new_waypoints && clicked_points.size() > 1)
         {
-            std::vector<geometry_msgs::Point> smooth_path = omplPlanAndSimplify(clicked_points);
-            std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
-            waypoints_msg.waypoints = convertToWaypoints(projected_path); // waypoints_msg 업데이트
-
-            // 원래 경로 시각화 (빨간색)
-            visualization_msgs::Marker original_path_marker;
-            original_path_marker.header.frame_id = "base_link";
-            original_path_marker.header.stamp = ros::Time::now();
-            original_path_marker.ns = "original_path";
-            original_path_marker.id = 0;
-            original_path_marker.type = visualization_msgs::Marker::LINE_STRIP;
-            original_path_marker.action = visualization_msgs::Marker::ADD;
-            original_path_marker.pose.orientation.w = 1.0;
-            original_path_marker.scale.x = 0.005;
-            original_path_marker.color.r = 1.0;
-            original_path_marker.color.a = 1.0;
-
-            for (const auto &point : smooth_path)
-            {
-                original_path_marker.points.push_back(point);
-            }
-
-            marker_pub.publish(original_path_marker);
-
-            // 투영된 경로 시각화 (파란색)
-            visualization_msgs::Marker projected_path_marker;
-            projected_path_marker.header.frame_id = "base_link";
-            projected_path_marker.header.stamp = ros::Time::now();
-            projected_path_marker.ns = "projected_path";
-            projected_path_marker.id = 1;
-            projected_path_marker.type = visualization_msgs::Marker::LINE_STRIP;
-            projected_path_marker.action = visualization_msgs::Marker::ADD;
-            projected_path_marker.pose.orientation.w = 1.0;
-            projected_path_marker.scale.x = 0.005;
-            projected_path_marker.color.b = 1.0;
-            projected_path_marker.color.a = 1.0;
-
-            for (const auto &point : projected_path)
-            {
-                projected_path_marker.points.push_back(point);
-            }
-
-            marker_pub.publish(projected_path_marker);
-
+            generate_Geodesic_Path(clicked_points);
             new_waypoints = false; // OMPL 플래닝이 끝난 후 플래그를 false로 설정
         }
 
@@ -318,5 +369,6 @@ int main(int argc, char **argv)
     }
 
     delete tree;
+    delete shortest_paths;
     return 0;
 }
