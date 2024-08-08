@@ -489,3 +489,87 @@ make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeF
 
 
 
+Determining if the function XOpenDisplay exists in the /usr/lib/x86_64-linux-gnu/libX11.so;/usr/lib/x86_64-linux-gnu/libXext.so passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_3e427/fast && /usr/bin/make -f CMakeFiles/cmTC_3e427.dir/build.make CMakeFiles/cmTC_3e427.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_3e427.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=XOpenDisplay   -o CMakeFiles/cmTC_3e427.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_3e427
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e427.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=XOpenDisplay    -rdynamic CMakeFiles/cmTC_3e427.dir/CheckFunctionExists.c.o  -o cmTC_3e427  /usr/lib/x86_64-linux-gnu/libX11.so /usr/lib/x86_64-linux-gnu/libXext.so 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function gethostbyname exists passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_4c1f3/fast && /usr/bin/make -f CMakeFiles/cmTC_4c1f3.dir/build.make CMakeFiles/cmTC_4c1f3.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_4c1f3.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=gethostbyname   -o CMakeFiles/cmTC_4c1f3.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_4c1f3
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4c1f3.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=gethostbyname    CMakeFiles/cmTC_4c1f3.dir/CheckFunctionExists.c.o  -o cmTC_4c1f3 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function connect exists passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_39b48/fast && /usr/bin/make -f CMakeFiles/cmTC_39b48.dir/build.make CMakeFiles/cmTC_39b48.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_39b48.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=connect   -o CMakeFiles/cmTC_39b48.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_39b48
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_39b48.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=connect    CMakeFiles/cmTC_39b48.dir/CheckFunctionExists.c.o  -o cmTC_39b48 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function remove exists passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_afea5/fast && /usr/bin/make -f CMakeFiles/cmTC_afea5.dir/build.make CMakeFiles/cmTC_afea5.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_afea5.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=remove   -o CMakeFiles/cmTC_afea5.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_afea5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_afea5.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=remove    CMakeFiles/cmTC_afea5.dir/CheckFunctionExists.c.o  -o cmTC_afea5 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function shmat exists passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_b3d32/fast && /usr/bin/make -f CMakeFiles/cmTC_b3d32.dir/build.make CMakeFiles/cmTC_b3d32.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_b3d32.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=shmat   -o CMakeFiles/cmTC_b3d32.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_b3d32
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b3d32.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=shmat    CMakeFiles/cmTC_b3d32.dir/CheckFunctionExists.c.o  -o cmTC_b3d32 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+
+Determining if the function IceConnectionNumber exists in the ICE passed with the following output:
+Change Dir: /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_76519/fast && /usr/bin/make -f CMakeFiles/cmTC_76519.dir/build.make CMakeFiles/cmTC_76519.dir/build
+make[1]: Entering directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_76519.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=IceConnectionNumber   -o CMakeFiles/cmTC_76519.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_76519
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_76519.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=IceConnectionNumber    -rdynamic CMakeFiles/cmTC_76519.dir/CheckFunctionExists.c.o  -o cmTC_76519  -lICE 
+make[1]: Leaving directory '/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/CMakeTmp'
+
+
+

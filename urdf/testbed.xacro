@@ -9,17 +9,17 @@
       <geometry>
         <box size="0.84 1.24 0.9"/> <!-- 840mm x 1240mm x 900mm -->
       </geometry>
-      <material name="gray">
-        <color rgba="0.5 0.5 0.5 1.0" />
+      <material name="testbed_gray">
+        <color rgba="0.5 0.5 0.5 0.5" />
       </material>
     </visual>
     <collision>
       <origin xyz="0.3 0.5 -0.45" rpy="0 0 0" />
       <geometry>
-        <box size="0.84 1.24 0.9"/> <!-- 840mm x 1240mm x 900mm -->
+        <box size="0.84 1.24 0.9"/>
       </geometry>
-      <material name="gray">
-        <color rgba="0.5 0.5 0.5 1.0" />
+      <material name="testbed_gray">
+        <color rgba="0.5 0.5 0.5 0.5" />
       </material>
     </collision>
     <inertial>
@@ -29,13 +29,12 @@
     </inertial>
   </link>
 
-
   <link name="tooltip">
     <visual>
       <geometry>
         <mesh filename="package://nrs_vision_rviz/mesh/ur10_tooltip.stl"/>
       </geometry>
-      <material name="gray">
+      <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
     </visual>
@@ -43,7 +42,7 @@
       <geometry>
         <mesh filename="package://nrs_vision_rviz/mesh/ur10_tooltip.stl"/>
       </geometry>
-      <material name="gray">
+      <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
     </collision>
@@ -68,8 +67,6 @@
     </collision> -->
   </link>
 
-
-
   <!-- Define a fixed joint to attach the testbed to the base link -->
   <joint name="testbed_joint" type="fixed">
     <parent link="base_link" />
@@ -77,7 +74,7 @@
     <origin xyz="0 0 0" rpy="0 0 -0.7853981633974483" /> <!-- 45 degrees in radians -->
   </joint>
 
-  <!-- Define a fixed joint to attach the testbed to the base link -->
+  <!-- Define a fixed joint to attach the tooltip to the wrist_3_link -->
   <joint name="tooltip_joint" type="fixed">
     <parent link="wrist_3_link" />
     <child link="tooltip" />
@@ -90,5 +87,4 @@
     <child link="workpiece" />
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0" /> 
   </joint>
-
 </robot>

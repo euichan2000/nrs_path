@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "devel/lib/nrs_vision_rviz/VR_Path_Planning"
+			"path" : "devel/lib/nrs_vision_rviz/path_visualizer"
 		}
 	],
 	"backtrace" : 1,
@@ -43,19 +43,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 60,
+				"line" : 53,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 61,
+				"line" : 54,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 62,
+				"line" : 55,
 				"parent" : 0
 			},
 			{
@@ -231,6 +231,10 @@
 				{
 					"backtrace" : 24,
 					"path" : "/usr/include/bullet"
+				},
+				{
+					"backtrace" : 24,
+					"path" : "/opt/ros/noetic/include/ompl-1.6"
 				}
 			],
 			"language" : "CXX",
@@ -242,6 +246,14 @@
 	],
 	"dependencies" : 
 	[
+		{
+			"backtrace" : 2,
+			"id" : "nrs_vision_rviz_generate_messages_cpp::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "nrs_vision_rviz_generate_messages_nodejs::@6890427a1f51a3e7e1df"
+		},
 		{
 			"backtrace" : 2,
 			"id" : "std_srvs_generate_messages_nodejs::@6890427a1f51a3e7e1df"
@@ -292,6 +304,10 @@
 		},
 		{
 			"backtrace" : 2,
+			"id" : "nrs_vision_rviz_generate_messages_lisp::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
 			"id" : "dynamic_reconfigure_generate_messages_cpp::@6890427a1f51a3e7e1df"
 		},
 		{
@@ -309,6 +325,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "octomap_msgs_generate_messages_cpp::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "nrs_vision_rviz_generate_messages_py::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
@@ -445,6 +465,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "actionlib_msgs_generate_messages_eus::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "nrs_vision_rviz_generate_messages_eus::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
@@ -595,7 +619,7 @@
 			"id" : "shape_msgs_generate_messages_eus::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "VR_Path_Planning::@6890427a1f51a3e7e1df",
+	"id" : "path_visualizer::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -1027,8 +1051,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "VR_Path_Planning",
-	"nameOnDisk" : "VR_Path_Planning",
+	"name" : "path_visualizer",
+	"nameOnDisk" : "path_visualizer",
 	"paths" : 
 	{
 		"build" : ".",
@@ -1049,7 +1073,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/VR_Path_Planning.cpp",
+			"path" : "src/path_visualizer.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

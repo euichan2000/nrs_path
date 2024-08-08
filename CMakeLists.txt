@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(CGAL REQUIRED)
 find_package(Eigen3 REQUIRED)
-
+find_package(ompl REQUIRED)
 
 add_message_files(
   FILES
@@ -38,6 +38,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${CGAL_INCLUDE_DIRS}
+  ${OMPL_INCLUDE_DIRS}
 )
 
 add_executable(visualize_mesh src/visualize_mesh.cpp)
@@ -62,4 +63,4 @@ add_dependencies(VR_Path_Planning ${catkin_EXPORTED_TARGETS})
 target_link_libraries(VR_Path_Planning ${catkin_LIBRARIES} ${CGAL_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(test_path_visualizer src/test_path_visualizer.cpp)
-target_link_libraries(test_path_visualizer ${catkin_LIBRARIES})
+target_link_libraries(test_path_visualizer ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGAL_LIBRARIES})

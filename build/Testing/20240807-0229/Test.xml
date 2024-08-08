@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Site BuildName="(empty)"
-	BuildStamp="20240806-0153-Experimental"
+	BuildStamp="20240807-0229-Experimental"
 	Name="nrs-vision"
 	Generator="ctest-3.16.3"
 	CompilerName="/usr/bin/c++"
@@ -21,14 +21,14 @@
 	TotalVirtualMemory="2047"
 	TotalPhysicalMemory="7805"
 	LogicalProcessorsPerPhysical="2"
-	ProcessorClockFrequency="4030.75"
+	ProcessorClockFrequency="3782.85"
 	>
 	<Testing>
-		<StartDateTime>Aug 06 21:32 KST</StartDateTime>
-		<StartTestTime>1722947521</StartTestTime>
+		<StartDateTime>Aug 07 17:25 KST</StartDateTime>
+		<StartTestTime>1723019125</StartTestTime>
 		<TestList/>
-		<EndDateTime>Aug 06 21:32 KST</EndDateTime>
-		<EndTestTime>1722947521</EndTestTime>
+		<EndDateTime>Aug 07 17:25 KST</EndDateTime>
+		<EndTestTime>1723019125</EndTestTime>
 		<ElapsedMinutes>0</ElapsedMinutes>
 	</Testing>
 </Site>

@@ -67,9 +67,9 @@ devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoint.l: /opt/ros/noetic/share/geo
 
 devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: /opt/ros/noetic/lib/geneus/gen_eus.py
 devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: ../msg/Waypoints.msg
-devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: /opt/ros/noetic/share/geometry_msgs/msg/Vector3.msg
-devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: ../msg/Waypoint.msg
+devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
+devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l: /opt/ros/noetic/share/geometry_msgs/msg/Vector3.msg
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating EusLisp code from nrs_vision_rviz/Waypoints.msg"
 	catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/geneus/cmake/../../../lib/geneus/gen_eus.py /home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg -Inrs_vision_rviz:/home/nrs/catkin_ws/src/nrs_vision_rviz/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p nrs_vision_rviz -o /home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/share/roseus/ros/nrs_vision_rviz/msg
 
