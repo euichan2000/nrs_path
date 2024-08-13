@@ -44,7 +44,7 @@ public:
         if (!points.empty())
         {
             visualization_msgs::Marker marker;
-            marker.header.frame_id = "base_link";  // 수정: "map"으로 변경
+            marker.header.frame_id = "base_link";  
             marker.header.stamp = ros::Time::now();
             marker.ns = "points";
             marker.id = 1;

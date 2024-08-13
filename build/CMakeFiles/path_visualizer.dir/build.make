@@ -178,6 +178,10 @@ devel/lib/nrs_vision_rviz/path_visualizer: /opt/ros/noetic/lib/libcpp_common.so
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+devel/lib/nrs_vision_rviz/path_visualizer: /opt/ros/noetic/lib/x86_64-linux-gnu/libompl.so
+devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libboost_serialization.so
+devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
+devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libboost_system.so
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libgmpxx.so
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libmpfr.so
 devel/lib/nrs_vision_rviz/path_visualizer: /usr/lib/x86_64-linux-gnu/libgmp.so

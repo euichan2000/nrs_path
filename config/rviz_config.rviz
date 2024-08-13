@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Status1
         - /Grid1
-        - /Marker1/Status1
         - /Marker1/Namespaces1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
@@ -61,8 +60,9 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        geodesic_path: true
+        Catmull_Rom_path: true
         points: true
+        waypoint_axes: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -273,6 +273,14 @@ Visualization Manager:
       Trajectory Topic: move_group/display_planned_path
       Use Sim Time: false
       Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /visualization_mesh_edge
+      Name: Marker
+      Namespaces:
+        mesh_edges: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -301,7 +309,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.055992841720581
+      Distance: 0.5869170427322388
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -309,17 +317,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.24996346235275269
-        Y: -0.04929419979453087
-        Z: -0.19275948405265808
+        X: 0.3503057360649109
+        Y: -0.08115814626216888
+        Z: 0.010131429880857468
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7397960424423218
+      Pitch: 0.9947968125343323
       Target Frame: <Fixed Frame>
-      Yaw: 6.076810836791992
+      Yaw: 5.4918107986450195
     Saved: ~
 Window Geometry:
   Displays:

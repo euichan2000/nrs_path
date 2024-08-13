@@ -178,6 +178,9 @@ devel/lib/nrs_vision_rviz/visualize_mesh: /opt/ros/noetic/lib/libcpp_common.so
 devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
 devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
 devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libgmpxx.so
+devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libmpfr.so
+devel/lib/nrs_vision_rviz/visualize_mesh: /usr/lib/x86_64-linux-gnu/libgmp.so
 devel/lib/nrs_vision_rviz/visualize_mesh: CMakeFiles/visualize_mesh.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable devel/lib/nrs_vision_rviz/visualize_mesh"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/visualize_mesh.dir/link.txt --verbose=$(VERBOSE)

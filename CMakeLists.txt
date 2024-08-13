@@ -42,7 +42,7 @@ include_directories(
 )
 
 add_executable(visualize_mesh src/visualize_mesh.cpp)
-target_link_libraries(visualize_mesh ${catkin_LIBRARIES})
+target_link_libraries(visualize_mesh ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
 
 add_executable(point_publisher src/point_publisher.cpp)
 target_link_libraries(point_publisher ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
@@ -50,17 +50,11 @@ target_link_libraries(point_publisher ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
 add_executable(keyboard_listener src/keyboard_listener.cpp)
 target_link_libraries(keyboard_listener ${catkin_LIBRARIES})
 
-add_executable(path_visualizer src/path_visualizer.cpp)
-add_dependencies(path_visualizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(path_visualizer ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
+add_executable(path_generator src/path_generator.cpp)
+add_dependencies(path_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(path_generator ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGAL_LIBRARIES})
 
 add_executable(moveit_planner src/moveit_planner.cpp)
 add_dependencies(moveit_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(moveit_planner ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(VR_Path_Planning src/VR_Path_Planning.cpp)
-add_dependencies(VR_Path_Planning ${catkin_EXPORTED_TARGETS})
-target_link_libraries(VR_Path_Planning ${catkin_LIBRARIES} ${CGAL_LIBRARIES} ${Boost_LIBRARIES})
-
-add_executable(test_path_visualizer src/test_path_visualizer.cpp)
-target_link_libraries(test_path_visualizer ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGAL_LIBRARIES})

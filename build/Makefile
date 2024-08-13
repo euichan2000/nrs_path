@@ -168,30 +168,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named VR_Path_Planning
+# Target rules for targets named path_generator
 
 # Build rule for target.
-VR_Path_Planning: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 VR_Path_Planning
-.PHONY : VR_Path_Planning
+path_generator: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 path_generator
+.PHONY : path_generator
 
 # fast build rule for target.
-VR_Path_Planning/fast:
-	$(MAKE) -f CMakeFiles/VR_Path_Planning.dir/build.make CMakeFiles/VR_Path_Planning.dir/build
-.PHONY : VR_Path_Planning/fast
-
-#=============================================================================
-# Target rules for targets named path_visualizer
-
-# Build rule for target.
-path_visualizer: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 path_visualizer
-.PHONY : path_visualizer
-
-# fast build rule for target.
-path_visualizer/fast:
-	$(MAKE) -f CMakeFiles/path_visualizer.dir/build.make CMakeFiles/path_visualizer.dir/build
-.PHONY : path_visualizer/fast
+path_generator/fast:
+	$(MAKE) -f CMakeFiles/path_generator.dir/build.make CMakeFiles/path_generator.dir/build
+.PHONY : path_generator/fast
 
 #=============================================================================
 # Target rules for targets named nrs_vision_rviz_genpy
@@ -257,19 +244,6 @@ nrs_vision_rviz_generate_messages_cpp: cmake_check_build_system
 nrs_vision_rviz_generate_messages_cpp/fast:
 	$(MAKE) -f CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir/build.make CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir/build
 .PHONY : nrs_vision_rviz_generate_messages_cpp/fast
-
-#=============================================================================
-# Target rules for targets named test_path_visualizer
-
-# Build rule for target.
-test_path_visualizer: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 test_path_visualizer
-.PHONY : test_path_visualizer
-
-# fast build rule for target.
-test_path_visualizer/fast:
-	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/build
-.PHONY : test_path_visualizer/fast
 
 #=============================================================================
 # Target rules for targets named _nrs_vision_rviz_generate_messages_check_deps_Waypoints
@@ -1688,33 +1662,6 @@ gtest/fast:
 	$(MAKE) -f gtest/googletest/CMakeFiles/gtest.dir/build.make gtest/googletest/CMakeFiles/gtest.dir/build
 .PHONY : gtest/fast
 
-src/VR_Path_Planning.o: src/VR_Path_Planning.cpp.o
-
-.PHONY : src/VR_Path_Planning.o
-
-# target to build an object file
-src/VR_Path_Planning.cpp.o:
-	$(MAKE) -f CMakeFiles/VR_Path_Planning.dir/build.make CMakeFiles/VR_Path_Planning.dir/src/VR_Path_Planning.cpp.o
-.PHONY : src/VR_Path_Planning.cpp.o
-
-src/VR_Path_Planning.i: src/VR_Path_Planning.cpp.i
-
-.PHONY : src/VR_Path_Planning.i
-
-# target to preprocess a source file
-src/VR_Path_Planning.cpp.i:
-	$(MAKE) -f CMakeFiles/VR_Path_Planning.dir/build.make CMakeFiles/VR_Path_Planning.dir/src/VR_Path_Planning.cpp.i
-.PHONY : src/VR_Path_Planning.cpp.i
-
-src/VR_Path_Planning.s: src/VR_Path_Planning.cpp.s
-
-.PHONY : src/VR_Path_Planning.s
-
-# target to generate assembly for a file
-src/VR_Path_Planning.cpp.s:
-	$(MAKE) -f CMakeFiles/VR_Path_Planning.dir/build.make CMakeFiles/VR_Path_Planning.dir/src/VR_Path_Planning.cpp.s
-.PHONY : src/VR_Path_Planning.cpp.s
-
 src/keyboard_listener.o: src/keyboard_listener.cpp.o
 
 .PHONY : src/keyboard_listener.o
@@ -1769,32 +1716,32 @@ src/moveit_planner.cpp.s:
 	$(MAKE) -f CMakeFiles/moveit_planner.dir/build.make CMakeFiles/moveit_planner.dir/src/moveit_planner.cpp.s
 .PHONY : src/moveit_planner.cpp.s
 
-src/path_visualizer.o: src/path_visualizer.cpp.o
+src/path_generator.o: src/path_generator.cpp.o
 
-.PHONY : src/path_visualizer.o
+.PHONY : src/path_generator.o
 
 # target to build an object file
-src/path_visualizer.cpp.o:
-	$(MAKE) -f CMakeFiles/path_visualizer.dir/build.make CMakeFiles/path_visualizer.dir/src/path_visualizer.cpp.o
-.PHONY : src/path_visualizer.cpp.o
+src/path_generator.cpp.o:
+	$(MAKE) -f CMakeFiles/path_generator.dir/build.make CMakeFiles/path_generator.dir/src/path_generator.cpp.o
+.PHONY : src/path_generator.cpp.o
 
-src/path_visualizer.i: src/path_visualizer.cpp.i
+src/path_generator.i: src/path_generator.cpp.i
 
-.PHONY : src/path_visualizer.i
+.PHONY : src/path_generator.i
 
 # target to preprocess a source file
-src/path_visualizer.cpp.i:
-	$(MAKE) -f CMakeFiles/path_visualizer.dir/build.make CMakeFiles/path_visualizer.dir/src/path_visualizer.cpp.i
-.PHONY : src/path_visualizer.cpp.i
+src/path_generator.cpp.i:
+	$(MAKE) -f CMakeFiles/path_generator.dir/build.make CMakeFiles/path_generator.dir/src/path_generator.cpp.i
+.PHONY : src/path_generator.cpp.i
 
-src/path_visualizer.s: src/path_visualizer.cpp.s
+src/path_generator.s: src/path_generator.cpp.s
 
-.PHONY : src/path_visualizer.s
+.PHONY : src/path_generator.s
 
 # target to generate assembly for a file
-src/path_visualizer.cpp.s:
-	$(MAKE) -f CMakeFiles/path_visualizer.dir/build.make CMakeFiles/path_visualizer.dir/src/path_visualizer.cpp.s
-.PHONY : src/path_visualizer.cpp.s
+src/path_generator.cpp.s:
+	$(MAKE) -f CMakeFiles/path_generator.dir/build.make CMakeFiles/path_generator.dir/src/path_generator.cpp.s
+.PHONY : src/path_generator.cpp.s
 
 src/point_publisher.o: src/point_publisher.cpp.o
 
@@ -1822,33 +1769,6 @@ src/point_publisher.s: src/point_publisher.cpp.s
 src/point_publisher.cpp.s:
 	$(MAKE) -f CMakeFiles/point_publisher.dir/build.make CMakeFiles/point_publisher.dir/src/point_publisher.cpp.s
 .PHONY : src/point_publisher.cpp.s
-
-src/test_path_visualizer.o: src/test_path_visualizer.cpp.o
-
-.PHONY : src/test_path_visualizer.o
-
-# target to build an object file
-src/test_path_visualizer.cpp.o:
-	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.o
-.PHONY : src/test_path_visualizer.cpp.o
-
-src/test_path_visualizer.i: src/test_path_visualizer.cpp.i
-
-.PHONY : src/test_path_visualizer.i
-
-# target to preprocess a source file
-src/test_path_visualizer.cpp.i:
-	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.i
-.PHONY : src/test_path_visualizer.cpp.i
-
-src/test_path_visualizer.s: src/test_path_visualizer.cpp.s
-
-.PHONY : src/test_path_visualizer.s
-
-# target to generate assembly for a file
-src/test_path_visualizer.cpp.s:
-	$(MAKE) -f CMakeFiles/test_path_visualizer.dir/build.make CMakeFiles/test_path_visualizer.dir/src/test_path_visualizer.cpp.s
-.PHONY : src/test_path_visualizer.cpp.s
 
 src/visualize_mesh.o: src/visualize_mesh.cpp.o
 
@@ -1886,15 +1806,13 @@ help:
 	@echo "... install/strip"
 	@echo "... install/local"
 	@echo "... test"
-	@echo "... VR_Path_Planning"
-	@echo "... path_visualizer"
+	@echo "... path_generator"
 	@echo "... nrs_vision_rviz_genpy"
 	@echo "... nrs_vision_rviz_gennodejs"
 	@echo "... nrs_vision_rviz_genlisp"
 	@echo "... nrs_vision_rviz_geneus"
 	@echo "... list_install_components"
 	@echo "... nrs_vision_rviz_generate_messages_cpp"
-	@echo "... test_path_visualizer"
 	@echo "... _nrs_vision_rviz_generate_messages_check_deps_Waypoints"
 	@echo "... nrs_vision_rviz_generate_messages"
 	@echo "... nrs_vision_rviz_generate_messages_nodejs"
@@ -2007,24 +1925,18 @@ help:
 	@echo "... gmock"
 	@echo "... gtest_main"
 	@echo "... gtest"
-	@echo "... src/VR_Path_Planning.o"
-	@echo "... src/VR_Path_Planning.i"
-	@echo "... src/VR_Path_Planning.s"
 	@echo "... src/keyboard_listener.o"
 	@echo "... src/keyboard_listener.i"
 	@echo "... src/keyboard_listener.s"
 	@echo "... src/moveit_planner.o"
 	@echo "... src/moveit_planner.i"
 	@echo "... src/moveit_planner.s"
-	@echo "... src/path_visualizer.o"
-	@echo "... src/path_visualizer.i"
-	@echo "... src/path_visualizer.s"
+	@echo "... src/path_generator.o"
+	@echo "... src/path_generator.i"
+	@echo "... src/path_generator.s"
 	@echo "... src/point_publisher.o"
 	@echo "... src/point_publisher.i"
 	@echo "... src/point_publisher.s"
-	@echo "... src/test_path_visualizer.o"
-	@echo "... src/test_path_visualizer.i"
-	@echo "... src/test_path_visualizer.s"
 	@echo "... src/visualize_mesh.o"
 	@echo "... src/visualize_mesh.i"
 	@echo "... src/visualize_mesh.s"

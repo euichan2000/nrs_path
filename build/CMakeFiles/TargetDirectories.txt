@@ -1,15 +1,13 @@
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/install/strip.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/install/local.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/test.dir
-/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/VR_Path_Planning.dir
-/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/path_visualizer.dir
+/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/path_generator.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_genpy.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_gennodejs.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_genlisp.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_geneus.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/list_install_components.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_generate_messages_cpp.dir
-/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/test_path_visualizer.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_generate_messages.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/nrs_vision_rviz_generate_messages_nodejs.dir
