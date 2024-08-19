@@ -8,7 +8,8 @@
 
 # modified environment variables
 export CMAKE_PREFIX_PATH="/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel:$CMAKE_PREFIX_PATH"
-export LD_LIBRARY_PATH="/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH='/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/lib:/home/nrs/catkin_ws/devel/lib:/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/usr/local/lib'
+export PATH='/opt/ros/noetic/bin:/home/nrs/.local/bin:/home/nrs/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'
 export PKG_CONFIG_PATH="/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
 export PWD='/home/nrs/catkin_ws/src/nrs_vision_rviz/build'
 export PYTHONPATH="/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/lib/python3/dist-packages:$PYTHONPATH"

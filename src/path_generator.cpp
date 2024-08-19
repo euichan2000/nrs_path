@@ -1,7 +1,7 @@
-// 필요한 헤더 파일 포함
+// path_generator.cpp
+
 #include <ros/ros.h>
 #include <geometry_msgs/PointStamped.h>
-#include <visualization_msgs/Marker.h>
 #include <nrs_vision_rviz/Waypoints.h>
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
@@ -22,6 +22,8 @@
 #include <fstream>
 #include <iterator>
 #include <std_msgs/String.h>
+#include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Point.h>
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -41,6 +43,7 @@ namespace og = ompl::geometric;
 // 전역 변수 선언
 ros::Publisher waypoints_pub;
 ros::Publisher marker_pub;
+
 std::vector<geometry_msgs::Point> clicked_points;
 Triangle_mesh tmesh;
 Tree *tree;
@@ -57,14 +60,28 @@ public:
         return true;
     }
 };
-
-void keyboardCallback(const std_msgs::String::ConstPtr &msg)
+void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
 {
-    if (msg->data == "start")
+    visualization_msgs::Marker path_marker;
+    path_marker.header.frame_id = "base_link";
+    path_marker.header.stamp = ros::Time::now();
+    path_marker.ns = ns;
+    path_marker.id = id;
+    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
+    path_marker.action = visualization_msgs::Marker::ADD;
+    path_marker.pose.orientation.w = 1.0;
+    path_marker.scale.x = 0.005;
+    path_marker.color.r = r;
+    path_marker.color.g = g;
+    path_marker.color.b = b;
+    path_marker.color.a = a;
+
+    for (const auto &point : path)
     {
-        waypoints_pub.publish(waypoints_msg);
-        ROS_INFO("Waypoints published.");
+        path_marker.points.push_back(point);
     }
+
+    marker_pub.publish(path_marker);
 }
 
 void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
@@ -114,163 +131,51 @@ bool locate_face_and_point(const Point_3 &point, face_descriptor &face, Surface_
     return true;
 }
 
-void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
-{
-    visualization_msgs::Marker path_marker;
-    path_marker.header.frame_id = "base_link";
-    path_marker.header.stamp = ros::Time::now();
-    path_marker.ns = ns;
-    path_marker.id = id;
-    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
-    path_marker.action = visualization_msgs::Marker::ADD;
-    path_marker.pose.orientation.w = 1.0;
-    path_marker.scale.x = 0.005;
-    path_marker.color.r = r;
-    path_marker.color.g = g;
-    path_marker.color.b = b;
-    path_marker.color.a = a;
-
-    for (const auto &point : path)
-    {
-        path_marker.points.push_back(point);
-    }
-
-    marker_pub.publish(path_marker);
-}
-
-void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoints)
-{
-    double axis_length = 0.01; // 축의 고정 길이
-
-    for (size_t i = 0; i < waypoints.size(); ++i)
-    {
-        const auto &waypoint = waypoints[i];
-        const auto &origin = waypoint.point;
-        const auto &z_axis = waypoint.normal;
-
-        // 다음 점을 기준으로 x축 방향을 설정 (path 진행 방향)
-        geometry_msgs::Point x_axis_end;
-        if (i < waypoints.size() - 1)
-        {
-            const auto &next_point = waypoints[i + 1].point;
-
-            // x축 벡터 계산
-            geometry_msgs::Point x_axis;
-            x_axis.x = next_point.x - origin.x;
-            x_axis.y = next_point.y - origin.y;
-            x_axis.z = next_point.z - origin.z;
-
-            // 벡터를 정규화
-            double length = std::sqrt(x_axis.x * x_axis.x + x_axis.y * x_axis.y + x_axis.z * x_axis.z);
-            x_axis.x = (x_axis.x / length) * axis_length;
-            x_axis.y = (x_axis.y / length) * axis_length;
-            x_axis.z = (x_axis.z / length) * axis_length;
-
-            // x_axis_end 포인트 계산
-            x_axis_end.x = origin.x + x_axis.x;
-            x_axis_end.y = origin.y + x_axis.y;
-            x_axis_end.z = origin.z + x_axis.z;
-        }
-        else
-        {
-            // 마지막 점인 경우, x축 방향을 0으로 설정
-            x_axis_end = origin;
-        }
-
-        // y축을 z축과 x축의 외적(cross product)으로 계산
-        geometry_msgs::Point y_axis_end;
-        y_axis_end.x = origin.x + (-z_axis.y * (x_axis_end.z - origin.z) - -z_axis.z * (x_axis_end.y - origin.y));
-        y_axis_end.y = origin.y + (-z_axis.z * (x_axis_end.x - origin.x) - -z_axis.x * (x_axis_end.z - origin.z));
-        y_axis_end.z = origin.z + (-z_axis.x * (x_axis_end.y - origin.y) - -z_axis.y * (x_axis_end.x - origin.x));
-
-        // z축 끝 포인트 계산 (정규화)
-        geometry_msgs::Point z_axis_end;
-        double z_length = std::sqrt(-z_axis.x * -z_axis.x + -z_axis.y * -z_axis.y + -z_axis.z * -z_axis.z);
-        z_axis_end.x = origin.x + (-z_axis.x / z_length) * axis_length;
-        z_axis_end.y = origin.y + (-z_axis.y / z_length) * axis_length;
-        z_axis_end.z = origin.z + (-z_axis.z / z_length) * axis_length;
-
-        // 마커 생성
-        visualization_msgs::Marker x_axis_marker, y_axis_marker, z_axis_marker;
-
-        x_axis_marker.header.frame_id = y_axis_marker.header.frame_id = z_axis_marker.header.frame_id = "base_link";
-        x_axis_marker.header.stamp = y_axis_marker.header.stamp = z_axis_marker.header.stamp = ros::Time::now();
-        x_axis_marker.ns = y_axis_marker.ns = z_axis_marker.ns = "waypoint_axes";
-        x_axis_marker.action = y_axis_marker.action = z_axis_marker.action = visualization_msgs::Marker::ADD;
-        x_axis_marker.type = y_axis_marker.type = z_axis_marker.type = visualization_msgs::Marker::ARROW;
-        x_axis_marker.scale.x = y_axis_marker.scale.x = z_axis_marker.scale.x = 0.0005; // 화살표 몸통의 두께
-        x_axis_marker.scale.y = y_axis_marker.scale.y = z_axis_marker.scale.y = 0.001;  // 화살표 머리의 두께
-        x_axis_marker.scale.z = y_axis_marker.scale.z = z_axis_marker.scale.z = 0.001;  // 화살표 머리의 길이
-        x_axis_marker.color.a = y_axis_marker.color.a = z_axis_marker.color.a = 1.0;
-
-        // x축 색상 (빨간색)
-        x_axis_marker.color.r = 1.0;
-        x_axis_marker.color.g = 0.0;
-        x_axis_marker.color.b = 0.0;
-
-        // y축 색상 (녹색)
-        y_axis_marker.color.r = 0.0;
-        y_axis_marker.color.g = 1.0;
-        y_axis_marker.color.b = 0.0;
-
-        // z축 색상 (파란색)
-        z_axis_marker.color.r = 0.0;
-        z_axis_marker.color.g = 0.0;
-        z_axis_marker.color.b = 1.0;
-
-        // 각 마커의 고유 ID 설정
-        x_axis_marker.id = i * 3;
-        y_axis_marker.id = i * 3 + 1;
-        z_axis_marker.id = i * 3 + 2;
-
-        // 마커 시작점과 끝점 설정
-        x_axis_marker.points.push_back(origin);
-        x_axis_marker.points.push_back(x_axis_end);
-
-        y_axis_marker.points.push_back(origin);
-        y_axis_marker.points.push_back(y_axis_end);
-
-        z_axis_marker.points.push_back(origin);
-        z_axis_marker.points.push_back(z_axis_end);
-
-        // 마커 퍼블리시
-        marker_pub.publish(x_axis_marker);
-        marker_pub.publish(y_axis_marker);
-        marker_pub.publish(z_axis_marker);
-    }
-}
-
 std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geometry_msgs::Point> &points)
 {
     std::vector<geometry_msgs::Point> projected_points, offset_points;
 
     for (const auto &point : points)
     {
-        Point_3 query(point.x, point.y, point.z);
+        // Point_3 query(point.x, point.y, point.z);
 
-        // 해당 포인트에 가장 가까운 face와 위치를 찾습니다.
-        face_descriptor face;
-        Surface_mesh_shortest_path::Barycentric_coordinates location;
-        if (!locate_face_and_point(query, face, location))
-        {
-            ROS_ERROR("Failed to locate face and point");
-            continue;
-        }
+        // // 해당 포인트에 가장 가까운 face와 위치를 찾습니다.
+        // face_descriptor face;
+        // Surface_mesh_shortest_path::Barycentric_coordinates location;
+        // if (!locate_face_and_point(query, face, location))
+        // {
+        //     ROS_ERROR("Failed to locate face and point");
+        //     continue;
+        // }
+        // // face의 normal vector를 계산합니다.
+        // Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
 
-        // face의 normal vector를 계산합니다.
-        Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
+        // // normal vector 방향으로 포인트를 살짝 이동시킵니다.
+        // double offset = 0.1; // 이동할 거리
+        // Point_3 offset_point = query + normal * offset;
 
-        // normal vector 방향으로 포인트를 살짝 이동시킵니다.
-        double offset = 0.1; // 이동할 거리
-        Point_3 offset_point = query + normal * offset;
+        // geometry_msgs::Point off_point;
+        // off_point.x = offset_point.x();
+        // off_point.y = offset_point.y();
+        // off_point.z = offset_point.z();
+        // offset_points.push_back(off_point);
+
+        // // mesh 표면에 가장 가까운 점을 찾습니다.
+        // auto closest_point = tree->closest_point(offset_point);
+
+        // geometry_msgs::Point ros_point;
+        // ros_point.x = closest_point.x();
+        // ros_point.y = closest_point.y();
+        // ros_point.z = closest_point.z();
+
+        Point_3 query(point.x, point.y, point.z + 0.05);
+        auto closest_point = tree->closest_point(query);
+
         geometry_msgs::Point off_point;
-        off_point.x = offset_point.x();
-        off_point.y = offset_point.y();
-        off_point.z = offset_point.z();
+        off_point.x = query.x();
+        off_point.y = query.y();
+        off_point.z = query.z();
         offset_points.push_back(off_point);
-
-        // mesh 표면에 가장 가까운 점을 찾습니다.
-        auto closest_point = tree->closest_point(offset_point);
 
         geometry_msgs::Point ros_point;
         ros_point.x = closest_point.x();
@@ -279,7 +184,9 @@ std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geomet
 
         projected_points.push_back(ros_point);
     }
-    visualizePath(offset_points, "offset_point", 6, 0.0, 0.0, 1.0, 1.0);
+    // offset_point와 projected_point를 시각화합니다.
+    visualizePath(offset_points, "offset_B_spline_path", 1, 0.0, 0.0, 1.0, 1.0);
+    visualizePath(projected_points, "projected_B_spline_path", 2, 1.0, 0.0, 0.0, 1.0);
 
     return projected_points;
 }
@@ -352,12 +259,10 @@ void generate_Geodesic_Path(const std::vector<geometry_msgs::Point> &points)
     }
 
     ROS_INFO("Generated geodesic path with %zu points", path_points.size());
-    visualizePath(path_points, "geodesic_path", 0, 0.0, 1.0, 0.0, 1.0);
     waypoints_msg.waypoints = convertToWaypoints(path_points);
-    // visualizeWaypointsAxes(waypoints_msg.waypoints);
 }
 
-void generate_B_Splin_Path(const std::vector<geometry_msgs::Point> &points)
+void generate_B_Spline_Path(const std::vector<geometry_msgs::Point> &points)
 {
     unsigned int maxSteps = 2;
     double minChange = std::numeric_limits<double>::epsilon();
@@ -428,9 +333,9 @@ void generate_B_Splin_Path(const std::vector<geometry_msgs::Point> &points)
         smooth_path.push_back(p);
     }
     std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
-    visualizePath(projected_path, "B_spline_path", 1, 0.0, 1.0, 0.0, 1.0);
-    waypoints_msg.waypoints = convertToWaypoints(projected_path);
+    waypoints_msg.waypoints = convertToWaypoints(smooth_path);
 }
+
 void generate_Catmull_Rom_Path(const std::vector<geometry_msgs::Point> &points)
 {
     std::vector<geometry_msgs::Point> smooth_path;
@@ -459,9 +364,7 @@ void generate_Catmull_Rom_Path(const std::vector<geometry_msgs::Point> &points)
     }
 
     std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
-    visualizePath(projected_path, "Catmull_Rom_path", 2, 0.0, 0.0, 1.0, 1.0);
     waypoints_msg.waypoints = convertToWaypoints(projected_path);
-    visualizeWaypointsAxes(waypoints_msg.waypoints);
 }
 
 int main(int argc, char **argv)
@@ -469,10 +372,10 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "path_generator");
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
-    marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
-    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
-
+    // 추가된 publisher 초기화
+    marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+   
     std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
     std::ifstream input(mesh_file_path, std::ios::binary);
     read_stl_file(input, tmesh);
@@ -488,8 +391,10 @@ int main(int argc, char **argv)
         ros::spinOnce();
         if (new_waypoints && clicked_points.size() > 1)
         {
-            generate_B_Splin_Path(clicked_points);
-            new_waypoints = false; // 모션 플래닝이 끝난 후 플래그를 false로 설정
+            generate_B_Spline_Path(clicked_points);
+            waypoints_pub.publish(waypoints_msg); // 경로 생성 후 퍼블리시
+            
+            new_waypoints = false;                // 모션 플래닝이 끝난 후 플래그를 false로 설정
         }
 
         r.sleep();

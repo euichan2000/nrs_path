@@ -54,15 +54,15 @@
         <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl"/>
       </geometry>
       <material name="light_blue">
-        <color rgba="0.57 0.81 0.92 1.0" />
+        <color rgba="0.57 0.81 0.92 0.5" />
       </material>
     </visual>
      <collision>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/sample_wrap.stl"/>
+        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl"/>
       </geometry>
-      <material name="gray">
-        <color rgba="0.5 0.5 0.5 1.0" />
+      <material name="light_blue">
+        <color rgba="0.57 0.81 0.92 0.5" />
       </material>
     </collision> 
   </link>

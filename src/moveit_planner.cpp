@@ -14,9 +14,20 @@
 #include <moveit/trajectory_processing/trajectory_tools.h>
 #include <fstream> // 파일 입출력 라이브러리
 #include <tf2/LinearMath/Transform.h>
+#include <std_msgs/String.h>
 
 std::vector<geometry_msgs::Pose> waypoints_poses;
 bool path_received = false;
+bool start_planning = false; // 플래닝 시작 플래그
+
+void keyboardCallback(const std_msgs::String::ConstPtr &msg)
+{
+    if (msg->data == "start")
+    {
+        start_planning = true;
+        ROS_INFO("Received start command, initiating planning.");
+    }
+}
 
 void saveWaypointsToFile(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
 {
@@ -102,6 +113,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "moveit_planner");
     ros::NodeHandle nh;
     ros::Subscriber waypoints_sub = nh.subscribe("waypoints_with_normals", 10, waypointsCallback);
+     ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback); // "moveit_command" 구독 추가
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
@@ -132,7 +144,7 @@ int main(int argc, char **argv)
     moveit_msgs::DisplayTrajectory display_trajectory;
     while (ros::ok())
     {
-        if (path_received && waypoints_poses.size() > 1)
+        if (path_received && waypoints_poses.size() > 1 && start_planning)
         {
             // 기존 경로를 삭제
             move_group.clearPathConstraints();
@@ -155,7 +167,6 @@ int main(int argc, char **argv)
                 move_group.setJointValueTarget(initial_pose);
                 move_group.move();
 
-
                 display_trajectory.trajectory_start = plan.start_state_;
                 display_trajectory.trajectory.clear(); // 이전의 trajectory를 비웁니다.
                 display_trajectory.trajectory.push_back(plan.trajectory_);
@@ -164,6 +175,7 @@ int main(int argc, char **argv)
 
             waypoints_poses.clear();
             path_received = false;
+            start_planning = false; // 플래닝이 완료되면 다시 대기 상태로 설정
         }
 
         ros::Duration(1.0).sleep();
