@@ -186,7 +186,7 @@ std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geomet
     }
     // offset_point와 projected_point를 시각화합니다.
     visualizePath(offset_points, "offset_B_spline_path", 1, 0.0, 0.0, 1.0, 1.0);
-    visualizePath(projected_points, "projected_B_spline_path", 2, 1.0, 0.0, 0.0, 1.0);
+    visualizePath(projected_points, "projected_B_spline_path", 1, 1.0, 0.0, 0.0, 1.0);
 
     return projected_points;
 }

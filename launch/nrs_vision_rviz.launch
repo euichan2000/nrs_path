@@ -5,9 +5,9 @@
   <!-- Visualization nodes -->
   <node name="visualize_mesh" pkg="nrs_vision_rviz" type="visualize_mesh" output="screen" />
   <node name="point_publisher" pkg="nrs_vision_rviz" type="point_publisher" output="screen" />
-  <node name="path_generator" pkg="nrs_vision_rviz" type="path_generator" output="screen" />
+  <!-- <node name="path_generator" pkg="nrs_vision_rviz" type="path_generator" output="screen" /> -->
   <node name="path_visualizer" pkg="nrs_vision_rviz" type="path_visualizer" output="screen" />
-  <!-- <node name="geodesic_hermite_path_generator" pkg="nrs_vision_rviz" type="geodesic_hermite_path_generator" output="screen" /> -->
+  <node name="geodesic_hermite_path_generator" pkg="nrs_vision_rviz" type="geodesic_hermite_path_generator" output="screen" />
   <node name="keyboard_listener" pkg="nrs_vision_rviz" type="keyboard_listener" output="screen" />
   <node name="moveit_planner" pkg="nrs_vision_rviz" type="moveit_planner" output="screen" />
 

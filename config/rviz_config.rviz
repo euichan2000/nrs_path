@@ -11,6 +11,7 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
         - /MarkerArray1
+        - /MarkerArray1/Namespaces1
       Splitter Ratio: 0.5130784511566162
     Tree Height: 719
   - Class: rviz/Selection
@@ -61,6 +62,7 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
+        geodesic_path: true
         points: true
       Queue Size: 100
       Value: true
@@ -282,10 +284,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /vectors
+      Marker Topic: /visualization_marker_array_hermite
       Name: MarkerArray
       Namespaces:
-        {}
+        path_points: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -316,7 +318,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.10812123864889145
+      Distance: 0.13307979702949524
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -324,17 +326,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.4581455588340759
-        Y: -0.09166357666254044
-        Z: 0.01801164820790291
+        X: 0.4527042806148529
+        Y: -0.22314442694187164
+        Z: 0.004151494242250919
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.22479675710201263
+      Pitch: 0.4797969460487366
       Target Frame: <Fixed Frame>
-      Yaw: 5.346812725067139
+      Yaw: 5.011804580688477
     Saved: ~
 Window Geometry:
   Displays:
