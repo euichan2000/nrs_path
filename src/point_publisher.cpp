@@ -19,7 +19,7 @@ public:
     {
         points.push_back(msg->point);
         publishPoints();
-        printPoints();  // 선택된 점들의 좌표값을 출력
+        //printPoints();  // 선택된 점들의 좌표값을 출력
     }
 
     void publishPoints()
