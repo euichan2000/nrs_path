@@ -12,12 +12,16 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         std_msgs::String msg;
-        std::cout << "Enter 'a' to start the robot: ";
+        //std::cout << "Enter 'a' to start the robot: ";
         std::string input;
         std::cin >> input;
-        if (input == "a")
+        if (input == "b")
         {
             msg.data = "start";
+            command_pub.publish(msg);
+        }
+        if (input == "a"){
+            msg.data = "path_generating_start";
             command_pub.publish(msg);
         }
         ros::Duration(1.0).sleep(); // Sleep to prevent CPU overload

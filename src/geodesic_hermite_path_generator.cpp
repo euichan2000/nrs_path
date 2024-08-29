@@ -4,7 +4,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
-
+#include <std_msgs/String.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -30,7 +30,7 @@ typedef CGAL::AABB_traits<Kernel, Primitive> AABB_traits;
 typedef CGAL::AABB_tree<AABB_traits> Tree;
 
 std::vector<geometry_msgs::Point> clicked_points;
-bool new_waypoints = false;
+
 Triangle_mesh mesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
@@ -40,6 +40,7 @@ std::vector<Eigen::Vector3d> selected_points; // 선택한 점들
 std::vector<double> u_values = {0.0};         // u_0 = 0으로 초기화
 std::vector<Eigen::Vector3d> tangent_vectors; // 선택한 점들의 tangent vectors
 ros::Publisher marker_pub2;
+bool start_path_generating = false;
 
 // 기본 3D 벡터 연산
 struct Vec3d
@@ -461,93 +462,186 @@ void geodesicbasecalcuation(const Eigen::Vector3d &p, const Eigen::Vector3d &q, 
         throw std::runtime_error("Failed to locate point2 on mesh.");
     }
 
-    // p2를 source point로 추가
-    Surface_mesh_shortest_path shortest_paths(tmesh);
-    shortest_paths.add_source_point(face2, location2);
-
-    // Geodesic path 상의 점들 찾기
-    std::vector<Surface_mesh_shortest_path::Point_3> path_points;
-    shortest_paths.shortest_path_points_to_source_points(face1, location1, std::back_inserter(path_points));
-    // p0와 p1 사이의 지오데식 거리 계산
-    std::pair<double, Surface_mesh_shortest_path::Source_point_iterator> result = shortest_paths.shortest_distance_to_source_points(face1, location1);
-    geodesic_distance = result.first;
-    // std::cout << "geodesic_distance: " << geodesic_distance << std::endl;
-
-    if (path_points.size() < 2)
+    if (face1 != face2)
     {
-        throw std::runtime_error("Geodesic path does not contain enough points.");
+        // p2를 source point로 추가
+        Surface_mesh_shortest_path shortest_paths(tmesh);
+        shortest_paths.add_source_point(face2, location2);
+
+        // Geodesic path 상의 점들 찾기
+        std::vector<Surface_mesh_shortest_path::Point_3> path_points;
+        shortest_paths.shortest_path_points_to_source_points(face1, location1, std::back_inserter(path_points));
+        // p0와 p1 사이의 지오데식 거리 계산
+        std::pair<double, Surface_mesh_shortest_path::Source_point_iterator> result = shortest_paths.shortest_distance_to_source_points(face1, location1);
+        geodesic_distance = result.first;
+        // std::cout << "geodesic_distance: " << geodesic_distance << std::endl;
+
+        if (path_points.size() < 2)
+        {
+            throw std::runtime_error("Geodesic path does not contain enough points.");
+        }
+        for (int i = 0; i < path_points.size(); i++)
+        {
+            std::cout << "path_points[" << i << "]: " << path_points[i].x() << " " << path_points[i].y() << " " << path_points[i].z() << std::endl;
+        }
+
+        auto halfedge1 = tmesh.halfedge(face1);
+        Kernel::Point_3 vp0 = tmesh.point(tmesh.source(halfedge1));
+        Kernel::Point_3 vp1 = tmesh.point(tmesh.target(halfedge1));
+        Kernel::Point_3 vp2 = tmesh.point(tmesh.target(tmesh.next(halfedge1)));
+
+        auto halfedge2 = tmesh.halfedge(face2);
+        Kernel::Point_3 vq0 = tmesh.point(tmesh.source(halfedge2));
+        Kernel::Point_3 vq1 = tmesh.point(tmesh.target(halfedge2));
+        Kernel::Point_3 vq2 = tmesh.point(tmesh.target(tmesh.next(halfedge2)));
+
+        // 일반 Cartesian 좌표계에서의 벡터를 구함
+        Eigen::Vector3d point_p1(path_points[1].x(), path_points[1].y(), path_points[1].z());
+
+        // 설정할 epsilon 값 (두 점이 충분히 가까운지를 판단할 임계값)
+        double epsilon = 1e-6;
+
+        // 이전에 같은 점인지 확인하던 조건을 충분히 가까운지를 확인하도록 수정
+        Eigen::Vector3d last_point(path_points[path_points.size() - 1].x(), path_points[path_points.size() - 1].y(), path_points[path_points.size() - 1].z());
+        Eigen::Vector3d second_last_point(path_points[path_points.size() - 2].x(), path_points[path_points.size() - 2].y(), path_points[path_points.size() - 2].z());
+
+        if ((last_point - second_last_point).norm() < epsilon)
+        {
+            std::cout << "-1 and -2 is same" << std::endl;
+            Eigen::Vector3d point_q0(path_points[path_points.size() - 3].x(), path_points[path_points.size() - 3].y(), path_points[path_points.size() - 3].z());
+            std::cout << "point_q0: " << point_q0.x() << point_q0.y() << point_q0.z() << std::endl;
+            std::cout << "point_q1: " << q.x() << q.y() << q.z() << std::endl;
+            V_q = q - point_q0;
+            std::cout << "V_q: " << V_q.x() << V_q.y() << q.z() << std::endl;
+        }
+        else
+        {
+
+            Eigen::Vector3d point_q0(path_points[path_points.size() - 2].x(), path_points[path_points.size() - 2].y(), path_points[path_points.size() - 2].z());
+            std::cout << "point_q0: " << point_q0.x() << point_q0.y() << point_q0.z() << std::endl;
+            std::cout << "point_q1: " << q.x() << q.y() << q.z() << std::endl;
+            V_q = q - point_q0;
+            std::cout << "V_q: " << V_q.x() << V_q.y() << q.z() << std::endl;
+        }
+
+        std::cout << "vp0.x: " << vp0.x() << "vp0.y: " << vp0.y() << "vp0.z: " << vp0.z() << std::endl;
+        std::cout << "vp1.x: " << vp1.x() << "vp1.y: " << vp1.y() << "vp1.z: " << vp1.z() << std::endl;
+        std::cout << "vp2.x: " << vp2.x() << "vp2.y: " << vp2.y() << "vp2.z: " << vp2.z() << std::endl;
+        std::cout << "p0.x: " << path_points[0].x() << "p0.y: " << path_points[0].y() << "p0.z: " << path_points[0].z() << std::endl;
+        std::cout << "p1.x: " << path_points[1].x() << "p1.y: " << path_points[1].y() << "p1.z: " << path_points[1].z() << std::endl;
+
+        std::cout << "vq0.x: " << vq0.x() << "vq0.y: " << vq0.y() << "vq0.z: " << vq0.z() << std::endl;
+        std::cout << "vq1.x: " << vq1.x() << "vq1.y: " << vq1.y() << "vq1.z: " << vq1.z() << std::endl;
+        std::cout << "vq2.x: " << vq2.x() << "vq2.y: " << vq2.y() << "vq2.z: " << vq2.z() << std::endl;
+        std::cout << "q0.x: " << path_points[path_points.size() - 2].x() << "q0.y: " << path_points[path_points.size() - 2].y() << "q0.z: " << path_points[path_points.size() - 2].z() << std::endl;
+        std::cout << "q1.x: " << path_points[path_points.size() - 1].x() << "q1.y: " << path_points[path_points.size() - 1].y() << "q1.z: " << path_points[path_points.size() - 1].z() << std::endl;
+
+        // Barycentric 좌표계에서의 벡터를 구함
+
+        V_p = point_p1 - p;
+
+        // 방향 벡터 정규화
+        V_p.normalize();
+        V_q.normalize();
+    }
+    else
+    {
+        std::cout << "p and q is in same face" << std::endl;
+        V_p = q - p;
+        V_q = q - p;
+        V_p.normalize();
+        V_q.normalize();
+        geodesic_distance = V_p.norm();
+    }
+}
+
+// 법선 벡터 계산 함수 (시계 방향 또는 시계 반대 방향)
+Eigen::Vector3d computeFaceNormal(
+    const Vec3d &v1,
+    const Vec3d &v2,
+    const Vec3d &v3,
+    bool clockwise = true) // 기본은 시계 방향(clockwise)으로 설정
+{
+    Eigen::Vector3d edge1 = Vec3dToEigen(v2) - Vec3dToEigen(v1);
+    Eigen::Vector3d edge2 = Vec3dToEigen(v3) - Vec3dToEigen(v1);
+
+    Eigen::Vector3d normal;
+    if (clockwise)
+    {
+        normal = edge1.cross(edge2); // 시계 방향일 때
+    }
+    else
+    {
+        normal = edge2.cross(edge1); // 시계 반대 방향일 때
     }
 
-    auto halfedge1 = tmesh.halfedge(face1);
-    Kernel::Point_3 vp0 = tmesh.point(tmesh.source(halfedge1));
-    Kernel::Point_3 vp1 = tmesh.point(tmesh.target(halfedge1));
-    Kernel::Point_3 vp2 = tmesh.point(tmesh.target(tmesh.next(halfedge1)));
-
-    auto halfedge2 = tmesh.halfedge(face2);
-    Kernel::Point_3 vq0 = tmesh.point(tmesh.source(halfedge2));
-    Kernel::Point_3 vq1 = tmesh.point(tmesh.target(halfedge2));
-    Kernel::Point_3 vq2 = tmesh.point(tmesh.target(tmesh.next(halfedge2)));
-
-    // 일반 Cartesian 좌표계에서의 벡터를 구함
-    Eigen::Vector3d point_p1(path_points[1].x(), path_points[1].y(), path_points[1].z());
-    Eigen::Vector3d point_q0(path_points[path_points.size() - 2].x(), path_points[path_points.size() - 2].y(), path_points[path_points.size() - 2].z());
-
-    // std::cout << "vp0.x: " << vp0.x() << "vp0.y: " << vp0.y() << "vp0.z: " << vp0.z() << std::endl;
-    // std::cout << "vp1.x: " << vp1.x() << "vp1.y: " << vp1.y() << "vp1.z: " << vp1.z() << std::endl;
-    // std::cout << "vp2.x: " << vp2.x() << "vp2.y: " << vp2.y() << "vp2.z: " << vp2.z() << std::endl;
-    // std::cout << "p0.x: " << path_points[0].x() << "p0.y: " << path_points[0].y() << "p0.z: " << path_points[0].z() << std::endl;
-    // std::cout << "p1.x: " << path_points[1].x() << "p1.y: " << path_points[1].y() << "p1.z: " << path_points[1].z() << std::endl;
-
-    // std::cout << "vq0.x: " << vq0.x() << "vq0.y: " << vq0.y() << "vq0.z: " << vq0.z() << std::endl;
-    // std::cout << "vq1.x: " << vq1.x() << "vq1.y: " << vq1.y() << "vq1.z: " << vq1.z() << std::endl;
-    // std::cout << "vq2.x: " << vq2.x() << "vq2.y: " << vq2.y() << "vq2.z: " << vq2.z() << std::endl;
-    // std::cout << "q0.x: " << path_points[path_points.size() - 2].x() << "q0.y: " << path_points[path_points.size() - 2].y() << "q0.z: " << path_points[path_points.size() - 2].z() << std::endl;
-    // std::cout << "q1.x: " << path_points[path_points.size() - 1].x() << "q1.y: " << path_points[path_points.size() - 1].y() << "q1.z: " << path_points[path_points.size() - 1].z() << std::endl;
-
-    // Barycentric 좌표계에서의 벡터를 구함
-
-    V_p = point_p1 - p;
-    V_q = q - point_q0;
-
-    // 방향 벡터 정규화
-    V_p.normalize();
-    V_q.normalize();
+    return normal.normalized(); // 법선 벡터를 단위 벡터로 정규화
 }
 
 // 두 벡터 사이의 각도를 계산하는 함수
-double calculateAngleBetweenVectors(const Eigen::Vector3d &vec1, const Eigen::Vector3d &vec2)
+double calculateAngleBetweenVectors(const Eigen::Vector3d &vec1, const Eigen::Vector3d &vec2, const Eigen::Vector3d &p, const Triangle_mesh &tmesh)
 {
-    // 벡터 간의 내적 계산
-    double dot_product = vec1.dot(vec2);
+    // 1. 점 p가 속한 face와 그 face의 법선 벡터를 계산
+    face_descriptor face_desc;
+    Surface_mesh_shortest_path::Barycentric_coordinates bary_coords;
 
-    // 벡터의 크기 계산
-    double magnitude_vec1 = vec1.norm();
-    double magnitude_vec2 = vec2.norm();
-    // 벡터 크기가 0인 경우 처리
-    if (magnitude_vec1 == 0 || magnitude_vec2 == 0)
+    if (!locate_face_and_point(Vec3dToCGALPoint(Vec3d(p.x(), p.y(), p.z())), face_desc, bary_coords, tmesh))
     {
-        std::cerr << "Error: One of the vectors has zero length, cannot compute angle." << std::endl;
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    if (vec1 == vec2)
-    {
-        std::cout << "angle: 0.0" << std::endl;
+        std::cerr << "Error: Failed to locate the face for the point." << std::endl;
         return 0.0;
     }
 
-    // 내적을 벡터 크기의 곱으로 나누어 코사인 값을 얻음
-    double cos_theta = dot_product / (magnitude_vec1 * magnitude_vec2);
+    // face의 vertex 가져오기
+    auto vertices = CGAL::vertices_around_face(tmesh.halfedge(face_desc), tmesh);
+    auto v_it = vertices.begin();
 
-    // acos을 이용하여 라디안 단위의 각도 계산
+    Vec3d v1 = CGALPointToVec3d(tmesh.point(*v_it++));
+    Vec3d v2 = CGALPointToVec3d(tmesh.point(*v_it++));
+    Vec3d v3 = CGALPointToVec3d(tmesh.point(*v_it));
+
+    // 법선 벡터 계산
+    Eigen::Vector3d face_normal = computeFaceNormal(v1, v2, v3);
+
+    // 2. 벡터 간의 내적 계산
+    double dot_product = vec1.dot(vec2);
+    std::cout << "dot_product: " << dot_product << std::endl;
+
+    // 3. 벡터의 크기 계산
+    double magnitude_vec1 = vec1.norm();
+    double magnitude_vec2 = vec2.norm();
+
+    // 4. 벡터 크기가 0인 경우 처리
+    if (magnitude_vec1 == 0 || magnitude_vec2 == 0)
+    {
+        std::cerr << "Error: One of the vectors has zero length, cannot compute angle." << std::endl;
+        return 0.0;
+    }
+
+    // 5. 내적을 벡터 크기의 곱으로 나누어 코사인 값을 얻음
+    double cos_theta = dot_product / (magnitude_vec1 * magnitude_vec2);
+    // acos 함수의 입력 값이 [-1, 1] 범위를 벗어나지 않도록 클램핑
+    cos_theta = std::max(-1.0, std::min(1.0, cos_theta));
+    // 6. acos을 이용하여 라디안 단위의 각도 계산
     double angle_rad = acos(cos_theta);
 
-    // 라디안을 도(degree)로 변환
+    // 7. 벡터의 외적 계산
+    Eigen::Vector3d cross_product = vec1.cross(vec2);
+
+    // 8. 외적 벡터와 face의 법선 벡터의 내적 계산
+    double direction = cross_product.dot(face_normal);
+
+    // 9. direction의 부호에 따라 각도 부호 결정
+    if (direction < 0)
+    {
+        angle_rad = -angle_rad;
+    }
+
+    // 10. 라디안을 도(degree)로 변환하여 출력 (선택적)
     double angle_deg = angle_rad * (180.0 / M_PI);
     std::cout << "angle: " << angle_deg << std::endl;
 
     return angle_rad;
 }
-
 Eigen::Vector3d geodesicextend(const Eigen::Vector3d &p,
                                const Eigen::Vector3d &q,
                                const Eigen::Vector3d &V_q,
@@ -569,17 +663,46 @@ Eigen::Vector3d geodesicextend(const Eigen::Vector3d &p,
         throw std::runtime_error("Failed to locate point2 on mesh.");
     }
     // 현재 face의 법선 벡터를 계산
-    Kernel::Vector_3 normal_vector = CGAL::Polygon_mesh_processing::compute_face_normal(face2, tmesh);
-    Eigen::Vector3d normal(normal_vector.x(), normal_vector.y(), normal_vector.z());
+
+    // current_face의 세 개의 vertex를 가져옴
+    auto vertices = CGAL::vertices_around_face(tmesh.halfedge(face2), tmesh);
+    auto v_it = vertices.begin();
+
+    Point_3 v1 = tmesh.point(*v_it++);
+    Point_3 v2 = tmesh.point(*v_it++);
+    Point_3 v3 = tmesh.point(*v_it);
+
+    // Vec3d로 변환
+    Vec3d v1_vec = CGALPointToVec3d(v1);
+    Vec3d v2_vec = CGALPointToVec3d(v2);
+    Vec3d v3_vec = CGALPointToVec3d(v3);
+
+    // computeFaceNormal을 사용하여 법선 벡터를 계산
+    Eigen::Vector3d normal = computeFaceNormal(v1_vec, v2_vec, v3_vec);
 
     if (normal.norm() == 0)
     {
         throw std::runtime_error("Invalid normal vector, cannot perform rotation.");
     }
 
-    // 회전 변환을 적용하여 새로운 벡터를 계산
-    Eigen::AngleAxisd rotation(angle, normal.normalized());
-    Eigen::Vector3d rotated_vector = rotation * V_q;
+    Eigen::Vector3d rotated_vector;
+
+    Eigen::AngleAxisd rotation(-angle, normal.normalized());
+    rotated_vector = rotation * V_q;
+    // if (angle < M_PI / 2)
+    // {
+    //     std::cout << "angle is smaller than 180" << std::endl;
+    //     // 회전 변환을 적용하여 새로운 벡터를 계산
+    //     Eigen::AngleAxisd rotation(angle, normal.normalized());
+    //     rotated_vector = rotation * V_q;
+    // }
+    // else
+    // {
+    //     std::cout << "angle is bigger than 180" << std::endl;
+    //     // 회전 변환을 적용하여 새로운 벡터를 계산
+    //     Eigen::AngleAxisd rotation(-angle, normal.normalized());
+    //     rotated_vector = rotation * V_q;
+    // }
 
     return rotated_vector;
 }
@@ -766,28 +889,6 @@ face_descriptor findNeighboringFace(
     return Triangle_mesh::null_face();
 }
 
-// 법선 벡터 계산 함수 (시계 방향 또는 시계 반대 방향)
-Eigen::Vector3d computeFaceNormal(
-    const Vec3d &v1,
-    const Vec3d &v2,
-    const Vec3d &v3,
-    bool clockwise = true) // 기본은 시계 방향(clockwise)으로 설정
-{
-    Eigen::Vector3d edge1 = Vec3dToEigen(v2) - Vec3dToEigen(v1);
-    Eigen::Vector3d edge2 = Vec3dToEigen(v3) - Vec3dToEigen(v1);
-
-    Eigen::Vector3d normal;
-    if (clockwise)
-    {
-        normal = edge1.cross(edge2); // 시계 방향일 때
-    }
-    else
-    {
-        normal = edge2.cross(edge1); // 시계 반대 방향일 때
-    }
-
-    return normal.normalized(); // 법선 벡터를 단위 벡터로 정규화
-}
 // 지오데식 이동 함수
 Eigen::Vector3d geodesicAddVector(
     const Eigen::Vector3d &p,
@@ -803,6 +904,8 @@ Eigen::Vector3d geodesicAddVector(
     double geodesic_distance;
     double distance_traveled = 0.0;
     Eigen::Vector3d start_direction;
+    double percentage_traveled;
+    Vec3d final_point;
 
     // p와 q가 동일한 경우 처리
     if (p == q)
@@ -813,8 +916,23 @@ Eigen::Vector3d geodesicAddVector(
     else
     {
         geodesicbasecalcuation(p, q, V_p, V_q, geodesic_distance, tmesh, mesh);
-        double angle = calculateAngleBetweenVectors(V_p, start_direction_p);
-        start_direction = geodesicextend(p, q, V_q, tmesh, mesh, angle);
+        std::cout << "Geodesic adding vector: p is not q" << std::endl;
+        std::cout << "p.x: " << p.x() << " p.y: " << p.y() << " p.z: " << p.z() << std::endl;
+        std::cout << "q.x: " << q.x() << " q.y: " << q.y() << " q.z: " << q.z() << std::endl;
+        std::cout << "V_p.x: " << V_p.x() << " V_p.y: " << V_p.y() << " V_p.z: " << V_p.z() << std::endl;
+        std::cout << "V_q.x: " << V_q.x() << " V_q.y: " << V_q.y() << " V_q.z: " << V_q.z() << std::endl;
+        std::cout << "Tangent vector starting from P: start_direction_p.x: " << start_direction_p.x() << " start_direction_p.y: " << start_direction_p.y() << " start_direction_p.z: " << start_direction_p.z() << std::endl;
+        double angle1 = calculateAngleBetweenVectors(start_direction_p, V_p, p, tmesh);
+        std::cout << "angle between tangent vector & V_p: angle1: " << angle1 << std::endl;
+        start_direction = geodesicextend(p, q, V_q, tmesh, mesh, angle1);
+        std::cout << "Tangent vector startng from q: start_direction.x: " << start_direction.x() << "start_direction.y: " << start_direction.y() << "start_direction.z: " << start_direction.z() << std::endl;
+        double angle2 = calculateAngleBetweenVectors(start_direction, V_p, p, tmesh);
+        std::cout << "angle between tangent vector starting from q & V_p: angle2: " << angle2 << std::endl;
+    }
+
+    if (total_distance == 0)
+    {
+        return q;
     }
 
     // current_point와 direction 설정
@@ -852,13 +970,13 @@ Eigen::Vector3d geodesicAddVector(
         Eigen::Vector3d current_normal = computeFaceNormal(v1_vec, v2_vec, v3_vec, true);
 
         // current_face의 vertex 정보 출력
-        std::cout << "Current Face Vertices:\n";
+        // std::cout << "Current Face Vertices:\n";
 
-        for (auto v : vertices)
-        {
-            auto point = tmesh.point(v);
-            std::cout << "Vertex: (" << point.x() << ", " << point.y() << ", " << point.z() << ")\n";
-        }
+        // for (auto v : vertices)
+        // {
+        //     auto point = tmesh.point(v);
+        //     std::cout << "Vertex: (" << point.x() << ", " << point.y() << ", " << point.z() << ")\n";
+        // }
 
         // // current_face의 normal 정보 출력
         // std::cout << "current Face: " << current_face_descriptor << " Current Face Normal: (" << current_normal.x() << ", " << current_normal.y() << ", " << current_normal.z() << ")\n";
@@ -880,21 +998,21 @@ Eigen::Vector3d geodesicAddVector(
         // 이전 face와 동일하면, 이웃 face를 찾아야 함
         if (new_face_descriptor == current_face_descriptor)
         {
-            std::cout << "new face is same as current_face" << std::endl;
-            // 새 face를 찾기 위해, current_point를 살짝 이동시킴
+            // std::cout << "new face is same as current_face" << std::endl;
+            //  새 face를 찾기 위해, current_point를 살짝 이동시킴
             Vec3d epsilon_vector = current_direction.normalize() * 1e-4;
             Vec3d updated_point = new_point + epsilon_vector;
             // face_descriptor new_face_descriptor;
-            std::cout << "face2_New Point: (" << updated_point.x << ", " << updated_point.y << ", " << updated_point.z << ")\n";
+            // std::cout << "face2_New Point: (" << updated_point.x << ", " << updated_point.y << ", " << updated_point.z << ")\n";
             if (!locate_face_and_point(Vec3dToCGALPoint(updated_point), new_face_descriptor, barycentric_coords, tmesh))
             {
                 std::cerr << "Failed to locate new point on mesh." << std::endl;
                 return Vec3dToEigen(updated_point);
             }
-            std::cout << "new_face_descriptor1: " << new_face_descriptor << std::endl;
+            // std::cout << "new_face_descriptor1: " << new_face_descriptor << std::endl;
         }
-        std::cout << "new_face_descriptor2: " << new_face_descriptor << std::endl;
-        // new_normal 계산 (직접 만든 함수 이용)
+        // std::cout << "new_face_descriptor2: " << new_face_descriptor << std::endl;
+        //  new_normal 계산 (직접 만든 함수 이용)
         vertices = CGAL::vertices_around_face(tmesh.halfedge(new_face_descriptor), tmesh);
         v_it = vertices.begin();
 
@@ -924,31 +1042,40 @@ Eigen::Vector3d geodesicAddVector(
         // // 업데이트된 new_point와 direction 정보 출력
         // std::cout << "New Point: (" << new_point.x << ", " << new_point.y << ", " << new_point.z << ")\n";
         // std::cout << "New Direction: (" << new_direction.x << ", " << new_direction.y << ", " << new_direction.z << ")\n";
+
+        // 만약 이동 거리가 total_distance에 도달했거나 초과했다면 종료
+        // 현재 face를 새로운 face로 업데이트
         double new_distance_traveled = sqrt((new_point.x - current_point.x) * (new_point.x - current_point.x) + (new_point.y - current_point.y) * (new_point.y - current_point.y) + (new_point.z - current_point.z) * (new_point.z - current_point.z));
-        distance_traveled += (new_distance_traveled);
+
+        if (distance_traveled + new_distance_traveled >= abs(total_distance))
+        {
+            double remaining_distance = abs(total_distance) - distance_traveled;
+            final_point = current_point + current_direction.normalize() * remaining_distance;
+
+            distance_traveled += remaining_distance;
+            percentage_traveled = (distance_traveled / abs(total_distance)) * 100.0;
+            // 퍼센트 출력
+            std::cout << "Progress: " << percentage_traveled << "%, Distance Traveled: " << distance_traveled << " / " << total_distance << "\n"
+                      << std::endl;
+            std::cout << "Adding vector done." << std::endl;
+            break;
+        }
+
+        current_face_descriptor = new_face_descriptor;
+        current_point = new_point;
+        current_direction = new_direction;
+        distance_traveled += new_distance_traveled;
 
         // 현재 이동한 퍼센트 계산
-        double percentage_traveled = (distance_traveled / total_distance) * 100.0;
+        percentage_traveled = (distance_traveled / abs(total_distance)) * 100.0;
 
         // 퍼센트 출력
         std::cout << "Progress: " << percentage_traveled << "%, Distance Traveled: " << distance_traveled << " / " << total_distance << "\n"
                   << std::endl;
-
-        // 만약 이동 거리가 total_distance에 도달했거나 초과했다면 종료
-        // 현재 face를 새로운 face로 업데이트
-        current_face_descriptor = new_face_descriptor;
-        current_point = new_point;
-        current_direction = new_direction;
-
-        if (distance_traveled >= total_distance)
-        {
-            std::cout << "Adding vector done." << std::endl;
-            break;
-        }
     }
 
     // 최종 위치 반환
-    return Vec3dToEigen(current_point);
+    return Vec3dToEigen(final_point);
 }
 
 // 두 vertex_descriptor 간의 geodesic distance를 계산하는 함수
@@ -983,20 +1110,23 @@ double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d 
     return result.first;
 }
 // Geodesic interpolation parameters를 계산하는 함수
-void updateInterpolationParameters(std::vector<double> &u_values, const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, bool chord_length = true)
+void updateInterpolationParameters(std::vector<Eigen::Vector3d> &selected_points, bool chord_length = true)
 {
-    // p(i-1)과 p(i) 사이의 geodesic distance 계산
-    double geodesic_distance = computeGeodesicDistance(p0, p1, mesh);
-
-    // 필요에 따라 geodesic distance에 제곱근을 씌움
-    if (!chord_length)
+    for (int i = 1; i < selected_points.size(); i++)
     {
-        geodesic_distance = std::sqrt(geodesic_distance);
-    }
+        double geodesic_distance = computeGeodesicDistance(selected_points[i], selected_points[i + 1], mesh);
 
-    // u_i = u_{i-1} + d(p(i-1), p(i)) 또는 u_i = u_{i-1} + sqrt(d(p(i-1), p(i)))
-    double ui = u_values.back() + geodesic_distance;
-    u_values.push_back(ui);
+        // 필요에 따라 geodesic distance에 제곱근을 씌움
+        if (!chord_length)
+        {
+            geodesic_distance = std::sqrt(geodesic_distance);
+        }
+
+        // u_i = u_{i-1} + d(p(i-1), p(i)) 또는 u_i = u_{i-1} + sqrt(d(p(i-1), p(i)))
+        double ui = u_values.back() + geodesic_distance;
+        u_values.push_back(ui);
+    }
+    // p(i-1)과 p(i) 사이의 geodesic distance 계산
 }
 
 // Geodesic subtraction of points in the geodesic domain
@@ -1026,6 +1156,8 @@ std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
     const std::vector<double> &u_values,
     const Triangle_mesh &tmesh, visualization_msgs::MarkerArray &marker_array, int &marker_id)
 {
+    int c = 0; // tension parameter
+
     std::vector<Eigen::Vector3d> tangent_vectors;
 
     // 첫 번째 점과 마지막 점의 좌표를 가져옴
@@ -1053,7 +1185,7 @@ std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
         Eigen::Vector3d p_now = selected_points[0];
         Eigen::Vector3d p_next = selected_points[selected_points.size() - 2];
 
-        Eigen::Vector3d tangent_vector = 0.5 * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
 
         tangent_vectors.push_back(tangent_vector);
 
@@ -1072,7 +1204,7 @@ std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
         Eigen::Vector3d p_now = selected_points[i];
         Eigen::Vector3d p_next = selected_points[i + 1];
 
-        Eigen::Vector3d tangent_vector = 0.5 * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / (u_values[i + 1] - u_values[i - 1]);
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / (u_values[i + 1] - u_values[i - 1]);
         tangent_vectors.push_back(tangent_vector);
 
         std::cout << "Tangent vector " << i << ": " << tangent_vector.transpose() << std::endl;
@@ -1086,7 +1218,7 @@ std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
         Eigen::Vector3d p_prev = selected_points[1];
         Eigen::Vector3d p_now = selected_points[0];
         Eigen::Vector3d p_next = selected_points[selected_points.size() - 2];
-        Eigen::Vector3d tangent_vector = 0.5 * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh, marker_array, marker_id)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
         tangent_vectors.push_back(tangent_vector);
         std::cout << "Tangent vector last: " << tangent_vector.transpose() << std::endl;
     }
@@ -1159,7 +1291,7 @@ std::vector<std::vector<Eigen::Vector3d>> computeBezierControlPoints(
 
         Eigen::Vector3d b0 = p_now;
         Eigen::Vector3d b1 = geodesicAddVector(p_prev, tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
-        Eigen::Vector3d b2 = geodesicAddVector(p_now, tangent_next, -distance * tangent_next.norm(), p_next, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
         Eigen::Vector3d b3 = p_next;
         bezier_control_points.push_back({b0, b1, b2, b3});
     }
@@ -1167,7 +1299,7 @@ std::vector<std::vector<Eigen::Vector3d>> computeBezierControlPoints(
     {
         std::cout << "First and last points are not equal, setting first control points" << std::endl;
         double distance = (u_values[1] - u_values[0]) / 3.0;
-        Eigen::Vector3d b2 = geodesicAddVector(p_now, tangent_next, -distance * tangent_next.norm(), p_next, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
         bezier_control_points.push_back({p_now, p_now, b2, p_next});
     }
 
@@ -1185,7 +1317,7 @@ std::vector<std::vector<Eigen::Vector3d>> computeBezierControlPoints(
         double distance = (u_values[i + 1] - u_values[i]) / 3.0;
         Eigen::Vector3d b0 = p_now;
         Eigen::Vector3d b1 = geodesicAddVector(p_prev, tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
-        Eigen::Vector3d b2 = geodesicAddVector(p_now, tangent_next, -distance * tangent_next.norm(), p_next, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
         Eigen::Vector3d b3 = p_next;
         bezier_control_points.push_back({b0, b1, b2, b3});
     }
@@ -1198,7 +1330,7 @@ std::vector<std::vector<Eigen::Vector3d>> computeBezierControlPoints(
         Eigen::Vector3d b0 = p_prev;
         double distance = (u_values[0] - u_values[u_values.size() - 2]) / 3.0;
         Eigen::Vector3d b1 = geodesicAddVector(p_next, tangent_prev, distance * tangent_prev.norm(), p_prev, tmesh, mesh);
-        Eigen::Vector3d b2 = geodesicAddVector(p_prev, tangent_now, -distance * tangent_now.norm(), p_now, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_prev, -tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
         Eigen::Vector3d b3 = p_now;
         bezier_control_points.push_back({b0, b1, b2, b3});
     }
@@ -1236,60 +1368,40 @@ std::vector<Eigen::Vector3d> computeGeodesicBezierCurvePoints(
 {
     std::vector<TriangleFace> mesh = convertMeshToTriangleFaces(tmesh);
     std::vector<Eigen::Vector3d> curve_points;
-    Eigen::Vector3d V_p1, V_q1;
+    Eigen::Vector3d V_b0, V_q0;
     double geodesic_distance;
     curve_points.reserve(steps + 1);
+    Eigen::Vector3d b0 = control_points[0];
+    Eigen::Vector3d b1 = control_points[1];
+    Eigen::Vector3d b2 = control_points[2];
+    Eigen::Vector3d b3 = control_points[3];
 
+    Eigen::Vector3d v01 = geodesicSubtract(b0, b1, tmesh, marker_array, marker_id);
+    Eigen::Vector3d v02 = geodesicSubtract(b0, b2, tmesh, marker_array, marker_id);
+    Eigen::Vector3d v03 = geodesicSubtract(b0, b3, tmesh, marker_array, marker_id);
     for (int i = 0; i < steps; ++i)
     {
 
-        std::cout << "now step: " << i << std::endl;
+        // std::cout << "now step: " << i+1 << std::endl;
         double t = static_cast<double>(i) / steps;
-        Eigen::Vector3d p1 = (1 - t) * (1 - t) * (1 - t) * control_points[0];
-        Eigen::Vector3d p2 = 3 * (1 - t) * (1 - t) * t * control_points[1];
-        Eigen::Vector3d p3 = 3 * (1 - t) * t * t * control_points[2];
-        Eigen::Vector3d p4 = t * t * t * control_points[3];
-        std::cout << "p1.x: " << p1.x() << "p1.y: " << p1.y() << "p1.z: " << p1.z() << std::endl;
-        std::cout << "p2.x: " << p2.x() << "p2.y: " << p2.y() << "p2.z: " << p2.z() << std::endl;
-        std::cout << "p3.x: " << p3.x() << "p3.y: " << p3.y() << "p3.z: " << p3.z() << std::endl;
-        std::cout << "p4.x: " << p4.x() << "p4.y: " << p4.y() << "p3.z: " << p3.z() << std::endl;
 
-        Eigen::Vector3d v1 = geodesicSubtract(p1, p2, tmesh, marker_array, marker_id);
-        Eigen::Vector3d v2 = geodesicSubtract(p1, p4, tmesh, marker_array, marker_id);
-        Eigen::Vector3d v3 = geodesicSubtract(p1, p3, tmesh, marker_array, marker_id);
+        // std::cout << "v01.x: " << v01.x() << "v01.y: " << v01.y() << "v01.z: " << v01.z() << std::endl;
+        // std::cout << "v02.x: " << v02.x() << "v02.y: " << v02.y() << "v02.z: " << v02.z() << std::endl;
+        // std::cout << "v03.x: " << v03.x() << "v03.y: " << v03.y() << "v03.z: " << v03.z() << std::endl;
 
-        std::cout << "v1.x: " << v1.x() << "v1.y: " << v1.y() << "v1.z: " << v1.z() << std::endl;
-        std::cout << "v2.x: " << v2.x() << "v2.y: " << v2.y() << "v2.z: " << v2.z() << std::endl;
-        std::cout << "v3.x: " << v3.x() << "v3.y: " << v3.y() << "v3.z: " << v3.z() << std::endl;
+        Eigen::Vector3d q0 = geodesicAddVector(b0, v01, 3 * (1 - t) * (1 - t) * t * v01.norm(), b0, tmesh, mesh); // b0에서 v01만큼 떨어진 점 q0
+        // std::cout << "calculating q0 done." << std::endl;
+        std::cout << "q0.x: " << q0.x() << "q0.y: " << q0.y() << "q0.z: " << q0.z() << std::endl;
 
-        double angle1 = calculateAngleBetweenVectors(v1, v2);
-
-        Eigen::Vector3d q1 = geodesicAddVector(p1, v1, v1.norm(), p1, tmesh, mesh); // p1에서 v1만큼 떨어진 점 q1
-        std::cout << "calculating q1 done." << std::endl;
+        Eigen::Vector3d q1 = geodesicAddVector(b0, v02, 3 * (1 - t) * t * t * v02.norm(), q0, tmesh, mesh); // q0에서 v02만큼 떨어진 점 q1
+        // std::cout << "calculating q1 done." << std::endl;
         std::cout << "q1.x: " << q1.x() << "q1.y: " << q1.y() << "q1.z: " << q1.z() << std::endl;
 
-        geodesicbasecalcuation(p1, q1, V_p1, V_q1, geodesic_distance, tmesh, mesh);
-        Eigen::Vector3d v2_q1 = v2.norm() * geodesicextend(p1, q1, V_q1, tmesh, mesh, angle1); // q1에서의 v2벡터
-        std::cout << "calculating v2_q1 done." << std::endl;
-        std::cout << "v2_q1.x: " << v2_q1.x() << "v2_q1.y: " << v2_q1.y() << "v2_q1.z: " << v2_q1.z() << std::endl;
-
-        double angle2 = calculateAngleBetweenVectors(v1, v3);
-        Eigen::Vector3d v3_q1 = v3.norm() * geodesicextend(p1, q1, V_q1, tmesh, mesh, angle2); // q1에서의 v3벡터
-        std::cout << "calculating v3_q1 done." << std::endl;
-        std::cout << "v3_q1.x: " << v3_q1.x() << "v3_q1.y: " << v3_q1.y() << "v3_q1.z: " << v3_q1.z() << std::endl;
-
-        double angle3 = calculateAngleBetweenVectors(v2_q1, v3_q1);                       // q1에서의 v2벡터와 v3벡터 사이의 각도
-        Eigen::Vector3d q2 = geodesicAddVector(q1, v2_q1, v2_q1.norm(), q1, tmesh, mesh); // q1 + q1에서의 v2벡터 = q2
-        std::cout << "calculating q2 done." << std::endl;
+        Eigen::Vector3d q2 = geodesicAddVector(b0, v03, t * t * t * v03.norm(), q1, tmesh, mesh); // q1에서 v03만큼 떨어진 점 q2
+        // std::cout << "calculating q2 done." << std::endl;
         std::cout << "q2.x: " << q2.x() << "q2.y: " << q2.y() << "q2.z: " << q2.z() << std::endl;
 
-        Eigen::Vector3d v3_q2 = v3_q1.norm() * geodesicextend(q1, q2, v3_q1, tmesh, mesh, angle3); // q2에서의 v3벡터
-        std::cout << "calculating v3_q2 done." << std::endl;
-        std::cout << "v3_q2.x: " << v3_q2.x() << "v3_q2.y: " << v3_q2.y() << "v3_q2.z: " << v3_q2.z() << std::endl;
-
-        Eigen::Vector3d point = v3_q2;
-
-        curve_points.push_back(point);
+        curve_points.push_back(q2);
         std::cout << "curve_points[" << i << "]: " << curve_points[i].x() << "|" << curve_points[i].y() << "|" << curve_points[i].z() << std::endl;
     }
 
@@ -1395,8 +1507,15 @@ void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
     // 투영된 점을 사용하여 처리
     clicked_points.push_back(msg->point);             // 원본 clicked_point를 유지
     selected_points.push_back(projected_point_eigen); // Mesh 위의 점을 저장
+}
 
-    new_waypoints = true; // 새로운 waypoint가 추가될 때 플래그를 true로 설정
+void keyboardCallback(const std_msgs::String::ConstPtr &msg)
+{
+    if (msg->data == "path_generating_start")
+    {
+        start_path_generating = true;
+        ROS_INFO("Received start command, initiating planning.");
+    }
 }
 int main(int argc, char **argv)
 {
@@ -1406,6 +1525,7 @@ int main(int argc, char **argv)
     // Marker를 publish할 publisher 생성
     marker_pub2 = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array_hermite", 10);
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
+    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback); // "moveit_command" 구독 추가
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
     int marker_id = 0;
     std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
@@ -1421,14 +1541,14 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         ros::spinOnce();
-        if (new_waypoints)
+        if (start_path_generating)
         {
             visualization_msgs::MarkerArray marker_array; // 모든 마커들을 담을 MarkerArray 생성
 
             // u_values 업데이트
-            if (selected_points.size() > 1)
+            if (selected_points.size() > 2)
             {
-                updateInterpolationParameters(u_values, selected_points[selected_points.size() - 2], selected_points[-1], true);
+                updateInterpolationParameters(selected_points, true);
             }
             if (selected_points.size() > 2 && u_values.size() > 2)
             {
@@ -1462,11 +1582,12 @@ int main(int argc, char **argv)
 
                 // Hermite 스플라인을 Bernstein 형식으로 계산
 
-                generate_Hermite_Spline_path(bezier_control_points, 3, marker_array, 1);
+                generate_Hermite_Spline_path(bezier_control_points, 10, marker_array, 1);
                 marker_pub2.publish(marker_array);
+                waypoints_pub.publish(waypoints_msg); // 경로 생성 후 퍼블리시
             }
-            waypoints_pub.publish(waypoints_msg); // 경로 생성 후 퍼블리시
-            new_waypoints = false;                // 플래그 초기화
+
+            start_path_generating = false; // 플래그 초기화
         }
 
         r.sleep();
