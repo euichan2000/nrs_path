@@ -19,12 +19,12 @@ add_custom_target(nrs_vision_rviz_generate_messages ALL)
 
 get_filename_component(_filename "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg" NAME_WE)
 add_custom_target(_nrs_vision_rviz_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg" "geometry_msgs/Point:geometry_msgs/Vector3"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg" "geometry_msgs/Vector3:geometry_msgs/Point"
 )
 
 get_filename_component(_filename "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" NAME_WE)
 add_custom_target(_nrs_vision_rviz_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" "nrs_vision_rviz/Waypoint:geometry_msgs/Point:geometry_msgs/Vector3"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" "geometry_msgs/Vector3:geometry_msgs/Point:nrs_vision_rviz/Waypoint"
 )
 
 #
@@ -36,13 +36,13 @@ add_custom_target(_nrs_vision_rviz_generate_messages_check_deps_${_filename}
 _generate_msg_cpp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/nrs_vision_rviz
 )
 _generate_msg_cpp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -77,13 +77,13 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS nrs_vision_rviz_generate_messages_c
 _generate_msg_eus(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/nrs_vision_rviz
 )
 _generate_msg_eus(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -118,13 +118,13 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS nrs_vision_rviz_generate_messages_e
 _generate_msg_lisp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/nrs_vision_rviz
 )
 _generate_msg_lisp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -159,13 +159,13 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS nrs_vision_rviz_generate_messages_l
 _generate_msg_nodejs(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/nrs_vision_rviz
 )
 _generate_msg_nodejs(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -200,13 +200,13 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS nrs_vision_rviz_generate_messages_n
 _generate_msg_py(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/nrs_vision_rviz
 )
 _generate_msg_py(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/nrs_vision_rviz
 )
 

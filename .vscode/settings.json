@@ -70,7 +70,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "bit": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "dense": "cpp"
     },
 
 }

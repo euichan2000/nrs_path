@@ -372,6 +372,7 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/tf_generate_messages_lisp.dir/DependInfo.cmake"
   "CMakeFiles/tf_generate_messages_cpp.dir/DependInfo.cmake"
   "CMakeFiles/tf2_msgs_generate_messages_lisp.dir/DependInfo.cmake"
+  "CMakeFiles/waypoints_interpolator.dir/DependInfo.cmake"
   "CMakeFiles/dynamic_reconfigure_gencfg.dir/DependInfo.cmake"
   "CMakeFiles/tf2_msgs_generate_messages_py.dir/DependInfo.cmake"
   "CMakeFiles/dynamic_reconfigure_generate_messages_nodejs.dir/DependInfo.cmake"

@@ -21,6 +21,7 @@
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/tf_generate_messages_lisp.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/tf_generate_messages_cpp.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/tf2_msgs_generate_messages_lisp.dir
+/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/waypoints_interpolator.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/dynamic_reconfigure_gencfg.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/tf2_msgs_generate_messages_py.dir
 /home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles/dynamic_reconfigure_generate_messages_nodejs.dir

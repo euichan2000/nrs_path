@@ -36,7 +36,7 @@ std::vector<geometry_msgs::Point> extractEdgesFromMesh(const Triangle_mesh& mesh
 // 메쉬의 엣지를 Rviz에서 시각화하는 함수
 void visualizeMeshEdges(ros::Publisher& marker_pub, const std::vector<geometry_msgs::Point>& edges) {
     visualization_msgs::Marker edge_marker;
-    edge_marker.header.frame_id = "base_link";  // 변경 가능
+    edge_marker.header.frame_id = "workpiece";  // 변경 가능
     edge_marker.header.stamp = ros::Time::now();
     edge_marker.ns = "mesh_edges";
     edge_marker.id = 0;

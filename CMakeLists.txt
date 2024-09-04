@@ -8,6 +8,9 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   visualization_msgs
   moveit_ros_planning_interface
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 find_package(CGAL REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -56,7 +59,7 @@ target_link_libraries(path_generator ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGA
 
 add_executable(geodesic_hermite_path_generator src/geodesic_hermite_path_generator.cpp)
 add_dependencies(geodesic_hermite_path_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(geodesic_hermite_path_generator ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGAL_LIBRARIES})
+target_link_libraries(geodesic_hermite_path_generator ${catkin_LIBRARIES}  ${CGAL_LIBRARIES})
 
 add_executable(path_visualizer src/path_visualizer.cpp)
 add_dependencies(path_visualizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -66,3 +69,6 @@ add_executable(moveit_planner src/moveit_planner.cpp)
 add_dependencies(moveit_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(moveit_planner ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(waypoints_interpolator src/waypoints_interpolator.cpp)
+add_dependencies(waypoints_interpolator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(waypoints_interpolator ${catkin_LIBRARIES} ${CGAL_LIBRARIES})

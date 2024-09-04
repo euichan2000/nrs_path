@@ -415,6 +415,19 @@ tf2_msgs_generate_messages_lisp/fast:
 .PHONY : tf2_msgs_generate_messages_lisp/fast
 
 #=============================================================================
+# Target rules for targets named waypoints_interpolator
+
+# Build rule for target.
+waypoints_interpolator: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 waypoints_interpolator
+.PHONY : waypoints_interpolator
+
+# fast build rule for target.
+waypoints_interpolator/fast:
+	$(MAKE) -f CMakeFiles/waypoints_interpolator.dir/build.make CMakeFiles/waypoints_interpolator.dir/build
+.PHONY : waypoints_interpolator/fast
+
+#=============================================================================
 # Target rules for targets named dynamic_reconfigure_gencfg
 
 # Build rule for target.
@@ -1877,6 +1890,33 @@ src/visualize_mesh.cpp.s:
 	$(MAKE) -f CMakeFiles/visualize_mesh.dir/build.make CMakeFiles/visualize_mesh.dir/src/visualize_mesh.cpp.s
 .PHONY : src/visualize_mesh.cpp.s
 
+src/waypoints_interpolator.o: src/waypoints_interpolator.cpp.o
+
+.PHONY : src/waypoints_interpolator.o
+
+# target to build an object file
+src/waypoints_interpolator.cpp.o:
+	$(MAKE) -f CMakeFiles/waypoints_interpolator.dir/build.make CMakeFiles/waypoints_interpolator.dir/src/waypoints_interpolator.cpp.o
+.PHONY : src/waypoints_interpolator.cpp.o
+
+src/waypoints_interpolator.i: src/waypoints_interpolator.cpp.i
+
+.PHONY : src/waypoints_interpolator.i
+
+# target to preprocess a source file
+src/waypoints_interpolator.cpp.i:
+	$(MAKE) -f CMakeFiles/waypoints_interpolator.dir/build.make CMakeFiles/waypoints_interpolator.dir/src/waypoints_interpolator.cpp.i
+.PHONY : src/waypoints_interpolator.cpp.i
+
+src/waypoints_interpolator.s: src/waypoints_interpolator.cpp.s
+
+.PHONY : src/waypoints_interpolator.s
+
+# target to generate assembly for a file
+src/waypoints_interpolator.cpp.s:
+	$(MAKE) -f CMakeFiles/waypoints_interpolator.dir/build.make CMakeFiles/waypoints_interpolator.dir/src/waypoints_interpolator.cpp.s
+.PHONY : src/waypoints_interpolator.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1906,6 +1946,7 @@ help:
 	@echo "... tf_generate_messages_lisp"
 	@echo "... tf_generate_messages_cpp"
 	@echo "... tf2_msgs_generate_messages_lisp"
+	@echo "... waypoints_interpolator"
 	@echo "... dynamic_reconfigure_gencfg"
 	@echo "... tf2_msgs_generate_messages_py"
 	@echo "... dynamic_reconfigure_generate_messages_nodejs"
@@ -2028,6 +2069,9 @@ help:
 	@echo "... src/visualize_mesh.o"
 	@echo "... src/visualize_mesh.i"
 	@echo "... src/visualize_mesh.s"
+	@echo "... src/waypoints_interpolator.o"
+	@echo "... src/waypoints_interpolator.i"
+	@echo "... src/waypoints_interpolator.s"
 .PHONY : help
 
 

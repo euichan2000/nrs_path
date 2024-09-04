@@ -19,7 +19,7 @@ void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::str
     path_marker.type = visualization_msgs::Marker::LINE_STRIP;
     path_marker.action = visualization_msgs::Marker::ADD;
     path_marker.pose.orientation.w = 1.0;
-    path_marker.scale.x = 0.005;
+    path_marker.scale.x = 0.003;
     path_marker.color.r = r;
     path_marker.color.g = g;
     path_marker.color.b = b;
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-    ros::Subscriber waypoints_sub = nh.subscribe("waypoints_with_normals", 10, waypointsCallback);
+    ros::Subscriber waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, waypointsCallback);
     
     ros::spin();
     return 0;

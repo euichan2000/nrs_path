@@ -1,8 +1,12 @@
 // path_generator.cpp
 
 #include <ros/ros.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
+#include <visualization_msgs/Marker.h>
 #include <nrs_vision_rviz/Waypoints.h>
+#include <visualization_msgs/MarkerArray.h>
+
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/ScopedState.h>
@@ -11,19 +15,21 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/PathSimplifier.h>
 #include <ompl/util/Console.h>
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Surface_mesh_shortest_path.h>
 #include <CGAL/Polygon_mesh_processing/locate.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/IO/STL_reader.h>
+
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <fstream>
 #include <iterator>
 #include <std_msgs/String.h>
-#include <visualization_msgs/Marker.h>
-#include <geometry_msgs/Point.h>
+#include <Eigen/Dense>
+#include <limits>
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -44,12 +50,22 @@ namespace og = ompl::geometric;
 ros::Publisher waypoints_pub;
 ros::Publisher marker_pub;
 
-std::vector<geometry_msgs::Point> clicked_points;
 Triangle_mesh tmesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
 nrs_vision_rviz::Waypoints waypoints_msg;
+
+std::vector<geometry_msgs::Point> clicked_points;
+std::vector<Eigen::Vector3d> selected_points; // Projected [clicked_points] onto Mesh surface
+std::vector<double> u_values = {0.0};         // Interpolation Paramter array. U0=0
+std::vector<Eigen::Vector3d> tangent_vectors; // Tangent Vectors array
+std::vector<std::vector<Eigen::Vector3d>> bezier_control_points;
+int steps = 5;
+
 bool new_waypoints = false;
+bool start_path_generating = false; // keyboard publisher order to start
+bool use_straight = false;
+bool use_spline = false;
 
 class ValidityChecker : public ob::StateValidityChecker
 {
@@ -60,6 +76,74 @@ public:
         return true;
     }
 };
+
+// Structure for basic calculation of Triangle vertices
+struct Vec3d
+{
+    double x, y, z;
+
+    Vec3d() : x(0), y(0), z(0) {}
+
+    Vec3d(double x, double y, double z) : x(x), y(y), z(z) {}
+    Vec3d operator-(const Vec3d &other) const
+    {
+        return {x - other.x, y - other.y, z - other.z};
+    }
+
+    Vec3d operator+(const Vec3d &other) const
+    {
+        return {x + other.x, y + other.y, z + other.z};
+    }
+
+    Vec3d operator*(double scalar) const
+    {
+        return {x * scalar, y * scalar, z * scalar};
+    }
+
+    Vec3d cross(const Vec3d &other) const
+    {
+        return {
+            y * other.z - z * other.y,
+            z * other.x - x * other.z,
+            x * other.y - y * other.x};
+    }
+
+    double dot(const Vec3d &other) const
+    {
+        return x * other.x + y * other.y + z * other.z;
+    }
+
+    double length() const
+    {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+
+    Vec3d normalize() const
+    {
+        double len = length();
+        if (len > 0)
+        {
+            return {x / len, y / len, z / len};
+        }
+        return {0, 0, 0};
+    }
+};
+
+// double * Vec3d
+Vec3d operator*(double scalar, const Vec3d &vec)
+{
+    return {scalar * vec.x, scalar * vec.y, scalar * vec.z};
+}
+
+// Triangle bertices & Normal
+struct TriangleFace
+{
+    Vec3d vertices[3];
+    Vec3d normal;
+    const TriangleFace *neighbors[3];
+};
+
+/*
 void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
 {
     visualization_msgs::Marker path_marker;
@@ -83,53 +167,7 @@ void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::str
 
     marker_pub.publish(path_marker);
 }
-
-void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
-{
-    clicked_points.push_back(msg->point);
-    new_waypoints = true; // 새로운 waypoint가 추가될 때 플래그를 true로 설정
-}
-
-bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
-{
-    std::vector<Kernel::Point_3> points;
-    std::vector<std::array<std::size_t, 3>> triangles;
-    if (!CGAL::read_STL(input, points, triangles))
-    {
-        ROS_ERROR("Failed to read STL file.");
-        return false;
-    }
-
-    std::map<std::size_t, vertex_descriptor> index_to_vertex;
-    for (std::size_t i = 0; i < points.size(); ++i)
-    {
-        index_to_vertex[i] = mesh.add_vertex(points[i]);
-    }
-
-    for (const auto &t : triangles)
-    {
-        mesh.add_face(index_to_vertex[t[0]], index_to_vertex[t[1]], index_to_vertex[t[2]]);
-    }
-    ROS_INFO("Successfully read STL file.");
-    return true;
-}
-
-bool locate_face_and_point(const Point_3 &point, face_descriptor &face, Surface_mesh_shortest_path::Barycentric_coordinates &location)
-{
-    if (tmesh.faces().empty())
-    {
-        ROS_ERROR("Mesh is empty, cannot build AABB tree.");
-        return false;
-    }
-
-    Tree tree(tmesh.faces().begin(), tmesh.faces().end(), tmesh);
-    tree.build();
-
-    auto result = CGAL::Polygon_mesh_processing::locate_with_AABB_tree(point, tree, tmesh);
-    face = result.first;
-    location = result.second;
-    return true;
-}
+*/
 
 std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geometry_msgs::Point> &points)
 {
@@ -137,37 +175,6 @@ std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geomet
 
     for (const auto &point : points)
     {
-        // Point_3 query(point.x, point.y, point.z);
-
-        // // 해당 포인트에 가장 가까운 face와 위치를 찾습니다.
-        // face_descriptor face;
-        // Surface_mesh_shortest_path::Barycentric_coordinates location;
-        // if (!locate_face_and_point(query, face, location))
-        // {
-        //     ROS_ERROR("Failed to locate face and point");
-        //     continue;
-        // }
-        // // face의 normal vector를 계산합니다.
-        // Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
-
-        // // normal vector 방향으로 포인트를 살짝 이동시킵니다.
-        // double offset = 0.1; // 이동할 거리
-        // Point_3 offset_point = query + normal * offset;
-
-        // geometry_msgs::Point off_point;
-        // off_point.x = offset_point.x();
-        // off_point.y = offset_point.y();
-        // off_point.z = offset_point.z();
-        // offset_points.push_back(off_point);
-
-        // // mesh 표면에 가장 가까운 점을 찾습니다.
-        // auto closest_point = tree->closest_point(offset_point);
-
-        // geometry_msgs::Point ros_point;
-        // ros_point.x = closest_point.x();
-        // ros_point.y = closest_point.y();
-        // ros_point.z = closest_point.z();
-
         Point_3 query(point.x, point.y, point.z + 0.05);
         auto closest_point = tree->closest_point(query);
 
@@ -185,13 +192,88 @@ std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geomet
         projected_points.push_back(ros_point);
     }
     // offset_point와 projected_point를 시각화합니다.
-    visualizePath(offset_points, "offset_B_spline_path", 1, 0.0, 0.0, 1.0, 1.0);
-    visualizePath(projected_points, "projected_B_spline_path", 1, 1.0, 0.0, 0.0, 1.0);
+    // visualizePath(offset_points, "offset_B_spline_path", 1, 0.0, 0.0, 1.0, 1.0);
+    // visualizePath(projected_points, "projected_B_spline_path", 1, 1.0, 0.0, 0.0, 1.0);
 
     return projected_points;
 }
 
-std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points)
+/*----------------------------------------------------------------------*/
+
+// Vec3d to Eigen::Vector3d
+Vec3d EigenToVec3d(const Eigen::Vector3d &eigen_vec)
+{
+    return {eigen_vec.x(), eigen_vec.y(), eigen_vec.z()};
+}
+
+// Eigen::Vector3d to Vec3d
+Eigen::Vector3d Vec3dToEigen(const Vec3d &vec)
+{
+    return Eigen::Vector3d(vec.x, vec.y, vec.z);
+}
+
+// Kernel::Point_3 to Vec3d
+Vec3d CGALPointToVec3d(const Point_3 &p)
+{
+    return Vec3d(p.x(), p.y(), p.z());
+}
+
+// Vec3d to Kernel::Point_3
+Point_3 Vec3dToCGALPoint(const Vec3d &v)
+{
+    return Point_3(v.x, v.y, v.z);
+}
+
+// tranform triangle to basic calculation
+std::vector<TriangleFace> convertMeshToTriangleFaces(const Triangle_mesh &tmesh)
+{
+    std::vector<TriangleFace> triangle_faces;
+
+    for (auto face : tmesh.faces())
+    {
+        TriangleFace triangle;
+
+        int i = 0;
+        for (auto vertex : vertices_around_face(tmesh.halfedge(face), tmesh))
+        {
+            Kernel::Point_3 p = tmesh.point(vertex);
+            triangle.vertices[i] = EigenToVec3d(Eigen::Vector3d(p.x(), p.y(), p.z()));
+            i++;
+        }
+
+        triangle_faces.push_back(triangle);
+    }
+
+    return triangle_faces;
+}
+
+// Find closest [face and barycentric coordinate on Mesh] with points
+bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, Surface_mesh_shortest_path::Barycentric_coordinates &location, const Triangle_mesh &tmesh)
+{
+    if (tmesh.faces().empty())
+    {
+        std::cerr << "Mesh is empty, cannot build AABB tree." << std::endl;
+        return false;
+    }
+
+    Tree tree(tmesh.faces().begin(), tmesh.faces().end(), tmesh);
+    tree.build();
+
+    auto result = CGAL::Polygon_mesh_processing::locate_with_AABB_tree(point, tree, tmesh);
+    face = result.first;
+    location = result.second;
+
+    if (face == Triangle_mesh::null_face())
+    {
+        std::cerr << "Failed to locate face for point: " << point << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+// points to waypoints to publish
+std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh tmesh)
 {
     std::vector<nrs_vision_rviz::Waypoint> waypoints;
 
@@ -201,9 +283,9 @@ std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geom
         face_descriptor face;
         Surface_mesh_shortest_path::Barycentric_coordinates location;
 
-        if (!locate_face_and_point(cgal_point, face, location))
+        if (!locate_face_and_point(cgal_point, face, location, tmesh))
         {
-            ROS_ERROR("Failed to locate face and point");
+            ROS_ERROR("Failed to locate face and point for point: [%f, %f, %f]", point.x, point.y, point.z);
             continue;
         }
 
@@ -224,7 +306,698 @@ std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geom
     return waypoints;
 }
 
-void generate_Geodesic_Path(const std::vector<geometry_msgs::Point> &points)
+// Vector Rotation using now face & new face's normal
+Vec3d rotateVectorToNewNormal(
+    Vec3d &vec,
+    const Eigen::Vector3d &old_normal,
+    const Eigen::Vector3d &new_normal)
+{
+    Eigen::Vector3d v = Vec3dToEigen(vec);
+    Eigen::Vector3d rotation_axis = old_normal.cross(new_normal);
+    double angle = acos(old_normal.dot(new_normal) / (old_normal.norm() * new_normal.norm()));
+
+    if (rotation_axis.norm() < 1e-6 || std::isnan(angle))
+    {
+
+        Vec3d v2 = EigenToVec3d(v);
+        return v2;
+    }
+
+    Eigen::AngleAxisd rotation(angle, rotation_axis.normalized());
+    Eigen::Vector3d rotated_vec = rotation * v;
+    rotated_vec = rotated_vec.normalized();
+    Vec3d rotated_vec2 = EigenToVec3d(rotated_vec);
+
+    return rotated_vec2;
+}
+
+// calculate basic informations between P & Q ->Geodesic distance, V_p, V_q
+void geodesicbasecalcuation(const Eigen::Vector3d &p, const Eigen::Vector3d &q, Eigen::Vector3d &V_p, Eigen::Vector3d &V_q, double &geodesic_distance, const Triangle_mesh &tmesh,
+                            const std::vector<TriangleFace> &mesh)
+{
+    Kernel::Point_3 point1(p.x(), p.y(), p.z());
+    Kernel::Point_3 point2(q.x(), q.y(), q.z());
+
+    face_descriptor face1, face2;
+    Surface_mesh_shortest_path::Barycentric_coordinates location1, location2;
+
+    if (!locate_face_and_point(point1, face1, location1, tmesh))
+    {
+        throw std::runtime_error("Failed to locate point1 on mesh.");
+    }
+    if (!locate_face_and_point(point2, face2, location2, tmesh))
+    {
+        throw std::runtime_error("Failed to locate point2 on mesh.");
+    }
+
+    if (face1 != face2)
+    {
+
+        Surface_mesh_shortest_path shortest_paths(tmesh);
+        shortest_paths.add_source_point(face2, location2);
+
+        std::vector<Surface_mesh_shortest_path::Point_3> path_points;
+        shortest_paths.shortest_path_points_to_source_points(face1, location1, std::back_inserter(path_points));
+
+        std::pair<double, Surface_mesh_shortest_path::Source_point_iterator> result = shortest_paths.shortest_distance_to_source_points(face1, location1);
+        geodesic_distance = result.first;
+
+        if (path_points.size() < 2)
+        {
+            throw std::runtime_error("Geodesic path does not contain enough points.");
+        }
+
+        auto halfedge1 = tmesh.halfedge(face1);
+        Kernel::Point_3 vp0 = tmesh.point(tmesh.source(halfedge1));
+        Kernel::Point_3 vp1 = tmesh.point(tmesh.target(halfedge1));
+        Kernel::Point_3 vp2 = tmesh.point(tmesh.target(tmesh.next(halfedge1)));
+
+        auto halfedge2 = tmesh.halfedge(face2);
+        Kernel::Point_3 vq0 = tmesh.point(tmesh.source(halfedge2));
+        Kernel::Point_3 vq1 = tmesh.point(tmesh.target(halfedge2));
+        Kernel::Point_3 vq2 = tmesh.point(tmesh.target(tmesh.next(halfedge2)));
+
+        Eigen::Vector3d point_p1(path_points[1].x(), path_points[1].y(), path_points[1].z());
+
+        double epsilon = 1e-6;
+
+        Eigen::Vector3d last_point(path_points[path_points.size() - 1].x(), path_points[path_points.size() - 1].y(), path_points[path_points.size() - 1].z());
+        Eigen::Vector3d second_last_point(path_points[path_points.size() - 2].x(), path_points[path_points.size() - 2].y(), path_points[path_points.size() - 2].z());
+
+        if ((last_point - second_last_point).norm() < epsilon)
+        {
+
+            Eigen::Vector3d point_q0(path_points[path_points.size() - 3].x(), path_points[path_points.size() - 3].y(), path_points[path_points.size() - 3].z());
+
+            V_q = q - point_q0;
+        }
+        else
+        {
+
+            Eigen::Vector3d point_q0(path_points[path_points.size() - 2].x(), path_points[path_points.size() - 2].y(), path_points[path_points.size() - 2].z());
+
+            V_q = q - point_q0;
+        }
+
+        V_p = point_p1 - p;
+
+        V_p.normalize();
+        V_q.normalize();
+    }
+    else
+    {
+
+        V_p = q - p;
+        V_q = q - p;
+        V_p.normalize();
+        V_q.normalize();
+        geodesic_distance = V_p.norm();
+    }
+}
+
+// Calculate Face normal vector
+Eigen::Vector3d computeFaceNormal(
+    const Vec3d &v1,
+    const Vec3d &v2,
+    const Vec3d &v3,
+    bool clockwise = true)
+{
+    Eigen::Vector3d edge1 = Vec3dToEigen(v2) - Vec3dToEigen(v1);
+    Eigen::Vector3d edge2 = Vec3dToEigen(v3) - Vec3dToEigen(v1);
+
+    Eigen::Vector3d normal;
+    if (clockwise)
+    {
+        normal = edge1.cross(edge2);
+    }
+    else
+    {
+        normal = edge2.cross(edge1);
+    }
+
+    return normal.normalized();
+}
+
+// calculate angle between two vectors
+double calculateAngleBetweenVectors(const Eigen::Vector3d &vec1, const Eigen::Vector3d &vec2, const Eigen::Vector3d &p, const Triangle_mesh &tmesh)
+{
+
+    face_descriptor face_desc;
+    Surface_mesh_shortest_path::Barycentric_coordinates bary_coords;
+
+    if (!locate_face_and_point(Vec3dToCGALPoint(Vec3d(p.x(), p.y(), p.z())), face_desc, bary_coords, tmesh))
+    {
+        std::cerr << "Error: Failed to locate the face for the point." << std::endl;
+        return 0.0;
+    }
+
+    auto vertices = CGAL::vertices_around_face(tmesh.halfedge(face_desc), tmesh);
+    auto v_it = vertices.begin();
+
+    Vec3d v1 = CGALPointToVec3d(tmesh.point(*v_it++));
+    Vec3d v2 = CGALPointToVec3d(tmesh.point(*v_it++));
+    Vec3d v3 = CGALPointToVec3d(tmesh.point(*v_it));
+
+    Eigen::Vector3d face_normal = computeFaceNormal(v1, v2, v3);
+
+    double dot_product = vec1.dot(vec2);
+
+    double magnitude_vec1 = vec1.norm();
+    double magnitude_vec2 = vec2.norm();
+
+    if (magnitude_vec1 == 0 || magnitude_vec2 == 0)
+    {
+        std::cerr << "Error: One of the vectors has zero length, cannot compute angle." << std::endl;
+        return 0.0;
+    }
+
+    double cos_theta = dot_product / (magnitude_vec1 * magnitude_vec2);
+
+    cos_theta = std::max(-1.0, std::min(1.0, cos_theta));
+
+    double angle_rad = acos(cos_theta);
+
+    Eigen::Vector3d cross_product = vec1.cross(vec2);
+
+    double direction = cross_product.dot(face_normal);
+
+    if (direction < 0)
+    {
+        angle_rad = -angle_rad;
+    }
+
+    double angle_deg = angle_rad * (180.0 / M_PI);
+
+    return angle_rad;
+}
+
+// find vector V_q has same angle with [V_p betwwen V_pq] at Q.
+Eigen::Vector3d geodesicextend(const Eigen::Vector3d &p,
+                               const Eigen::Vector3d &q,
+                               const Eigen::Vector3d &V_q,
+                               const Triangle_mesh &tmesh, const std::vector<TriangleFace> &mesh, double angle)
+{
+    Kernel::Point_3 point1(p.x(), p.y(), p.z());
+    Kernel::Point_3 point2(q.x(), q.y(), q.z());
+
+    face_descriptor face1, face2;
+    Surface_mesh_shortest_path::Barycentric_coordinates location1, location2;
+
+    if (!locate_face_and_point(point1, face1, location1, tmesh))
+    {
+        throw std::runtime_error("Failed to locate point1 on mesh.");
+    }
+    if (!locate_face_and_point(point2, face2, location2, tmesh))
+    {
+        throw std::runtime_error("Failed to locate point2 on mesh.");
+    }
+
+    auto vertices = CGAL::vertices_around_face(tmesh.halfedge(face2), tmesh);
+    auto v_it = vertices.begin();
+
+    Point_3 v1 = tmesh.point(*v_it++);
+    Point_3 v2 = tmesh.point(*v_it++);
+    Point_3 v3 = tmesh.point(*v_it);
+
+    Vec3d v1_vec = CGALPointToVec3d(v1);
+    Vec3d v2_vec = CGALPointToVec3d(v2);
+    Vec3d v3_vec = CGALPointToVec3d(v3);
+
+    Eigen::Vector3d normal = computeFaceNormal(v1_vec, v2_vec, v3_vec);
+
+    if (normal.norm() == 0)
+    {
+        throw std::runtime_error("Invalid normal vector, cannot perform rotation.");
+    }
+
+    Eigen::Vector3d rotated_vector;
+
+    Eigen::AngleAxisd rotation(-angle, normal.normalized());
+    rotated_vector = rotation * V_q;
+
+    return rotated_vector;
+}
+
+// project P to face and find next point(intersect with face edge)
+std::tuple<Vec3d, Vec3d> project_and_find_intersection(
+    const Vec3d &current_point,
+    const Vec3d &current_direction, double &distance_traveled,
+    const Triangle_mesh &tmesh,
+    const std::vector<TriangleFace> &mesh)
+{
+    face_descriptor current_face_descriptor;
+    Surface_mesh_shortest_path::Barycentric_coordinates barycentric_coords;
+
+    Vec3d epsilon_vector = current_direction.normalize() * 1e-4;
+    Vec3d updated_point = current_point + epsilon_vector;
+
+    locate_face_and_point(Vec3dToCGALPoint(updated_point), current_face_descriptor, barycentric_coords, tmesh);
+
+    auto vertices = CGAL::vertices_around_face(tmesh.halfedge(current_face_descriptor), tmesh);
+    auto v_it = vertices.begin();
+
+    Point_3 v1 = tmesh.point(*v_it++);
+    Point_3 v2 = tmesh.point(*v_it++);
+    Point_3 v3 = tmesh.point(*v_it);
+
+    Vec3d v1_vec = CGALPointToVec3d(v1);
+    Vec3d v2_vec = CGALPointToVec3d(v2);
+    Vec3d v3_vec = CGALPointToVec3d(v3);
+
+    Vec3d projected_point = current_point;
+    Vec3d projected_direction = current_direction.normalize();
+
+    Eigen::Matrix2d T;
+    T << (v2_vec - v1_vec).x, (v3_vec - v1_vec).x,
+        (v2_vec - v1_vec).y, (v3_vec - v1_vec).y;
+
+    Eigen::Vector2d bary_p0 = T.inverse() * Eigen::Vector2d(projected_point.x - v1_vec.x, projected_point.y - v1_vec.y);
+    Eigen::Vector2d bary_direction = T.inverse() * Eigen::Vector2d(projected_direction.x, projected_direction.y);
+
+    double t_intersect = std::numeric_limits<double>::max();
+    Eigen::Vector2d bary_intersection;
+
+    if (bary_direction.x() != 0)
+    {
+        double t1 = -bary_p0.x() / bary_direction.x();
+        Eigen::Vector2d bary1 = bary_p0 + t1 * bary_direction;
+        if (t1 >= 0 && t1 < t_intersect && bary1.y() >= 0 && bary1.y() <= 1)
+        {
+            t_intersect = t1;
+            bary_intersection = bary1;
+        }
+    }
+
+    if (bary_direction.y() != 0)
+    {
+        double t2 = -bary_p0.y() / bary_direction.y();
+        Eigen::Vector2d bary2 = bary_p0 + t2 * bary_direction;
+        if (t2 >= 0 && t2 < t_intersect && bary2.x() >= 0 && bary2.x() <= 1)
+        {
+            t_intersect = t2;
+            bary_intersection = bary2;
+        }
+    }
+
+    double denom = bary_direction.x() + bary_direction.y();
+    if (denom != 0)
+    {
+        double t3 = (1 - bary_p0.x() - bary_p0.y()) / denom;
+        Eigen::Vector2d bary3 = bary_p0 + t3 * bary_direction;
+        if (t3 >= 0 && t3 < t_intersect && bary3.x() >= 0 && bary3.y() >= 0)
+        {
+            t_intersect = t3;
+            bary_intersection = bary3;
+        }
+    }
+
+    Vec3d final_point = v1_vec + bary_intersection.x() * (v2_vec - v1_vec) + bary_intersection.y() * (v3_vec - v1_vec);
+
+    Vec3d new_direction = (final_point - current_point).normalize();
+
+    const double epsilon = 1e-6;
+
+    if ((std::abs(final_point.x - current_point.x) < epsilon) &&
+        (std::abs(final_point.y - current_point.y) < epsilon) &&
+        (std::abs(final_point.z - current_point.z) < epsilon))
+    {
+
+        Vec3d epsilon_vector = current_direction.normalize() * 1e-4;
+        Vec3d offset_point = current_point + epsilon_vector;
+
+        auto [updated_point, updated_direction] = project_and_find_intersection(offset_point, current_direction, distance_traveled, tmesh, mesh);
+
+        return std::make_tuple(updated_point, updated_direction);
+    }
+    else
+    {
+
+        return std::make_tuple(final_point, new_direction);
+    }
+}
+
+// using project_and_find_intersection(), find final_point that start from q, direction is start_direction_p.
+Eigen::Vector3d geodesicAddVector(
+    const Eigen::Vector3d &p,
+    const Eigen::Vector3d &start_direction_p,
+    double total_distance,
+    const Eigen::Vector3d &q,
+    const Triangle_mesh &tmesh,
+    const std::vector<TriangleFace> &mesh)
+{
+
+    Eigen::Vector3d V_p;
+    Eigen::Vector3d V_q;
+    double geodesic_distance;
+    double distance_traveled = 0.0;
+    Eigen::Vector3d start_direction;
+    double percentage_traveled;
+    Vec3d final_point;
+
+    if (p == q)
+    {
+
+        start_direction = start_direction_p;
+    }
+    else
+    {
+        geodesicbasecalcuation(p, q, V_p, V_q, geodesic_distance, tmesh, mesh);
+
+        double angle1 = calculateAngleBetweenVectors(start_direction_p, V_p, p, tmesh);
+
+        start_direction = geodesicextend(p, q, V_q, tmesh, mesh, angle1);
+    }
+
+    if (total_distance == 0)
+    {
+        return q;
+    }
+
+    Vec3d current_point = EigenToVec3d(q);
+    Vec3d current_direction = EigenToVec3d(start_direction).normalize();
+
+    face_descriptor current_face_descriptor;
+    Surface_mesh_shortest_path::Barycentric_coordinates barycentric_coords;
+
+    if (!locate_face_and_point(Vec3dToCGALPoint(current_point), current_face_descriptor, barycentric_coords, tmesh))
+    {
+        std::cerr << "Failed to locate point on mesh." << std::endl;
+        return Vec3dToEigen(current_point);
+    }
+
+    while (true)
+    {
+
+        auto vertices = CGAL::vertices_around_face(tmesh.halfedge(current_face_descriptor), tmesh);
+        auto v_it = vertices.begin();
+
+        Point_3 v1 = tmesh.point(*v_it++);
+        Point_3 v2 = tmesh.point(*v_it++);
+        Point_3 v3 = tmesh.point(*v_it);
+
+        Vec3d v1_vec = CGALPointToVec3d(v1);
+        Vec3d v2_vec = CGALPointToVec3d(v2);
+        Vec3d v3_vec = CGALPointToVec3d(v3);
+
+        Eigen::Vector3d current_normal = computeFaceNormal(v1_vec, v2_vec, v3_vec, true);
+
+        auto [new_point, new_direction] = project_and_find_intersection(current_point, current_direction, distance_traveled, tmesh, mesh);
+
+        face_descriptor new_face_descriptor;
+
+        locate_face_and_point(Vec3dToCGALPoint(new_point), new_face_descriptor, barycentric_coords, tmesh);
+
+        if (new_face_descriptor == current_face_descriptor)
+        {
+
+            Vec3d epsilon_vector = current_direction.normalize() * 1e-4;
+            Vec3d updated_point = new_point + epsilon_vector;
+
+            if (!locate_face_and_point(Vec3dToCGALPoint(updated_point), new_face_descriptor, barycentric_coords, tmesh))
+            {
+                std::cerr << "Failed to locate new point on mesh." << std::endl;
+                return Vec3dToEigen(updated_point);
+            }
+        }
+
+        vertices = CGAL::vertices_around_face(tmesh.halfedge(new_face_descriptor), tmesh);
+        v_it = vertices.begin();
+
+        v1 = tmesh.point(*v_it++);
+        v2 = tmesh.point(*v_it++);
+        v3 = tmesh.point(*v_it);
+
+        v1_vec = CGALPointToVec3d(v1);
+        v2_vec = CGALPointToVec3d(v2);
+        v3_vec = CGALPointToVec3d(v3);
+
+        Eigen::Vector3d new_normal = computeFaceNormal(v1_vec, v2_vec, v3_vec, true);
+
+        new_direction = rotateVectorToNewNormal(new_direction, current_normal, new_normal);
+
+        double new_distance_traveled = sqrt((new_point.x - current_point.x) * (new_point.x - current_point.x) + (new_point.y - current_point.y) * (new_point.y - current_point.y) + (new_point.z - current_point.z) * (new_point.z - current_point.z));
+
+        if (distance_traveled + new_distance_traveled >= abs(total_distance))
+        {
+            double remaining_distance = abs(total_distance) - distance_traveled;
+            final_point = current_point + current_direction.normalize() * remaining_distance;
+
+            distance_traveled += remaining_distance;
+
+            break;
+        }
+
+        current_face_descriptor = new_face_descriptor;
+        current_point = new_point;
+        current_direction = new_direction;
+        distance_traveled += new_distance_traveled;
+    }
+
+    return Vec3dToEigen(final_point);
+}
+
+// Calculate GeodesicDistance between two points
+double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, const Triangle_mesh &mesh)
+{
+
+    Kernel::Point_3 point0(p0.x(), p0.y(), p0.z());
+    Kernel::Point_3 point1(p1.x(), p1.y(), p1.z());
+
+    face_descriptor face0, face1;
+    Surface_mesh_shortest_path::Barycentric_coordinates location0, location1;
+
+    if (!locate_face_and_point(point0, face0, location0, mesh))
+    {
+        throw std::runtime_error("Failed to locate point0 on mesh.");
+    }
+
+    if (!locate_face_and_point(point1, face1, location1, mesh))
+    {
+        throw std::runtime_error("Failed to locate point1 on mesh.");
+    }
+
+    Surface_mesh_shortest_path shortest_paths(mesh);
+    shortest_paths.add_source_point(face1, location1);
+
+    std::pair<double, Surface_mesh_shortest_path::Source_point_iterator> result = shortest_paths.shortest_distance_to_source_points(face0, location0);
+
+    return abs(result.first);
+}
+
+// Calculate Geodesic interpolation parameters
+std::vector<double> calculateInterpolationParameters(std::vector<Eigen::Vector3d> &selected_points, bool chord_length)
+{
+    for (int i = 1; i < selected_points.size(); i++)
+    {
+        double geodesic_distance = computeGeodesicDistance(selected_points[i], selected_points[i + 1], tmesh);
+
+        if (!chord_length)
+        {
+            geodesic_distance = std::sqrt(geodesic_distance);
+        }
+
+        double ui = u_values.back() + geodesic_distance;
+        u_values.push_back(ui);
+    }
+    return u_values;
+}
+
+// Geodesic subtraction of points in the geodesic domain
+Eigen::Vector3d geodesicSubtract(
+    const Eigen::Vector3d &p1,
+    const Eigen::Vector3d &p2,
+    const Triangle_mesh &tmesh)
+{
+    Eigen::Vector3d V_p, V_q;
+    double geodesic_distance;
+    std::vector<TriangleFace> mesh = convertMeshToTriangleFaces(tmesh);
+    geodesicbasecalcuation(p1, p2, V_p, V_q, geodesic_distance, tmesh, mesh);
+
+    return V_p * geodesic_distance;
+}
+
+// Calculate Geodesic tangent vectors
+std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
+    const std::vector<Eigen::Vector3d> &selected_points,
+    const std::vector<double> &u_values,
+    const Triangle_mesh &tmesh)
+{
+    int c = 0;
+
+    std::vector<Eigen::Vector3d> tangent_vectors;
+
+    if (selected_points.empty() || u_values.empty())
+    {
+        throw std::runtime_error("selected_points or u_values are empty!");
+    }
+
+    Eigen::Vector3d p_first = selected_points.front();
+    Eigen::Vector3d p_last = selected_points.back();
+
+    if (p_first == p_last)
+    {
+
+        Eigen::Vector3d p_prev = selected_points[1];
+        Eigen::Vector3d p_now = selected_points[0];
+        Eigen::Vector3d p_next = selected_points[selected_points.size() - 2];
+
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
+
+        tangent_vectors.push_back(tangent_vector);
+    }
+    else
+    {
+
+        tangent_vectors.push_back(Eigen::Vector3d::Zero());
+    }
+
+    for (size_t i = 1; i < selected_points.size() - 1; ++i)
+    {
+        Eigen::Vector3d p_prev = selected_points[i - 1];
+        Eigen::Vector3d p_now = selected_points[i];
+        Eigen::Vector3d p_next = selected_points[i + 1];
+
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh)) / (u_values[i + 1] - u_values[i - 1]);
+        tangent_vectors.push_back(tangent_vector);
+    }
+
+    if (p_first == p_last)
+    {
+
+        Eigen::Vector3d p_prev = selected_points[1];
+        Eigen::Vector3d p_now = selected_points[0];
+        Eigen::Vector3d p_next = selected_points[selected_points.size() - 2];
+        Eigen::Vector3d tangent_vector = (1 - c) * (geodesicSubtract(p_prev, p_next, tmesh)) / ((u_values[1] - u_values[0]) + (u_values.back() - u_values[u_values.size() - 2]));
+        tangent_vectors.push_back(tangent_vector);
+    }
+    else
+    {
+
+        tangent_vectors.push_back(Eigen::Vector3d::Zero());
+    }
+
+    return tangent_vectors;
+}
+
+// Calculate Bézier spline's control points
+std::vector<std::vector<Eigen::Vector3d>> computeBezierControlPoints(
+    const std::vector<Eigen::Vector3d> &selected_points,
+    const std::vector<double> &u_values,
+    const std::vector<Eigen::Vector3d> &tangent_vectors,
+    const Triangle_mesh &tmesh)
+{
+    std::vector<TriangleFace> mesh = convertMeshToTriangleFaces(tmesh);
+    std::vector<std::vector<Eigen::Vector3d>> bezier_control_points;
+    int marker_id = 0;
+
+    Eigen::Vector3d p_first = selected_points.front();
+    Eigen::Vector3d p_last = selected_points.back();
+
+    Eigen::Vector3d p_prev = selected_points[selected_points.size() - 2];
+    Eigen::Vector3d p_now = selected_points[0];
+    Eigen::Vector3d p_next = selected_points[1];
+
+    Eigen::Vector3d tangent_prev = tangent_vectors[tangent_vectors.size() - 2];
+    Eigen::Vector3d tangent_now = tangent_vectors[0];
+    Eigen::Vector3d tangent_next = tangent_vectors[1];
+    double distance = (u_values[1] - u_values[0]) / 3.0;
+
+    if (p_first == p_last)
+    {
+
+        Eigen::Vector3d b0 = p_now;
+        Eigen::Vector3d b1 = geodesicAddVector(p_prev, tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
+        Eigen::Vector3d b3 = p_next;
+        bezier_control_points.push_back({b0, b1, b2, b3});
+    }
+    else
+    {
+
+        double distance = (u_values[1] - u_values[0]) / 3.0;
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
+        bezier_control_points.push_back({p_now, p_now, b2, p_next});
+    }
+
+    for (size_t i = 1; i < selected_points.size() - 2; ++i)
+    {
+        Eigen::Vector3d p_prev = selected_points[i - 1];
+        Eigen::Vector3d p_now = selected_points[i];
+        Eigen::Vector3d p_next = selected_points[i + 1];
+
+        Eigen::Vector3d tangent_prev = tangent_vectors[i - 1];
+        Eigen::Vector3d tangent_now = tangent_vectors[i];
+        Eigen::Vector3d tangent_next = tangent_vectors[i + 1];
+
+        double distance = (u_values[i + 1] - u_values[i]) / 3.0;
+        Eigen::Vector3d b0 = p_now;
+        Eigen::Vector3d b1 = geodesicAddVector(p_prev, tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_now, -tangent_next, distance * tangent_next.norm(), p_next, tmesh, mesh);
+        Eigen::Vector3d b3 = p_next;
+        bezier_control_points.push_back({b0, b1, b2, b3});
+    }
+
+    if (p_first == p_last)
+    {
+
+        Eigen::Vector3d b0 = p_prev;
+        double distance = (u_values[0] - u_values[u_values.size() - 2]) / 3.0;
+        Eigen::Vector3d b1 = geodesicAddVector(p_next, tangent_prev, distance * tangent_prev.norm(), p_prev, tmesh, mesh);
+        Eigen::Vector3d b2 = geodesicAddVector(p_prev, -tangent_now, distance * tangent_now.norm(), p_now, tmesh, mesh);
+        Eigen::Vector3d b3 = p_now;
+        bezier_control_points.push_back({b0, b1, b2, b3});
+    }
+    else
+    {
+
+        double distance = (u_values[u_values.size() - 1] - u_values[u_values.size() - 2]) / 3.0;
+        Eigen::Vector3d b1 = geodesicAddVector(selected_points[selected_points.size() - 3], tangent_vectors[tangent_vectors.size() - 2], distance * tangent_prev.norm(), selected_points[selected_points.size() - 2], tmesh, mesh);
+
+        bezier_control_points.push_back({selected_points[selected_points.size() - 2], b1, selected_points[selected_points.size() - 1], selected_points[selected_points.size() - 1]});
+    }
+    std::cout << "Computing Bezier control points complete " << std::endl;
+
+    return bezier_control_points;
+}
+
+// using control points, calculate Bezier Curve.
+std::vector<Eigen::Vector3d> computeGeodesicBezierCurvePoints(
+    const std::vector<Eigen::Vector3d> &control_points,
+    const Triangle_mesh &tmesh,
+    int steps)
+{
+    std::vector<TriangleFace> mesh = convertMeshToTriangleFaces(tmesh);
+    std::vector<Eigen::Vector3d> curve_points;
+    Eigen::Vector3d V_b0, V_q0;
+    double geodesic_distance;
+    curve_points.reserve(steps + 1);
+    Eigen::Vector3d b0 = control_points[0];
+    Eigen::Vector3d b1 = control_points[1];
+    Eigen::Vector3d b2 = control_points[2];
+    Eigen::Vector3d b3 = control_points[3];
+
+    Eigen::Vector3d v01 = geodesicSubtract(b0, b1, tmesh);
+    Eigen::Vector3d v02 = geodesicSubtract(b0, b2, tmesh);
+    Eigen::Vector3d v03 = geodesicSubtract(b0, b3, tmesh);
+    for (int i = 0; i < steps; ++i)
+    {
+
+        double t = static_cast<double>(i) / steps;
+
+        Eigen::Vector3d q0 = geodesicAddVector(b0, v01, 3 * (1 - t) * (1 - t) * t * v01.norm(), b0, tmesh, mesh);
+
+        Eigen::Vector3d q1 = geodesicAddVector(b0, v02, 3 * (1 - t) * t * t * v02.norm(), q0, tmesh, mesh);
+
+        Eigen::Vector3d q2 = geodesicAddVector(b0, v03, t * t * t * v03.norm(), q1, tmesh, mesh);
+
+        curve_points.push_back(q2);
+        // std::cout << "curve_points[" << i << "]: " << curve_points[i].x() << "|" << curve_points[i].y() << "|" << curve_points[i].z() << std::endl;
+    }
+
+    return curve_points;
+}
+
+void generate_Geodesic_Path(const std::vector<Eigen::Vector3d> &points, Triangle_mesh &tmesh)
 {
 
     std::vector<Point_3> complete_path;
@@ -232,14 +1005,14 @@ void generate_Geodesic_Path(const std::vector<geometry_msgs::Point> &points)
 
     for (size_t i = 1; i < points.size(); ++i)
     {
-        Point_3 start(points[i - 1].x, points[i - 1].y, points[i - 1].z);
-        Point_3 end(points[i].x, points[i].y, points[i].z);
+        Point_3 start(points[i - 1].x(), points[i - 1].y(), points[i - 1].z());
+        Point_3 end(points[i].x(), points[i].y(), points[i].z());
 
         face_descriptor start_face, end_face;
         Surface_mesh_shortest_path::Barycentric_coordinates start_location, end_location;
 
-        locate_face_and_point(start, start_face, start_location);
-        locate_face_and_point(end, end_face, end_location);
+        locate_face_and_point(start, start_face, start_location, tmesh);
+        locate_face_and_point(end, end_face, end_location, tmesh);
         shortest_paths->add_source_point(end_face, end_location);
         shortest_paths->shortest_path_points_to_source_points(start_face, start_location, std::back_inserter(path_segment));
         shortest_paths->remove_all_source_points();
@@ -259,10 +1032,45 @@ void generate_Geodesic_Path(const std::vector<geometry_msgs::Point> &points)
     }
 
     ROS_INFO("Generated geodesic path with %zu points", path_points.size());
-    waypoints_msg.waypoints = convertToWaypoints(path_points);
+    waypoints_msg.waypoints = convertToWaypoints(path_points, tmesh);
 }
 
-void generate_B_Spline_Path(const std::vector<geometry_msgs::Point> &points)
+// Convert curve_points to ROS_points to publish
+void generate_Hermite_Spline_path(
+    std::vector<Eigen::Vector3d> &selected_points, Triangle_mesh &tmesh)
+{
+    std::vector<Eigen::Vector3d> hermite_spline;
+    if (selected_points.size() > 2)
+    {
+        u_values = calculateInterpolationParameters(selected_points, true);
+        tangent_vectors = calculateGeodesicTangentVectors(selected_points, u_values, tmesh);
+        bezier_control_points = computeBezierControlPoints(selected_points, u_values, tangent_vectors, tmesh);
+
+        int i = 0;
+        for (const auto &control_points : bezier_control_points)
+        {
+            std::cout << "generating Spline bewteen point[" << i << "] and point[" << i + 1 << "]" << std::endl;
+            std::vector<Eigen::Vector3d> curve_points = computeGeodesicBezierCurvePoints(control_points, tmesh, steps);
+            hermite_spline.insert(hermite_spline.end(), curve_points.begin(), curve_points.end());
+            i += 1;
+        }
+    }
+
+    std::vector<geometry_msgs::Point> path_points;
+    for (const auto &point : hermite_spline)
+    {
+        geometry_msgs::Point ros_point;
+        ros_point.x = point.x();
+        ros_point.y = point.y();
+        ros_point.z = point.z();
+        path_points.push_back(ros_point);
+    }
+
+    ROS_INFO("Generated Hermite_Spline path with %zu points", path_points.size());
+    waypoints_msg.waypoints = convertToWaypoints(path_points, tmesh);
+}
+
+void generate_B_Spline_Path(const std::vector<Eigen::Vector3d> &points, Triangle_mesh &tmesh)
 {
     unsigned int maxSteps = 2;
     double minChange = std::numeric_limits<double>::epsilon();
@@ -286,13 +1094,13 @@ void generate_B_Spline_Path(const std::vector<geometry_msgs::Point> &points)
     {
         ob::ScopedState<> start(state_space), goal(state_space);
 
-        start->as<ob::RealVectorStateSpace::StateType>()->values[0] = points[i].x;
-        start->as<ob::RealVectorStateSpace::StateType>()->values[1] = points[i].y;
-        start->as<ob::RealVectorStateSpace::StateType>()->values[2] = points[i].z;
+        start->as<ob::RealVectorStateSpace::StateType>()->values[0] = points[i].x();
+        start->as<ob::RealVectorStateSpace::StateType>()->values[1] = points[i].y();
+        start->as<ob::RealVectorStateSpace::StateType>()->values[2] = points[i].z();
 
-        goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = points[i + 1].x;
-        goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = points[i + 1].y;
-        goal->as<ob::RealVectorStateSpace::StateType>()->values[2] = points[i + 1].z;
+        goal->as<ob::RealVectorStateSpace::StateType>()->values[0] = points[i + 1].x();
+        goal->as<ob::RealVectorStateSpace::StateType>()->values[1] = points[i + 1].y();
+        goal->as<ob::RealVectorStateSpace::StateType>()->values[2] = points[i + 1].z();
 
         ss.setStartAndGoalStates(start, goal);
 
@@ -333,21 +1141,32 @@ void generate_B_Spline_Path(const std::vector<geometry_msgs::Point> &points)
         smooth_path.push_back(p);
     }
     std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
-    waypoints_msg.waypoints = convertToWaypoints(smooth_path);
+    waypoints_msg.waypoints = convertToWaypoints(smooth_path, tmesh);
 }
 
-void generate_Catmull_Rom_Path(const std::vector<geometry_msgs::Point> &points)
+void generate_Catmull_Rom_Path(const std::vector<Eigen::Vector3d> &points, Triangle_mesh &tmesh)
 {
-    std::vector<geometry_msgs::Point> smooth_path;
-    if (points.size() < 4)
-        return; // Need at least 4 points for Catmull-Rom spline
-
-    for (size_t i = 1; i < points.size() - 2; ++i)
+    // Eigen::Vector3d를 geometry_msgs::Point로 변환
+    std::vector<geometry_msgs::Point> geom_points;
+    for (const auto &eigen_point : points)
     {
-        geometry_msgs::Point p0 = points[i - 1];
-        geometry_msgs::Point p1 = points[i];
-        geometry_msgs::Point p2 = points[i + 1];
-        geometry_msgs::Point p3 = points[i + 2];
+        geometry_msgs::Point geom_point;
+        geom_point.x = eigen_point.x();
+        geom_point.y = eigen_point.y();
+        geom_point.z = eigen_point.z();
+        geom_points.push_back(geom_point);
+    }
+
+    std::vector<geometry_msgs::Point> smooth_path;
+    if (geom_points.size() < 4)
+        return; // Catmull-Rom spline을 위해 최소 4개의 점이 필요
+
+    for (size_t i = 1; i < geom_points.size() - 2; ++i)
+    {
+        geometry_msgs::Point p0 = geom_points[i - 1];
+        geometry_msgs::Point p1 = geom_points[i];
+        geometry_msgs::Point p2 = geom_points[i + 1];
+        geometry_msgs::Point p3 = geom_points[i + 2];
 
         for (double t = 0; t <= 1; t += 0.05)
         {
@@ -363,8 +1182,110 @@ void generate_Catmull_Rom_Path(const std::vector<geometry_msgs::Point> &points)
         }
     }
 
+    // mesh에 투영된 점을 계산
     std::vector<geometry_msgs::Point> projected_path = projectPointsOntoMesh(smooth_path);
-    waypoints_msg.waypoints = convertToWaypoints(projected_path);
+
+    // Waypoints로 변환하여 메시지에 저장
+    waypoints_msg.waypoints = convertToWaypoints(projected_path, tmesh);
+}
+
+// read stl file
+bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
+{
+    std::vector<Kernel::Point_3> points;
+    std::vector<std::array<std::size_t, 3>> triangles;
+    if (!CGAL::read_STL(input, points, triangles))
+    {
+        ROS_ERROR("Failed to read STL file.");
+        return false;
+    }
+
+    std::map<std::size_t, vertex_descriptor> index_to_vertex;
+    for (std::size_t i = 0; i < points.size(); ++i)
+    {
+        index_to_vertex[i] = mesh.add_vertex(points[i]);
+    }
+
+    for (const auto &t : triangles)
+    {
+        if (mesh.add_face(index_to_vertex[t[0]], index_to_vertex[t[1]], index_to_vertex[t[2]]) == Triangle_mesh::null_face())
+        {
+            ROS_ERROR("Failed to add face.");
+            return false;
+        }
+    }
+    ROS_INFO("Successfully read STL file.");
+    return true;
+}
+
+// project clicked_points to mesh surface
+void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
+{
+    std::cout << "-----------------------------------new waypoints comming----------------------------------------------" << std::endl;
+
+    Kernel::Point_3 clicked_point(msg->point.x, msg->point.y, msg->point.z);
+
+    face_descriptor face;
+    Surface_mesh_shortest_path::Barycentric_coordinates location;
+
+    if (!locate_face_and_point(clicked_point, face, location, tmesh))
+    {
+        std::cerr << "Failed to locate the clicked point on the mesh." << std::endl;
+        return;
+    }
+
+    Kernel::Point_3 v1, v2, v3;
+    int i = 0;
+
+    for (auto v : vertices_around_face(tmesh.halfedge(face), tmesh))
+    {
+        if (i == 0)
+            v1 = tmesh.point(v);
+        else if (i == 1)
+            v2 = tmesh.point(v);
+        else if (i == 2)
+            v3 = tmesh.point(v);
+
+        ++i;
+    }
+
+    Kernel::Point_3 projected_point = CGAL::barycenter(v1, location[0], v2, location[1], v3, location[2]);
+
+    Eigen::Vector3d projected_point_eigen(projected_point.x(), projected_point.y(), projected_point.z());
+
+    clicked_points.push_back(msg->point);
+    selected_points.push_back(projected_point_eigen);
+}
+
+void keyboardCallback(const std_msgs::String::ConstPtr &msg)
+{
+    if (msg->data == "generate_Geodesic_Path")
+    {
+        start_path_generating = true;
+        use_straight = true;
+        ROS_INFO("Received start command, initiating generate_Geodesic_Path planning.");
+    }
+    // if (msg->data == "generate_B_Spline_Path")
+    // {
+    //     start_path_generating = true;
+    //     ROS_INFO("Received start command, initiating generate_B_Spline_Path planning.");
+    // }
+    // if (msg->data == "generate_Geodesic_Path")
+    // {
+    //     start_path_generating = true;
+    //     ROS_INFO("Received start command, initiating generate_Geodesic_Path planning.");
+    // }
+    // if (msg->data == "generate_Catmull_Rom_Path")
+    // {
+    //     start_path_generating = true;
+    //     ROS_INFO("Received start command, initiating generate_Catmull_Rom_Path planning.");
+    // }
+    if (msg->data == "generate_Hermite_Spline_path")
+    {
+        start_path_generating = true;
+        use_spline = true;
+        ROS_INFO("Received start command, initiating generate_Hermite_Spline_path planning.");
+    }
 }
 
 int main(int argc, char **argv)
@@ -372,10 +1293,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "path_generator");
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
+    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
-    // 추가된 publisher 초기화
-    marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-   
+
     std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
     std::ifstream input(mesh_file_path, std::ios::binary);
     read_stl_file(input, tmesh);
@@ -389,12 +1309,27 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         ros::spinOnce();
-        if (new_waypoints && clicked_points.size() > 1)
+        if (selected_points.size() > 1 && start_path_generating)
         {
-            generate_B_Spline_Path(clicked_points);
+            if (use_spline && selected_points.size() > 2)
+            {
+                waypoints_msg.waypoints.clear();
+                u_values.clear();
+                tangent_vectors.clear();
+                bezier_control_points.clear();
+                generate_Hermite_Spline_path(selected_points, tmesh);
+            }
+            else if (use_straight)
+            {
+                waypoints_msg.waypoints.clear();
+                generate_Geodesic_Path(selected_points, tmesh);
+            }
+
             waypoints_pub.publish(waypoints_msg); // 경로 생성 후 퍼블리시
-            
-            new_waypoints = false;                // 모션 플래닝이 끝난 후 플래그를 false로 설정
+
+            start_path_generating = false; // 모션 플래닝이 끝난 후 플래그를 false로 설정
+            use_spline = false;
+            use_straight = false;
         }
 
         r.sleep();
