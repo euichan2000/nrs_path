@@ -51,8 +51,8 @@
      - Muhammad Asif Rana
   -->
 
-  <xacro:include filename="$(find nrs_vision_rviz)/urdf/inc/ur_transmissions.xacro" />
-  <xacro:include filename="$(find nrs_vision_rviz)/urdf/inc/ur_common.xacro" />
+  <xacro:include filename="$(find nrs_path_planning)/urdf/inc/ur_transmissions.xacro" />
+  <xacro:include filename="$(find nrs_path_planning)/urdf/inc/ur_common.xacro" />
 
   <xacro:macro name="ur_robot" params="
     prefix

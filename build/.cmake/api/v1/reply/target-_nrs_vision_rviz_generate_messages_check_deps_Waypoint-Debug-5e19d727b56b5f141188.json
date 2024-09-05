@@ -10,7 +10,7 @@
 		],
 		"files" : 
 		[
-			"build/cmake/nrs_vision_rviz-genmsg.cmake",
+			"build/cmake/nrs_path_planning-genmsg.cmake",
 			"/opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake",
 			"CMakeLists.txt"
 		],
@@ -43,8 +43,8 @@
 			}
 		]
 	},
-	"id" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df",
-	"name" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoint",
+	"id" : "_nrs_path_planning_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df",
+	"name" : "_nrs_path_planning_generate_messages_check_deps_Waypoint",
 	"paths" : 
 	{
 		"build" : ".",
@@ -72,13 +72,13 @@
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "build/CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoint",
+			"path" : "build/CMakeFiles/_nrs_path_planning_generate_messages_check_deps_Waypoint",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoint.rule",
+			"path" : "build/CMakeFiles/_nrs_path_planning_generate_messages_check_deps_Waypoint.rule",
 			"sourceGroupIndex" : 1
 		}
 	],

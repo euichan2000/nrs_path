@@ -17,6 +17,6 @@
 
     Refer to 'inc/ur_macro.xacro' for more information.
   -->
-  <xacro:include filename="$(find nrs_vision_rviz)/urdf/inc/ur10_macro.xacro"/>
+  <xacro:include filename="$(find nrs_path_planning)/urdf/inc/ur10_macro.xacro"/>
   <xacro:ur10_robot prefix="" />
 </robot>

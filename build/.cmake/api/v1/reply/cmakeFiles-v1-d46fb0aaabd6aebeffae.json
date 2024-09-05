@@ -1371,7 +1371,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "build/devel/share/nrs_vision_rviz/cmake/nrs_vision_rviz-msg-paths.cmake"
+			"path" : "build/devel/share/nrs_path_planning/cmake/nrs_path_planning-msg-paths.cmake"
 		},
 		{
 			"isExternal" : true,
@@ -1391,7 +1391,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "build/cmake/nrs_vision_rviz-genmsg.cmake"
+			"path" : "build/cmake/nrs_path_planning-genmsg.cmake"
 		},
 		{
 			"isExternal" : true,
@@ -1450,7 +1450,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "build/catkin_generated/nrs_vision_rviz-msg-extras.cmake.develspace.in"
+			"path" : "build/catkin_generated/nrs_path_planning-msg-extras.cmake.develspace.in"
 		},
 		{
 			"isExternal" : true,
@@ -1470,7 +1470,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "build/catkin_generated/nrs_vision_rviz-msg-extras.cmake.installspace.in"
+			"path" : "build/catkin_generated/nrs_path_planning-msg-extras.cmake.installspace.in"
 		},
 		{
 			"isExternal" : true,
@@ -1585,8 +1585,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build",
-		"source" : "/home/nrs/catkin_ws/src/nrs_vision_rviz"
+		"build" : "/home/nrs/catkin_ws/src/nrs_path_planning/build",
+		"source" : "/home/nrs/catkin_ws/src/nrs_path_planning"
 	},
 	"version" : 
 	{

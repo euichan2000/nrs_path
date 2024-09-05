@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "devel/lib/nrs_vision_rviz/keyboard_listener"
+			"path" : "devel/lib/nrs_path_planning/keyboard_listener"
 		}
 	],
 	"backtrace" : 1,
@@ -30,7 +30,7 @@
 			"/opt/ros/noetic/share/catkin/cmake/tools/libraries.cmake",
 			"/opt/ros/noetic/share/catkin/cmake/all.cmake",
 			"/opt/ros/noetic/share/gencpp/cmake/gencpp-extras.cmake",
-			"build/cmake/nrs_vision_rviz-genmsg.cmake",
+			"build/cmake/nrs_path_planning-genmsg.cmake",
 			"/opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake"
 		],
 		"nodes" : 
@@ -181,14 +181,14 @@
 				},
 				{
 					"backtrace" : 15,
-					"define" : "ROS_PACKAGE_NAME=\"nrs_vision_rviz\""
+					"define" : "ROS_PACKAGE_NAME=\"nrs_path_planning\""
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 21,
-					"path" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/include"
+					"path" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/devel/include"
 				},
 				{
 					"backtrace" : 22,

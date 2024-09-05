@@ -4,7 +4,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
 #include <visualization_msgs/Marker.h>
-#include <nrs_vision_rviz/Waypoints.h>
+#include <nrs_path_planning/Waypoints.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <ompl/base/SpaceInformation.h>
@@ -53,7 +53,7 @@ ros::Publisher marker_pub;
 Triangle_mesh tmesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
-nrs_vision_rviz::Waypoints waypoints_msg;
+nrs_path_planning::Waypoints waypoints_msg;
 
 std::vector<geometry_msgs::Point> clicked_points;
 std::vector<Eigen::Vector3d> selected_points; // Projected [clicked_points] onto Mesh surface
@@ -273,9 +273,9 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
 }
 
 // points to waypoints to publish
-std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh tmesh)
+std::vector<nrs_path_planning::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh tmesh)
 {
-    std::vector<nrs_vision_rviz::Waypoint> waypoints;
+    std::vector<nrs_path_planning::Waypoint> waypoints;
 
     for (const auto &point : points)
     {
@@ -291,7 +291,7 @@ std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geom
 
         Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
 
-        nrs_vision_rviz::Waypoint waypoint_msg;
+        nrs_path_planning::Waypoint waypoint_msg;
         waypoint_msg.point.x = point.x;
         waypoint_msg.point.y = point.y;
         waypoint_msg.point.z = point.z;
@@ -1294,9 +1294,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
     ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
-    waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
+    waypoints_pub = nh.advertise<nrs_path_planning::Waypoints>("waypoints_with_normals", 10);
 
-    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_path_planning/mesh/lid_wrap.stl";
     std::ifstream input(mesh_file_path, std::ios::binary);
     read_stl_file(input, tmesh);
 
