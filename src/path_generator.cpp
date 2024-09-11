@@ -30,6 +30,7 @@
 #include <std_msgs/String.h>
 #include <Eigen/Dense>
 #include <limits>
+#include <chrono>
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -60,7 +61,7 @@ std::vector<Eigen::Vector3d> selected_points; // Projected [clicked_points] onto
 std::vector<double> u_values = {0.0};         // Interpolation Paramter array. U0=0
 std::vector<Eigen::Vector3d> tangent_vectors; // Tangent Vectors array
 std::vector<std::vector<Eigen::Vector3d>> bezier_control_points;
-int steps = 5;
+int steps = 10;
 
 bool new_waypoints = false;
 bool start_path_generating = false; // keyboard publisher order to start
@@ -140,7 +141,6 @@ struct TriangleFace
 {
     Vec3d vertices[3];
     Vec3d normal;
-    const TriangleFace *neighbors[3];
 };
 
 /*
@@ -999,6 +999,7 @@ std::vector<Eigen::Vector3d> computeGeodesicBezierCurvePoints(
 
 void generate_Geodesic_Path(const std::vector<Eigen::Vector3d> &points, Triangle_mesh &tmesh)
 {
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     std::vector<Point_3> complete_path;
     std::vector<Point_3> path_segment;
@@ -1033,12 +1034,22 @@ void generate_Geodesic_Path(const std::vector<Eigen::Vector3d> &points, Triangle
 
     ROS_INFO("Generated geodesic path with %zu points", path_points.size());
     waypoints_msg.waypoints = convertToWaypoints(path_points, tmesh);
+
+    // 프로그램 종료 시간 기록
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    // 시작과 종료 시간의 차이 계산 (밀리초 단위)
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+
+    // 소요 시간 출력
+    std::cout << "straight path generation time: " << duration << " s" << std::endl;
 }
 
 // Convert curve_points to ROS_points to publish
 void generate_Hermite_Spline_path(
     std::vector<Eigen::Vector3d> &selected_points, Triangle_mesh &tmesh)
 {
+    auto start_time = std::chrono::high_resolution_clock::now();
     std::vector<Eigen::Vector3d> hermite_spline;
     if (selected_points.size() > 2)
     {
@@ -1068,6 +1079,15 @@ void generate_Hermite_Spline_path(
 
     ROS_INFO("Generated Hermite_Spline path with %zu points", path_points.size());
     waypoints_msg.waypoints = convertToWaypoints(path_points, tmesh);
+
+    // 프로그램 종료 시간 기록
+    auto end_time = std::chrono::high_resolution_clock::now();
+
+    // 시작과 종료 시간의 차이 계산 (밀리초 단위)
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+
+    // 소요 시간 출력
+    std::cout << "spline path generation time: " << duration << " s" << std::endl;
 }
 
 void generate_B_Spline_Path(const std::vector<Eigen::Vector3d> &points, Triangle_mesh &tmesh)
@@ -1221,7 +1241,7 @@ bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
 // project clicked_points to mesh surface
 void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
 {
-    std::cout << "-----------------------------------new waypoints comming----------------------------------------------" << std::endl;
+    std::cout << "-----------------------------------new waypoints comming---------------------------------" << std::endl;
 
     Kernel::Point_3 clicked_point(msg->point.x, msg->point.y, msg->point.z);
 
@@ -1314,7 +1334,7 @@ int main(int argc, char **argv)
             if (use_spline && selected_points.size() > 2)
             {
                 waypoints_msg.waypoints.clear();
-                u_values.clear();
+                u_values = {0.0};
                 tangent_vectors.clear();
                 bezier_control_points.clear();
                 generate_Hermite_Spline_path(selected_points, tmesh);

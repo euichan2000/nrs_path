@@ -17,6 +17,7 @@
 #include <fstream>
 #include <cmath>
 #include <map>
+#include <chrono>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -59,13 +60,14 @@ std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geom
 void saveWaypointsToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename);
 
 // 함수: Waypoints를 입력받아 x, y, z, yaw, roll, pitch 값을 계산하고 텍스트 파일에 저장
-void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename);
+void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename, double force);
 
 // 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
 void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh);
 
 int main(int argc, char **argv)
 {
+
     ros::init(argc, argv, "waypoints_interpolator");
     ros::NodeHandle nh;
 
@@ -148,6 +150,34 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
     return true;
 }
 
+// getFaceNormal 함수
+Eigen::Vector3d getFaceNormal(const geometry_msgs::Point &ros_point, const Triangle_mesh &mesh)
+{
+    // ROS geometry_msgs::Point -> CGAL Point_3 변환
+    Point_3 cgal_point(ros_point.x, ros_point.y, ros_point.z);
+
+    // locate_face_and_point()를 사용하여 서피스에서 점과 면을 찾음
+    face_descriptor face;
+    CGAL::cpp11::array<double, 3> location; // Barycentric coordinates
+
+    if (!locate_face_and_point(cgal_point, face, location, mesh))
+    {
+        ROS_ERROR("Failed to locate face and point for point: [%f, %f, %f]", ros_point.x, ros_point.y, ros_point.z);
+        return Eigen::Vector3d::Zero(); // 실패 시 0 벡터 반환
+    }
+
+    // 면의 노멀 벡터 계산
+    Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, mesh);
+
+    // CGAL 노멀 벡터를 Eigen::Vector3d로 변환
+    Eigen::Vector3d eigen_normal(normal.x(), normal.y(), normal.z());
+
+    // 노멀 벡터 정규화
+    eigen_normal.normalize();
+
+    return eigen_normal; // 노멀 벡터 반환
+}
+
 // Calculate GeodesicDistance between two points
 double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, const Triangle_mesh &mesh)
 {
@@ -188,7 +218,7 @@ std::vector<geometry_msgs::Point> interpolatePoints(const std::vector<geometry_m
         Eigen::Vector3d p0(points[i - 1].x, points[i - 1].y, points[i - 1].z);
         Eigen::Vector3d p1(points[i].x, points[i].y, points[i].z);
         cumulative_distances[i] = cumulative_distances[i - 1] + (p1 - p0).norm();
-        //cumulative_distances[i] = cumulative_distances[i - 1] + computeGeodesicDistance(p0, p1, mesh);
+        // cumulative_distances[i] = cumulative_distances[i - 1] + computeGeodesicDistance(p0, p1, mesh);
     }
 
     // 2. 일정한 간격으로 보간된 점들을 추가
@@ -330,12 +360,71 @@ void saveWaypointsToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints
     file.close();
     ROS_INFO("Waypoints saved to %s", filename.c_str());
 }
+// 첫 번째 및 세 번째 구간: 고정된 RPY 값을 사용하여 텍스트 파일에 저장
+void saveFixedRPYPoseToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename, const nrs_vision_rviz::Waypoint &reference_waypoint, double force)
+{
+    // 첫 번째 웨이포인트를 기준으로 RPY 값을 계산
+    tf2::Vector3 z_axis(reference_waypoint.normal.x, reference_waypoint.normal.y, reference_waypoint.normal.z);
+    z_axis.normalize();
+
+    tf2::Vector3 x_axis;
+    if (waypoints.size() > 1)
+    {
+        // 첫 번째 웨이포인트와 두 번째 웨이포인트 사이의 방향 벡터 계산
+        tf2::Vector3 next_point(waypoints[1].point.x, waypoints[1].point.y, waypoints[1].point.z);
+        tf2::Vector3 current_point(waypoints[0].point.x, waypoints[0].point.y, waypoints[0].point.z);
+        x_axis = (next_point - current_point).normalized();
+    }
+    else
+    {
+        // 점이 하나만 있는 경우 진행 방향은 임의로 설정 (예: X축 방향)
+        x_axis.setValue(1.0, 0.0, 0.0);
+    }
+
+    // Y축은 Z축과 X축의 외적
+    tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
+    x_axis = y_axis.cross(z_axis).normalized();
+
+    // 회전 행렬 계산
+    tf2::Matrix3x3 rotation_matrix(
+        x_axis.x(), y_axis.x(), z_axis.x(),
+        x_axis.y(), y_axis.y(), z_axis.y(),
+        x_axis.z(), y_axis.z(), z_axis.z());
+
+    // roll, pitch, yaw 계산
+    double roll, pitch, yaw;
+    rotation_matrix.getRPY(roll, pitch, yaw);
+
+    // 파일 열기 (append 모드로 열어서 내용을 추가)
+    std::ofstream file(filename, std::ios_base::app); // 'app' 모드로 파일에 내용을 추가
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    // 고정된 RPY 값을 모든 웨이포인트에 적용
+    for (const auto &waypoint : waypoints)
+    {
+        // 현재 웨이포인트의 위치 (x, y, z)
+        double x = waypoint.point.x;
+        double y = waypoint.point.y;
+        double z = waypoint.point.z;
+
+        // 고정된 yaw, roll, pitch 값으로 파일에 기록
+        file << x << ", " << y << ", " << z << ", " << yaw << ", " << roll << ", " << pitch << ", " << force << "\n";
+    }
+
+    // 파일 닫기
+    file.close();
+    std::cout << "Fixed RPY Poses saved to " << filename << std::endl;
+}
 
 // 함수: Waypoints를 입력받아 x, y, z, yaw, roll, pitch 값을 계산하고 텍스트 파일에 저장
-void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename)
+void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, const std::string &filename, double force)
 {
-    // 파일 열기
-    std::ofstream file(filename);
+    // 파일 열기 (append 모드로 열어서 내용을 추가)
+    std::ofstream file(filename, std::ios_base::app); // 'app' 모드로 파일에 내용을 추가
     if (!file.is_open())
     {
         std::cerr << "Failed to open file: " << filename << std::endl;
@@ -343,7 +432,7 @@ void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, co
     }
 
     // 파일에 헤더 작성
-    file << "x, y, z, yaw, roll, pitch\n";
+    file << "x, y, z, yaw, roll, pitch, force\n";
 
     for (size_t i = 0; i < waypoints.size(); ++i)
     {
@@ -387,7 +476,7 @@ void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, co
         rotation_matrix.getRPY(roll, pitch, yaw);
 
         // 결과를 파일에 기록 (x, y, z, yaw, roll, pitch)
-        file << x << ", " << y << ", " << z << ", " << yaw << ", " << roll << ", " << pitch << "\n";
+        file << x << ", " << y << ", " << z << ", " << yaw << ", " << roll << ", " << pitch << ", " << force << "\n";
     }
 
     // 파일 닫기
@@ -398,35 +487,101 @@ void savePosesToFile(const std::vector<nrs_vision_rviz::Waypoint> &waypoints, co
 // 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
 void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh)
 {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     // 원래의 포인트들 추출
     std::vector<geometry_msgs::Point> original_points;
     for (const auto &waypoint : msg->waypoints)
     {
         original_points.push_back(waypoint.point);
     }
-    std::cout << "interpolating waypoints" << std::endl;
-    // 보간된 포인트들 생성
-    std::vector<geometry_msgs::Point> interpolated_points = interpolatePoints(original_points, desired_interval, mesh);
 
-    // 보간된 포인트들로부터 웨이포인트 생성 (노멀 벡터 포함)
-    std::vector<nrs_vision_rviz::Waypoint> interpolated_waypoints = convertToWaypoints(interpolated_points, mesh);
+    if (original_points.size() < 2)
+    {
+        ROS_WARN("Not enough waypoints for interpolation");
+        return;
+    }
 
-    std::cout << "smoothing normal vectors" << std::endl;
+    // 첫 번째 점과 마지막 점에서 face normal vector 구하기
+    geometry_msgs::Point start_point = original_points.front();
+    geometry_msgs::Point end_point = original_points.back();
 
-    // 보간된 포인트들로부터  smoothing normal 웨이포인트 생성 (노멀 벡터 포함)
-    std::vector<nrs_vision_rviz::Waypoint> smoothing_interpolated_waypoints = generateWaypointsWithNormals(interpolated_points, mesh);
+    // 첫 번째와 마지막 점에서 face의 normal vector 구하기
+    Eigen::Vector3d start_normal = getFaceNormal(start_point, mesh);
+    Eigen::Vector3d end_normal = getFaceNormal(end_point, mesh);
 
-    savePosesToFile(smoothing_interpolated_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_with_RPY.txt");
+    // start_point를 첫 번째 normal 방향으로 0.2만큼 띄움
+    geometry_msgs::Point start_interpolated;
+    start_interpolated.x = start_point.x + 0.1 * start_normal.x();
+    start_interpolated.y = start_point.y + 0.1 * start_normal.y();
+    start_interpolated.z = start_point.z + 0.1 * start_normal.z();
 
-    // 새로운 웨이포인트 메시지 생성 및 퍼블리시
+    // end_point를 마지막 normal 방향으로 0.2만큼 띄움
+    geometry_msgs::Point end_interpolated;
+    end_interpolated.x = end_point.x + 0.1 * end_normal.x();
+    end_interpolated.y = end_point.y + 0.1 * end_normal.y();
+    end_interpolated.z = end_point.z + 0.1 * end_normal.z();
+
+    // 세 구간의 포인트 설정: start_point -> waypoints[0], waypoints, waypoints[-1] -> end_point
+    std::vector<geometry_msgs::Point> first_segment{start_interpolated, original_points.front()};
+    std::vector<geometry_msgs::Point> last_segment{original_points.back(), end_interpolated};
+
+    // 첫 번째 구간 interpolation
+    std::vector<geometry_msgs::Point> first_interpolated = interpolatePoints(first_segment, desired_interval, mesh);
+
+    // 두 번째 구간 interpolation (원래 waypoints)
+    std::vector<geometry_msgs::Point> middle_interpolated = interpolatePoints(original_points, desired_interval, mesh);
+
+    // 세 번째 구간 interpolation
+    std::vector<geometry_msgs::Point> last_interpolated = interpolatePoints(last_segment, desired_interval, mesh);
+
+    // 첫 번째 구간의 normal vector 설정 (첫 번째 waypoints[0]의 normal과 동일하게 설정)
+    std::vector<nrs_vision_rviz::Waypoint> first_waypoints = convertToWaypoints(first_interpolated, mesh);
+    for (auto &waypoint : first_waypoints)
+    {
+        waypoint.normal.x = msg->waypoints[0].normal.x;
+        waypoint.normal.y = msg->waypoints[0].normal.y;
+        waypoint.normal.z = msg->waypoints[0].normal.z;
+    }
+
+    // 두 번째 구간의 normal vector는 그대로 convertToWaypoints 사용
+    std::vector<nrs_vision_rviz::Waypoint> middle_waypoints = convertToWaypoints(middle_interpolated, mesh);
+
+    // 세 번째 구간의 normal vector 설정 (마지막 waypoints[-1]의 normal과 동일하게 설정)
+    std::vector<nrs_vision_rviz::Waypoint> last_waypoints = convertToWaypoints(last_interpolated, mesh);
+    for (auto &waypoint : last_waypoints)
+    {
+        waypoint.normal.x = msg->waypoints.back().normal.x;
+        waypoint.normal.y = msg->waypoints.back().normal.y;
+        waypoint.normal.z = msg->waypoints.back().normal.z;
+    }
+
+    // 세 구간의 결과를 합침
+    std::vector<nrs_vision_rviz::Waypoint> final_waypoints;
+    final_waypoints.insert(final_waypoints.end(), first_waypoints.begin(), first_waypoints.end());
+    final_waypoints.insert(final_waypoints.end(), middle_waypoints.begin(), middle_waypoints.end());
+    final_waypoints.insert(final_waypoints.end(), last_waypoints.begin(), last_waypoints.end());
+
+    // 첫 번째 구간 (start_point -> waypoints[0])
+    saveFixedRPYPoseToFile(first_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_with_RPY.txt", middle_waypoints[0], 0.0);
+
+    // 두 번째 구간 (waypoints[0] -> waypoints[-1])
+    savePosesToFile(middle_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_with_RPY.txt", 5.0);
+
+    // 세 번째 구간 (waypoints[-1] -> end_point)
+    saveFixedRPYPoseToFile(last_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_with_RPY.txt", middle_waypoints[middle_waypoints.size() - 2], 0.0);
+
     nrs_vision_rviz::Waypoints interpolated_waypoints_msg;
-    interpolated_waypoints_msg.waypoints = smoothing_interpolated_waypoints;
-
+    interpolated_waypoints_msg.waypoints = final_waypoints;
     pub.publish(interpolated_waypoints_msg);
-    // Save interpolated waypoints to a file
-    saveWaypointsToFile(msg->waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints.txt");
-    saveWaypointsToFile(interpolated_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/interpolated_waypoints.txt");
-    saveWaypointsToFile(smoothing_interpolated_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/smoothing_interpolated_waypoints.txt");
 
-    ROS_INFO("Published %lu interpolated waypoints", interpolated_waypoints.size());
+    //saveWaypointsToFile(msg->waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints.txt");
+    //saveWaypointsToFile(final_waypoints, "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/smoothing_interpolated_waypoints.txt");
+
+    ROS_INFO("Published %lu final waypoints", final_waypoints.size());
+
+    // 소요 시간 측정 및 출력
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+    std::cout << "interpolation & Normal smoothing time: " << duration << " s" << std::endl;
 }

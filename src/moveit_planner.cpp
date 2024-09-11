@@ -8,7 +8,7 @@
 #include <moveit/robot_state/conversions.h>
 #include <moveit/trajectory_processing/trajectory_tools.h>
 #include <moveit/trajectory_processing/iterative_spline_parameterization.h>
-//#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+// #include <moveit/trajectory_processing/iterative_time_parameterization.h>
 
 #include <geometry_msgs/Pose.h>
 #include <shape_msgs/Mesh.h>
@@ -302,9 +302,9 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
     waypoints_poses.clear();
 
     tf2::Transform tooltip_transform;
-    tooltip_transform.setOrigin(tf2::Vector3(-0.03, 0.0, -0.115));
+    tooltip_transform.setOrigin(tf2::Vector3(0.0, 0.0, -0.316));
     tf2::Quaternion tooltip_orientation;
-    tooltip_orientation.setRPY(0.0, 0.0, M_PI_2);
+    tooltip_orientation.setRPY(0.0, 0.0, 0.0);
     tooltip_transform.setRotation(tooltip_orientation);
 
     for (const auto &waypoint : msg->waypoints)
@@ -336,9 +336,9 @@ void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &m
     interpolated_waypoints_poses.clear();
 
     tf2::Transform tooltip_transform;
-    tooltip_transform.setOrigin(tf2::Vector3(-0.03, 0.0, -0.115));
+    tooltip_transform.setOrigin(tf2::Vector3(0.0, 0.0, -0.316));
     tf2::Quaternion tooltip_orientation;
-    tooltip_orientation.setRPY(0.0, 0.0, M_PI_2);
+    tooltip_orientation.setRPY(0.0, 0.0, 0.0);
     tooltip_transform.setRotation(tooltip_orientation);
 
     for (const auto &waypoint : msg->waypoints)

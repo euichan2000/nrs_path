@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20240909-0037-Experimental"
+	Name="nrs-vision"
+	Generator="ctest-3.16.3"
+	CompilerName="/usr/bin/c++"
+	CompilerVersion="9.4.0"
+	OSName="Linux"
+	Hostname="nrs-vision"
+	OSRelease="5.15.0-119-generic"
+	OSVersion="#129~20.04.1-Ubuntu SMP Wed Aug 7 13:07:13 UTC 2024"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="142"
+	ProcessorCacheSize="8192"
+	NumberOfLogicalCPU="8"
+	NumberOfPhysicalCPU="4"
+	TotalVirtualMemory="2047"
+	TotalPhysicalMemory="7805"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="3958.95"
+	>
+	<Testing>
+		<StartDateTime>Sep 09 14:15 KST</StartDateTime>
+		<StartTestTime>1725858955</StartTestTime>
+		<TestList/>
+		<EndDateTime>Sep 09 14:15 KST</EndDateTime>
+		<EndTestTime>1725858955</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

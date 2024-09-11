@@ -28,7 +28,7 @@ std::vector<geometry_msgs::Point> extractEdgesFromMesh(const Triangle_mesh& mesh
 
         edges.push_back(ros_p1);
         edges.push_back(ros_p2);
-    }
+    }   
 
     return edges;
 }

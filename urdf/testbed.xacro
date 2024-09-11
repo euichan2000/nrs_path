@@ -29,24 +29,25 @@
     </inertial>
   </link>
 
-  <link name="tooltip">
+
+  <link name="UR_EE_tool">
     <visual>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/ur10_tooltip.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/ur10_tooltip.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
-    </collision>
-  </link>
+    </collision> -->
+  </link> 
 
 
   <link name="workpiece">
@@ -78,9 +79,10 @@
   <!-- Define a fixed joint to attach the tooltip to the wrist_3_link -->
   <joint name="tooltip_joint" type="fixed">
     <parent link="wrist_3_link" />
-    <child link="tooltip" />
-    <origin xyz="0 0 0" rpy="0 0 -1.5707963267948966" />
+    <child link="UR_EE_tool" />
+    <origin xyz="0 0 0.0" rpy="0 0 0" />
   </joint>
+
 
   <!-- Define a fixed joint to attach the workpiece to the base link -->
   <joint name="workpiece_joint" type="fixed">
@@ -88,5 +90,5 @@
     <child link="workpiece" />
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
   </joint>
-  
+
 </robot>
