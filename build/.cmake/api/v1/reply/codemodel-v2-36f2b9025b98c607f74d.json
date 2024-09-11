@@ -196,7 +196,7 @@
 					[
 						0
 					],
-					"name" : "nrs_vision_rviz",
+					"name" : "nrs_path_planning",
 					"targetIndexes" : 
 					[
 						0,
@@ -362,16 +362,16 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-_nrs_vision_rviz_generate_messages_check_deps_Waypoint-Debug-5e19d727b56b5f141188.json",
-					"name" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoint",
+					"id" : "_nrs_path_planning_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-_nrs_path_planning_generate_messages_check_deps_Waypoint-Debug-5e19d727b56b5f141188.json",
+					"name" : "_nrs_path_planning_generate_messages_check_deps_Waypoint",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoints::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-_nrs_vision_rviz_generate_messages_check_deps_Waypoints-Debug-00da4a63063934111b9f.json",
-					"name" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoints",
+					"id" : "_nrs_path_planning_generate_messages_check_deps_Waypoints::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-_nrs_path_planning_generate_messages_check_deps_Waypoints-Debug-00da4a63063934111b9f.json",
+					"name" : "_nrs_path_planning_generate_messages_check_deps_Waypoints",
 					"projectIndex" : 0
 				},
 				{
@@ -642,79 +642,79 @@
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_gencpp::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_gencpp-Debug-8978deac012f448d4489.json",
-					"name" : "nrs_vision_rviz_gencpp",
+					"id" : "nrs_path_planning_gencpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_gencpp-Debug-8978deac012f448d4489.json",
+					"name" : "nrs_path_planning_gencpp",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages-Debug-295efbd34d88a96a638f.json",
-					"name" : "nrs_vision_rviz_generate_messages",
+					"id" : "nrs_path_planning_generate_messages::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages-Debug-295efbd34d88a96a638f.json",
+					"name" : "nrs_path_planning_generate_messages",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages_cpp::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages_cpp-Debug-18e4499e4c826e3fb659.json",
-					"name" : "nrs_vision_rviz_generate_messages_cpp",
+					"id" : "nrs_path_planning_generate_messages_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages_cpp-Debug-18e4499e4c826e3fb659.json",
+					"name" : "nrs_path_planning_generate_messages_cpp",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages_eus::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages_eus-Debug-4524223ec34247773417.json",
-					"name" : "nrs_vision_rviz_generate_messages_eus",
+					"id" : "nrs_path_planning_generate_messages_eus::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages_eus-Debug-4524223ec34247773417.json",
+					"name" : "nrs_path_planning_generate_messages_eus",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages_lisp::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages_lisp-Debug-644331f4ef95a4eab855.json",
-					"name" : "nrs_vision_rviz_generate_messages_lisp",
+					"id" : "nrs_path_planning_generate_messages_lisp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages_lisp-Debug-644331f4ef95a4eab855.json",
+					"name" : "nrs_path_planning_generate_messages_lisp",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages_nodejs::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages_nodejs-Debug-3f40d2435f02db3dc4a1.json",
-					"name" : "nrs_vision_rviz_generate_messages_nodejs",
+					"id" : "nrs_path_planning_generate_messages_nodejs::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages_nodejs-Debug-3f40d2435f02db3dc4a1.json",
+					"name" : "nrs_path_planning_generate_messages_nodejs",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_generate_messages_py::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_generate_messages_py-Debug-209340d664b41d37a2f7.json",
-					"name" : "nrs_vision_rviz_generate_messages_py",
+					"id" : "nrs_path_planning_generate_messages_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_generate_messages_py-Debug-209340d664b41d37a2f7.json",
+					"name" : "nrs_path_planning_generate_messages_py",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_geneus::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_geneus-Debug-4b1f299ae50cb4431543.json",
-					"name" : "nrs_vision_rviz_geneus",
+					"id" : "nrs_path_planning_geneus::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_geneus-Debug-4b1f299ae50cb4431543.json",
+					"name" : "nrs_path_planning_geneus",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_genlisp::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_genlisp-Debug-0481e72a83f9b527e861.json",
-					"name" : "nrs_vision_rviz_genlisp",
+					"id" : "nrs_path_planning_genlisp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_genlisp-Debug-0481e72a83f9b527e861.json",
+					"name" : "nrs_path_planning_genlisp",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_gennodejs::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_gennodejs-Debug-83e5f6c4aad14b00b831.json",
-					"name" : "nrs_vision_rviz_gennodejs",
+					"id" : "nrs_path_planning_gennodejs::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_gennodejs-Debug-83e5f6c4aad14b00b831.json",
+					"name" : "nrs_path_planning_gennodejs",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "nrs_vision_rviz_genpy::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-nrs_vision_rviz_genpy-Debug-6c61de21a07459410263.json",
-					"name" : "nrs_vision_rviz_genpy",
+					"id" : "nrs_path_planning_genpy::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-nrs_path_planning_genpy-Debug-6c61de21a07459410263.json",
+					"name" : "nrs_path_planning_genpy",
 					"projectIndex" : 0
 				},
 				{
@@ -1192,8 +1192,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build",
-		"source" : "/home/nrs/catkin_ws/src/nrs_vision_rviz"
+		"build" : "/home/nrs/catkin_ws/src/nrs_path_planning/build",
+		"source" : "/home/nrs/catkin_ws/src/nrs_path_planning"
 	},
 	"version" : 
 	{

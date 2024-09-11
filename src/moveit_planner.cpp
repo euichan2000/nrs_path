@@ -15,8 +15,8 @@
 #include <shape_msgs/MeshTriangle.h>
 #include <geometric_shapes/shape_operations.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <nrs_vision_rviz/Waypoints.h>
-#include <nrs_vision_rviz/Waypoint.h>
+#include <nrs_path_planning/Waypoints.h>
+#include <nrs_path_planning/Waypoint.h>
 #include <fstream> // 파일 입출력 라이브러리
 #include <tf2/LinearMath/Transform.h>
 #include <std_msgs/String.h>
@@ -35,9 +35,9 @@ void saveJointStatesToFile(const moveit::planning_interface::MoveGroupInterface:
 
 void saveTCPStatesToFile(const moveit::planning_interface::MoveGroupInterface::Plan &plan, const std::string &file_path, moveit::planning_interface::MoveGroupInterface &move_group);
 
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
+void waypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg);
 
-void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
+void interpolatedWaypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg);
 
 int main(int argc, char **argv)
 {
@@ -126,10 +126,10 @@ int main(int argc, char **argv)
                     display_trajectory.trajectory.push_back(plan.trajectory_);
                     display_publisher.publish(display_trajectory);
 
-                    std::string file_path = using_interpolated_waypoints ? "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/interpolated_joint_states.txt" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/joint_states.txt";
+                    std::string file_path = using_interpolated_waypoints ? "/home/nrs/catkin_ws/src/nrs_path_planning/data/interpolated_joint_states.txt" : "/home/nrs/catkin_ws/src/nrs_path_planning/data/joint_states.txt";
                     saveJointStatesToFile(plan, file_path);
 
-                    std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/tcp_states.txt";
+                    std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_path_planning/data/tcp_states.txt";
                     saveTCPStatesToFile(plan, file_path2, move_group);
                 }
 
@@ -297,7 +297,7 @@ void saveJointStatesToFile(const moveit::planning_interface::MoveGroupInterface:
     ROS_INFO("Joint states saved to %s", file_path.c_str());
 }
 
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
+void waypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg)
 {
     waypoints_poses.clear();
 
@@ -331,7 +331,7 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
     }
 }
 
-void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
+void interpolatedWaypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg)
 {
     interpolated_waypoints_poses.clear();
 

@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "devel/lib/nrs_vision_rviz/moveit_planner"
+			"path" : "devel/lib/nrs_path_planning/moveit_planner"
 		}
 	],
 	"backtrace" : 1,
@@ -31,7 +31,7 @@
 			"/opt/ros/noetic/share/catkin/cmake/tools/libraries.cmake",
 			"/opt/ros/noetic/share/catkin/cmake/all.cmake",
 			"/opt/ros/noetic/share/gencpp/cmake/gencpp-extras.cmake",
-			"build/cmake/nrs_vision_rviz-genmsg.cmake",
+			"build/cmake/nrs_path_planning-genmsg.cmake",
 			"/opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake"
 		],
 		"nodes" : 
@@ -188,14 +188,14 @@
 				},
 				{
 					"backtrace" : 16,
-					"define" : "ROS_PACKAGE_NAME=\"nrs_vision_rviz\""
+					"define" : "ROS_PACKAGE_NAME=\"nrs_path_planning\""
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 22,
-					"path" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/devel/include"
+					"path" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/devel/include"
 				},
 				{
 					"backtrace" : 23,
@@ -229,11 +229,11 @@
 	[
 		{
 			"backtrace" : 2,
-			"id" : "nrs_vision_rviz_generate_messages_cpp::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_cpp::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
-			"id" : "nrs_vision_rviz_generate_messages_nodejs::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_nodejs::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
@@ -285,7 +285,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"id" : "nrs_vision_rviz_generate_messages_lisp::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_lisp::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
@@ -309,7 +309,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"id" : "nrs_vision_rviz_generate_messages_py::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_py::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,
@@ -449,7 +449,7 @@
 		},
 		{
 			"backtrace" : 2,
-			"id" : "nrs_vision_rviz_generate_messages_eus::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_eus::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 2,

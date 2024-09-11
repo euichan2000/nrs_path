@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libgmockd.so -o ../lib/libgmockd.so CMakeFiles/gmock.dir/src/gmock-all.cc.o  -Wl,-rpath,/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gtest/lib ../lib/libgtestd.so -lpthread 

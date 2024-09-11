@@ -1,7 +1,7 @@
 // path_visualizer.cpp
 
 #include <ros/ros.h>
-#include <nrs_vision_rviz/Waypoints.h>
+#include <nrs_path_planning/Waypoints.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
 #include <vector>
@@ -33,7 +33,7 @@ void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::str
     marker_pub.publish(path_marker);
 }
 
-void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoints)
+void visualizeWaypointsAxes(const std::vector<nrs_path_planning::Waypoint> &waypoints)
 {
     double axis_length = 0.01; // 축의 고정 길이
 
@@ -135,7 +135,7 @@ void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoi
     }
 }
 
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
+void waypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg)
 {
     std::vector<geometry_msgs::Point> path;
     for (const auto &waypoint : msg->waypoints)

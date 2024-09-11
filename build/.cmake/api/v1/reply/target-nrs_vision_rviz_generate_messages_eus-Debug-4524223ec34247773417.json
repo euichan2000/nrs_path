@@ -11,7 +11,7 @@
 		],
 		"files" : 
 		[
-			"build/cmake/nrs_vision_rviz-genmsg.cmake",
+			"build/cmake/nrs_path_planning-genmsg.cmake",
 			"/opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake",
 			"CMakeLists.txt"
 		],
@@ -72,11 +72,11 @@
 	[
 		{
 			"backtrace" : 5,
-			"id" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoints::@6890427a1f51a3e7e1df"
+			"id" : "_nrs_path_planning_generate_messages_check_deps_Waypoints::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 6,
-			"id" : "_nrs_vision_rviz_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df"
+			"id" : "_nrs_path_planning_generate_messages_check_deps_Waypoint::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 7,
@@ -87,8 +87,8 @@
 			"id" : "std_msgs_generate_messages_eus::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "nrs_vision_rviz_generate_messages_eus::@6890427a1f51a3e7e1df",
-	"name" : "nrs_vision_rviz_generate_messages_eus",
+	"id" : "nrs_path_planning_generate_messages_eus::@6890427a1f51a3e7e1df",
+	"name" : "nrs_path_planning_generate_messages_eus",
 	"paths" : 
 	{
 		"build" : ".",
@@ -119,31 +119,31 @@
 		{
 			"backtrace" : 4,
 			"isGenerated" : true,
-			"path" : "build/CMakeFiles/nrs_vision_rviz_generate_messages_eus",
+			"path" : "build/CMakeFiles/nrs_path_planning_generate_messages_eus",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/CMakeFiles/nrs_vision_rviz_generate_messages_eus.rule",
+			"path" : "build/CMakeFiles/nrs_path_planning_generate_messages_eus.rule",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoint.l.rule",
+			"path" : "build/devel/share/roseus/ros/nrs_path_planning/msg/Waypoint.l.rule",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/devel/share/roseus/ros/nrs_vision_rviz/msg/Waypoints.l.rule",
+			"path" : "build/devel/share/roseus/ros/nrs_path_planning/msg/Waypoints.l.rule",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/devel/share/roseus/ros/nrs_vision_rviz/manifest.l.rule",
+			"path" : "build/devel/share/roseus/ros/nrs_path_planning/manifest.l.rule",
 			"sourceGroupIndex" : 1
 		}
 	],

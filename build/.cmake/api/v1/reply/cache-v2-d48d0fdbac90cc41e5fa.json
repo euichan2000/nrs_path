@@ -343,7 +343,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/catkin_generated/env_cached.sh"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/catkin_generated/env_cached.sh"
 		},
 		{
 			"name" : "CATKIN_PACKAGE_PREFIX",
@@ -391,7 +391,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/test_results"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/test_results"
 		},
 		{
 			"name" : "CGAL_Boost_USE_STATIC_LIBS",
@@ -563,7 +563,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -1199,7 +1199,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning"
 		},
 		{
 			"name" : "CMAKE_INSTALL_BINDIR",
@@ -1711,7 +1711,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "nrs_vision_rviz"
+			"value" : "nrs_path_planning"
 		},
 		{
 			"name" : "CMAKE_PROJECT_VERSION",
@@ -2763,7 +2763,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gmock"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/gmock"
 		},
 		{
 			"name" : "GMOCK_FROM_SOURCE_MAIN_LIBRARIES",
@@ -2959,7 +2959,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gtest"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/gtest"
 		},
 		{
 			"name" : "GTEST_FROM_SOURCE_MAIN_LIBRARIES",
@@ -9015,7 +9015,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gtest/googlemock"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/gtest/googlemock"
 		},
 		{
 			"name" : "gmock_LIB_DEPENDS",
@@ -9079,7 +9079,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gtest"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/gtest"
 		},
 		{
 			"name" : "googletest-distribution_SOURCE_DIR",
@@ -9103,7 +9103,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build/gtest/googletest"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build/gtest/googletest"
 		},
 		{
 			"name" : "gtest_SOURCE_DIR",
@@ -9402,7 +9402,7 @@
 			"value" : "/opt/ros/noetic/share/nodelet/cmake"
 		},
 		{
-			"name" : "nrs_vision_rviz_BINARY_DIR",
+			"name" : "nrs_path_planning_BINARY_DIR",
 			"properties" : 
 			[
 				{
@@ -9411,10 +9411,10 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/build"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning/build"
 		},
 		{
-			"name" : "nrs_vision_rviz_SOURCE_DIR",
+			"name" : "nrs_path_planning_SOURCE_DIR",
 			"properties" : 
 			[
 				{
@@ -9423,7 +9423,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/nrs/catkin_ws/src/nrs_vision_rviz"
+			"value" : "/home/nrs/catkin_ws/src/nrs_path_planning"
 		},
 		{
 			"name" : "object_recognition_msgs_DIR",

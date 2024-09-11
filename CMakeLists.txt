@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(nrs_vision_rviz)
+project(nrs_path_planning)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -56,10 +56,6 @@ target_link_libraries(keyboard_listener ${catkin_LIBRARIES})
 add_executable(path_generator src/path_generator.cpp)
 add_dependencies(path_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(path_generator ${catkin_LIBRARIES} ${OMPL_LIBRARIES} ${CGAL_LIBRARIES})
-
-add_executable(geodesic_hermite_path_generator src/geodesic_hermite_path_generator.cpp)
-add_dependencies(geodesic_hermite_path_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(geodesic_hermite_path_generator ${catkin_LIBRARIES}  ${CGAL_LIBRARIES})
 
 add_executable(path_visualizer src/path_visualizer.cpp)
 add_dependencies(path_visualizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

@@ -11,7 +11,7 @@
 		],
 		"files" : 
 		[
-			"build/cmake/nrs_vision_rviz-genmsg.cmake",
+			"build/cmake/nrs_path_planning-genmsg.cmake",
 			"/opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake",
 			"CMakeLists.txt"
 		],
@@ -54,11 +54,11 @@
 	[
 		{
 			"backtrace" : 5,
-			"id" : "nrs_vision_rviz_generate_messages_py::@6890427a1f51a3e7e1df"
+			"id" : "nrs_path_planning_generate_messages_py::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "nrs_vision_rviz_genpy::@6890427a1f51a3e7e1df",
-	"name" : "nrs_vision_rviz_genpy",
+	"id" : "nrs_path_planning_genpy::@6890427a1f51a3e7e1df",
+	"name" : "nrs_path_planning_genpy",
 	"paths" : 
 	{
 		"build" : ".",

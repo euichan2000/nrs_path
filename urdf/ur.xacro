@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg robot_model)_robot">
 
    <!-- import main macro -->
-   <xacro:include filename="$(find nrs_vision_rviz)/urdf/inc/ur_macro.xacro"/>
+   <xacro:include filename="$(find nrs_path_planning)/urdf/inc/ur_macro.xacro"/>
 
    <!-- parameters -->
    <xacro:arg name="joint_limit_params" default=""/>
