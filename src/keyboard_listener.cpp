@@ -16,12 +16,12 @@ int main(int argc, char **argv)
         std::string input;
         std::cin >> input;
 
-        if (input == "geodesic")
+        if (input == "straight")
         {
             msg.data = "generate_Geodesic_Path";
             command_pub.publish(msg);
         }
-        if (input == "hermite")
+        if (input == "spline")
         {
             msg.data = "generate_Hermite_Spline_path";
             command_pub.publish(msg);
@@ -32,11 +32,11 @@ int main(int argc, char **argv)
             msg.data = "start";
             command_pub.publish(msg);
         }
-        // if (input == "4")
-        // {
-        //     msg.data = "waypoints";
-        //     command_pub.publish(msg);
-        // }
+        if (input == "reset")
+        {
+            msg.data = "reset";
+            command_pub.publish(msg);
+        }
         if (input == "move")
         {
             msg.data = "interpolated_waypoints";

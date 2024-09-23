@@ -4,7 +4,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PointStamped.h>
 #include <visualization_msgs/Marker.h>
-#include <nrs_path_planning/Waypoints.h>
+#include <nrs_vision_rviz/Waypoints.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <ompl/base/SpaceInformation.h>
@@ -54,14 +54,14 @@ ros::Publisher marker_pub;
 Triangle_mesh tmesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
-nrs_path_planning::Waypoints waypoints_msg;
+nrs_vision_rviz::Waypoints waypoints_msg;
 
 std::vector<geometry_msgs::Point> clicked_points;
 std::vector<Eigen::Vector3d> selected_points; // Projected [clicked_points] onto Mesh surface
 std::vector<double> u_values = {0.0};         // Interpolation Paramter array. U0=0
 std::vector<Eigen::Vector3d> tangent_vectors; // Tangent Vectors array
 std::vector<std::vector<Eigen::Vector3d>> bezier_control_points;
-int steps = 10;
+int steps = 20;
 
 bool new_waypoints = false;
 bool start_path_generating = false; // keyboard publisher order to start
@@ -143,31 +143,6 @@ struct TriangleFace
     Vec3d normal;
 };
 
-/*
-void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
-{
-    visualization_msgs::Marker path_marker;
-    path_marker.header.frame_id = "base_link";
-    path_marker.header.stamp = ros::Time::now();
-    path_marker.ns = ns;
-    path_marker.id = id;
-    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
-    path_marker.action = visualization_msgs::Marker::ADD;
-    path_marker.pose.orientation.w = 1.0;
-    path_marker.scale.x = 0.005;
-    path_marker.color.r = r;
-    path_marker.color.g = g;
-    path_marker.color.b = b;
-    path_marker.color.a = a;
-
-    for (const auto &point : path)
-    {
-        path_marker.points.push_back(point);
-    }
-
-    marker_pub.publish(path_marker);
-}
-*/
 
 std::vector<geometry_msgs::Point> projectPointsOntoMesh(const std::vector<geometry_msgs::Point> &points)
 {
@@ -273,9 +248,9 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
 }
 
 // points to waypoints to publish
-std::vector<nrs_path_planning::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh tmesh)
+std::vector<nrs_vision_rviz::Waypoint> convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh tmesh)
 {
-    std::vector<nrs_path_planning::Waypoint> waypoints;
+    std::vector<nrs_vision_rviz::Waypoint> waypoints;
 
     for (const auto &point : points)
     {
@@ -291,7 +266,7 @@ std::vector<nrs_path_planning::Waypoint> convertToWaypoints(const std::vector<ge
 
         Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, tmesh);
 
-        nrs_path_planning::Waypoint waypoint_msg;
+        nrs_vision_rviz::Waypoint waypoint_msg;
         waypoint_msg.point.x = point.x;
         waypoint_msg.point.y = point.y;
         waypoint_msg.point.z = point.z;
@@ -1285,21 +1260,14 @@ void keyboardCallback(const std_msgs::String::ConstPtr &msg)
         use_straight = true;
         ROS_INFO("Received start command, initiating generate_Geodesic_Path planning.");
     }
-    // if (msg->data == "generate_B_Spline_Path")
-    // {
-    //     start_path_generating = true;
-    //     ROS_INFO("Received start command, initiating generate_B_Spline_Path planning.");
-    // }
-    // if (msg->data == "generate_Geodesic_Path")
-    // {
-    //     start_path_generating = true;
-    //     ROS_INFO("Received start command, initiating generate_Geodesic_Path planning.");
-    // }
-    // if (msg->data == "generate_Catmull_Rom_Path")
-    // {
-    //     start_path_generating = true;
-    //     ROS_INFO("Received start command, initiating generate_Catmull_Rom_Path planning.");
-    // }
+    if (msg->data == "reset")
+    {
+        clicked_points.clear();
+        selected_points.clear();
+        
+        ROS_INFO("waypoints cleared");
+    }
+
     if (msg->data == "generate_Hermite_Spline_path")
     {
         start_path_generating = true;
@@ -1314,9 +1282,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
     ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
-    waypoints_pub = nh.advertise<nrs_path_planning::Waypoints>("waypoints_with_normals", 10);
+    waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
 
-    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_path_planning/mesh/lid_wrap.stl";
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
     std::ifstream input(mesh_file_path, std::ios::binary);
     read_stl_file(input, tmesh);
 

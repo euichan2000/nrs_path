@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="ur10_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Include the UR10 robot description -->
-  <xacro:include filename="$(find nrs_path_planning)/urdf/ur10.xacro" />
+  <xacro:include filename="$(find nrs_vision_rviz)/urdf/ur10.xacro" />
   <!-- Define the testbed link -->
   <link name="testbed">
     <visual>
@@ -33,11 +33,7 @@
   <link name="UR_EE_tool">
     <visual>
       <geometry>
-<<<<<<< HEAD
         <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
-=======
-        <mesh filename="package://nrs_path_planning/mesh/ur10_tooltip.stl" />
->>>>>>> 745743660d549b29ec120686157a19684c5f67e3
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
@@ -45,11 +41,7 @@
     </visual>
     <!-- <collision>
       <geometry>
-<<<<<<< HEAD
         <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
-=======
-        <mesh filename="package://nrs_path_planning/mesh/ur10_tooltip.stl" />
->>>>>>> 745743660d549b29ec120686157a19684c5f67e3
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
@@ -61,7 +53,7 @@
   <link name="workpiece">
     <visual>
       <geometry>
-        <mesh filename="package://nrs_path_planning/mesh/lid_wrap.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl" />
       </geometry>
       <material name="light_blue">
         <color rgba="0.57 0.81 0.92 0.5" />
@@ -69,7 +61,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://nrs_path_planning/mesh/lid_wrap.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl" />
       </geometry>
       <material name="light_blue">
         <color rgba="0.57 0.81 0.92 0.5" />

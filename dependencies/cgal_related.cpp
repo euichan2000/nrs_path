@@ -27,9 +27,9 @@ bool cgal_related::read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
     ROS_INFO("Successfully read STL file.");
     return true;
 }
-std::vector<nrs_path_planning::Waypoint> cgal_related::convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh mesh)
+std::vector<nrs_vision_rviz::Waypoint> cgal_related::convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const Triangle_mesh mesh)
 {
-    std::vector<nrs_path_planning::Waypoint> waypoints;
+    std::vector<nrs_vision_rviz::Waypoint> waypoints;
 
     for (const auto &point : points)
     {
@@ -45,7 +45,7 @@ std::vector<nrs_path_planning::Waypoint> cgal_related::convertToWaypoints(const 
 
         Kernel::Vector_3 normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, mesh);
 
-        nrs_path_planning::Waypoint waypoint_msg;
+        nrs_vision_rviz::Waypoint waypoint_msg;
         waypoint_msg.point.x = point.x;
         waypoint_msg.point.y = point.y;
         waypoint_msg.point.z = point.z;

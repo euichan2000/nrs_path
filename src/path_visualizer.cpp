@@ -1,13 +1,16 @@
 // path_visualizer.cpp
 
 #include <ros/ros.h>
-#include <nrs_path_planning/Waypoints.h>
+#include <nrs_vision_rviz/Waypoints.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
 #include <vector>
+#include <std_msgs/String.h>
 
 // 전역 변수 선언
 ros::Publisher marker_pub;
+
+std::vector<geometry_msgs::Point> path;
 
 void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::string &ns, int id, float r, float g, float b, float a)
 {
@@ -33,7 +36,7 @@ void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::str
     marker_pub.publish(path_marker);
 }
 
-void visualizeWaypointsAxes(const std::vector<nrs_path_planning::Waypoint> &waypoints)
+void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoints)
 {
     double axis_length = 0.01; // 축의 고정 길이
 
@@ -135,19 +138,45 @@ void visualizeWaypointsAxes(const std::vector<nrs_path_planning::Waypoint> &wayp
     }
 }
 
-void waypointsCallback(const nrs_path_planning::Waypoints::ConstPtr &msg)
+void deleteMarkers()
 {
-    std::vector<geometry_msgs::Point> path;
+    // 마커 삭제를 위한 메시지 생성
+    visualization_msgs::Marker delete_marker;
+    delete_marker.header.frame_id = "base_link";
+    delete_marker.header.stamp = ros::Time::now();
+    delete_marker.ns = "geodesic_path"; // 삭제하려는 마커와 동일한 네임스페이스 사용
+    delete_marker.id = 0;               // 삭제하려는 마커 ID (모든 마커를 삭제하려면 범위를 설정할 수 있습니다)
+    delete_marker.action = visualization_msgs::Marker::DELETE;
+
+    // 삭제 명령을 퍼블리시
+    marker_pub.publish(delete_marker);
+
+    ROS_INFO("Markers deleted");
+}
+
+void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
+{
+
     for (const auto &waypoint : msg->waypoints)
     {
         path.push_back(waypoint.point);
     }
 
     visualizePath(path, "geodesic_path", 0, 0.0, 1.0, 0.0, 1.0);
-    //visualizeWaypointsAxes(msg->waypoints);
+    // visualizeWaypointsAxes(msg->waypoints);
 }
 
+void keyboardCallback(const std_msgs::String::ConstPtr &msg)
+{
 
+    if (msg->data == "reset")
+    {
+        path.clear();
+        deleteMarkers(); // 마커 삭제 호출
+
+        ROS_INFO("waypoints cleared");
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -156,7 +185,7 @@ int main(int argc, char **argv)
 
     marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
     ros::Subscriber waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, waypointsCallback);
-    
+    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
     ros::spin();
     return 0;
 }

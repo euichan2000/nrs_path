@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(nrs_path_planning)
+project(nrs_vision_rviz)
+
+set(CMAKE_BUILD_TYPE Release)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

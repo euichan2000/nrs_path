@@ -7,6 +7,7 @@ Panels:
         - /Status1
         - /Grid1
         - /Marker1/Namespaces1
+        - /PointStamped1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
@@ -63,20 +64,19 @@ Visualization Manager:
       Name: Marker
       Namespaces:
         geodesic_path: true
-        points: true
       Queue Size: 100
       Value: true
     - Alpha: 1
       Class: rviz/PointStamped
       Color: 204; 41; 204
-      Enabled: true
+      Enabled: false
       History Length: 20
       Name: PointStamped
       Queue Size: 10
       Radius: 0.004999999888241291
       Topic: /clicked_point
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/Axes
       Enabled: true
@@ -96,6 +96,11 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        UR_EE_tool:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         base:
           Alpha: 1
           Show Axes: false
@@ -132,11 +137,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        tooltip:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         upper_arm_link:
           Alpha: 1
           Show Axes: false
@@ -287,7 +287,7 @@ Visualization Manager:
       Marker Topic: /visualization_marker_array_hermite
       Name: MarkerArray
       Namespaces:
-        path_points: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -318,7 +318,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.13307979702949524
+      Distance: 0.23562057316303253
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -326,17 +326,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.4527042806148529
-        Y: -0.22314442694187164
-        Z: 0.004151494242250919
+        X: 0.48407039046287537
+        Y: -0.0570172555744648
+        Z: 0.08957203477621078
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4797969460487366
+      Pitch: 0.16979645192623138
       Target Frame: <Fixed Frame>
-      Yaw: 5.011804580688477
+      Yaw: 0.04361430183053017
     Saved: ~
 Window Geometry:
   Displays:

@@ -24,7 +24,7 @@
           However, users MUST NOT rely on these properties, their contents or
           their names.
 
-          This macro is NOT part of the public API of the nrs_path_planning pkg,
+          This macro is NOT part of the public API of the nrs_vision_rviz pkg,
           and as such should be considered to be for internal use only.
   -->
   <xacro:macro name="read_model_data" params="joint_limits_parameters_file kinematics_parameters_file physical_parameters_file visual_parameters_file">

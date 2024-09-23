@@ -56,7 +56,7 @@ void visualization::visualizePath(const std::vector<geometry_msgs::Point> &path,
 }
 
 
-void visualization::visualizeWaypointsAxes(const std::vector<nrs_path_planning::Waypoint> &waypoints)
+void visualization::visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoints)
 {
     double axis_length = 0.01; // 축의 고정 길이
 
