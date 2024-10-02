@@ -6,9 +6,13 @@
 #include <geometry_msgs/Point.h>
 #include <vector>
 #include <std_msgs/String.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 // 전역 변수 선언
-ros::Publisher marker_pub;
+ros::Publisher marker_pub1;
+ros::Publisher marker_pub2;
 
 std::vector<geometry_msgs::Point> path;
 
@@ -33,62 +37,94 @@ void visualizePath(const std::vector<geometry_msgs::Point> &path, const std::str
         path_marker.points.push_back(point);
     }
 
-    marker_pub.publish(path_marker);
+    marker_pub1.publish(path_marker);
 }
 
+void visualizePoints(const std::vector<geometry_msgs::Point> &points, const std::string &ns)
+{
+    int id = 0; // 각 마커의 고유 ID
+
+    // 색상 설정: b0 = 노랑, b1 = 초록, b2 = 파랑, b3 = 검정
+    std::vector<std::array<float, 4>> colors = {
+        {1.0, 1.0, 0.0, 1.0}, // b0: 노랑 (r, g, b, a)
+        {0.0, 1.0, 0.5, 1.0}, // b1: 초록
+        {0.0, 0.0, 1.0, 1.0}, // b2: 파랑
+        {0.0, 0.0, 0.0, 1.0}  // b3: 검정
+    };
+
+    // 각 포인트에 대해 마커 생성 및 퍼블리시
+    for (size_t i = 0; i < points.size(); ++i)
+    {
+        visualization_msgs::Marker sphere_marker;
+        sphere_marker.header.frame_id = "base_link";             // 프레임 ID 설정
+        sphere_marker.header.stamp = ros::Time::now();           // 타임스탬프 설정
+        sphere_marker.ns = ns;                                   // 네임스페이스 설정
+        sphere_marker.id = id++;                                 // 고유한 ID 설정
+        sphere_marker.type = visualization_msgs::Marker::SPHERE; // 마커 타입을 구로 설정
+        sphere_marker.action = visualization_msgs::Marker::ADD;  // 마커 추가
+
+        // 마커의 위치 설정
+        sphere_marker.pose.position = points[i]; // points[i]의 위치를 마커 위치로 설정
+        sphere_marker.pose.orientation.w = 1.0;  // 기본값으로 설정
+
+        // Sphere 크기 설정
+        sphere_marker.scale.x = 0.01; // X축 크기
+        sphere_marker.scale.y = 0.01; // Y축 크기
+        sphere_marker.scale.z = 0.01; // Z축 크기
+
+        // 색상 설정: 4개마다 반복 (b0, b1, b2, b3)
+        int color_index = i % 4; // 0, 1, 2, 3 반복
+        sphere_marker.color.r = colors[color_index][0];
+        sphere_marker.color.g = colors[color_index][1];
+        sphere_marker.color.b = colors[color_index][2];
+        sphere_marker.color.a = colors[color_index][3]; // 투명도는 항상 1.0
+
+        // 마커 퍼블리시
+        marker_pub2.publish(sphere_marker);
+    }
+}
+
+// Waypoints 시각화 함수
 void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoints)
 {
-    double axis_length = 0.01; // 축의 고정 길이
+    double axis_length = 0.01; // 축의 길이 설정
 
     for (size_t i = 0; i < waypoints.size(); ++i)
     {
         const auto &waypoint = waypoints[i];
-        const auto &origin = waypoint.point;
-        const auto &z_axis = waypoint.normal;
+        const auto &origin = waypoint.pose.position; // 원점
 
-        // 다음 점을 기준으로 x축 방향을 설정 (path 진행 방향)
-        geometry_msgs::Point x_axis_end;
-        if (i < waypoints.size() - 1)
-        {
-            const auto &next_point = waypoints[i + 1].point;
+        // Quaternion을 사용하여 Rotation Matrix를 생성
+        tf2::Quaternion q(
+            waypoint.pose.orientation.x,
+            waypoint.pose.orientation.y,
+            waypoint.pose.orientation.z,
+            waypoint.pose.orientation.w);
 
-            // x축 벡터 계산
-            geometry_msgs::Point x_axis;
-            x_axis.x = next_point.x - origin.x;
-            x_axis.y = next_point.y - origin.y;
-            x_axis.z = next_point.z - origin.z;
+        // 쿼터니언을 Rotation Matrix로 변환
+        tf2::Matrix3x3 rotation_matrix(q);
 
-            // 벡터를 정규화
-            double length = std::sqrt(x_axis.x * x_axis.x + x_axis.y * x_axis.y + x_axis.z * x_axis.z);
-            x_axis.x = (x_axis.x / length) * axis_length;
-            x_axis.y = (x_axis.y / length) * axis_length;
-            x_axis.z = (x_axis.z / length) * axis_length;
+        // X, Y, Z 축 방향 설정
+        tf2::Vector3 x_axis = rotation_matrix * tf2::Vector3(axis_length, 0, 0);
+        tf2::Vector3 y_axis = rotation_matrix * tf2::Vector3(0, axis_length, 0);
+        tf2::Vector3 z_axis = rotation_matrix * tf2::Vector3(0, 0, axis_length);
 
-            // x_axis_end 포인트 계산
-            x_axis_end.x = origin.x + x_axis.x;
-            x_axis_end.y = origin.y + x_axis.y;
-            x_axis_end.z = origin.z + x_axis.z;
-        }
-        else
-        {
-            // 마지막 점인 경우, x축 방향을 0으로 설정
-            x_axis_end = origin;
-        }
+        // X축, Y축, Z축 끝 좌표 계산
+        geometry_msgs::Point x_axis_end, y_axis_end, z_axis_end;
 
-        // y축을 z축과 x축의 외적(cross product)으로 계산
-        geometry_msgs::Point y_axis_end;
-        y_axis_end.x = origin.x + (-z_axis.y * (x_axis_end.z - origin.z) - -z_axis.z * (x_axis_end.y - origin.y));
-        y_axis_end.y = origin.y + (-z_axis.z * (x_axis_end.x - origin.x) - -z_axis.x * (x_axis_end.z - origin.z));
-        y_axis_end.z = origin.z + (-z_axis.x * (x_axis_end.y - origin.y) - -z_axis.y * (x_axis_end.x - origin.x));
+        x_axis_end.x = origin.x + x_axis.getX();
+        x_axis_end.y = origin.y + x_axis.getY();
+        x_axis_end.z = origin.z + x_axis.getZ();
 
-        // z축 끝 포인트 계산 (정규화)
-        geometry_msgs::Point z_axis_end;
-        double z_length = std::sqrt(-z_axis.x * -z_axis.x + -z_axis.y * -z_axis.y + -z_axis.z * -z_axis.z);
-        z_axis_end.x = origin.x + (-z_axis.x / z_length) * axis_length;
-        z_axis_end.y = origin.y + (-z_axis.y / z_length) * axis_length;
-        z_axis_end.z = origin.z + (-z_axis.z / z_length) * axis_length;
+        y_axis_end.x = origin.x + y_axis.getX();
+        y_axis_end.y = origin.y + y_axis.getY();
+        y_axis_end.z = origin.z + y_axis.getZ();
 
-        // 마커 생성
+        z_axis_end.x = origin.x + z_axis.getX();
+        z_axis_end.y = origin.y + z_axis.getY();
+        z_axis_end.z = origin.z + z_axis.getZ();
+
+        // 마커 생성 (X, Y, Z 축 각각)
         visualization_msgs::Marker x_axis_marker, y_axis_marker, z_axis_marker;
 
         x_axis_marker.header.frame_id = y_axis_marker.header.frame_id = z_axis_marker.header.frame_id = "base_link";
@@ -96,22 +132,24 @@ void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoi
         x_axis_marker.ns = y_axis_marker.ns = z_axis_marker.ns = "waypoint_axes";
         x_axis_marker.action = y_axis_marker.action = z_axis_marker.action = visualization_msgs::Marker::ADD;
         x_axis_marker.type = y_axis_marker.type = z_axis_marker.type = visualization_msgs::Marker::ARROW;
-        x_axis_marker.scale.x = y_axis_marker.scale.x = z_axis_marker.scale.x = 0.0005; // 화살표 몸통의 두께
-        x_axis_marker.scale.y = y_axis_marker.scale.y = z_axis_marker.scale.y = 0.001;  // 화살표 머리의 두께
-        x_axis_marker.scale.z = y_axis_marker.scale.z = z_axis_marker.scale.z = 0.001;  // 화살표 머리의 길이
+
+        // 화살표 크기 설정
+        x_axis_marker.scale.x = y_axis_marker.scale.x = z_axis_marker.scale.x = 0.0005; // 화살표 몸통 두께
+        x_axis_marker.scale.y = y_axis_marker.scale.y = z_axis_marker.scale.y = 0.001;  // 화살표 머리 두께
+        x_axis_marker.scale.z = y_axis_marker.scale.z = z_axis_marker.scale.z = 0.001;  // 화살표 머리 길이
         x_axis_marker.color.a = y_axis_marker.color.a = z_axis_marker.color.a = 1.0;
 
-        // x축 색상 (빨간색)
+        // X축 색상 (빨간색)
         x_axis_marker.color.r = 1.0;
         x_axis_marker.color.g = 0.0;
         x_axis_marker.color.b = 0.0;
 
-        // y축 색상 (녹색)
+        // Y축 색상 (녹색)
         y_axis_marker.color.r = 0.0;
         y_axis_marker.color.g = 1.0;
         y_axis_marker.color.b = 0.0;
 
-        // z축 색상 (파란색)
+        // Z축 색상 (파란색)
         z_axis_marker.color.r = 0.0;
         z_axis_marker.color.g = 0.0;
         z_axis_marker.color.b = 1.0;
@@ -132,9 +170,9 @@ void visualizeWaypointsAxes(const std::vector<nrs_vision_rviz::Waypoint> &waypoi
         z_axis_marker.points.push_back(z_axis_end);
 
         // 마커 퍼블리시
-        marker_pub.publish(x_axis_marker);
-        marker_pub.publish(y_axis_marker);
-        marker_pub.publish(z_axis_marker);
+        marker_pub1.publish(x_axis_marker);
+        marker_pub1.publish(y_axis_marker);
+        marker_pub1.publish(z_axis_marker);
     }
 }
 
@@ -149,7 +187,7 @@ void deleteMarkers()
     delete_marker.action = visualization_msgs::Marker::DELETE;
 
     // 삭제 명령을 퍼블리시
-    marker_pub.publish(delete_marker);
+    marker_pub1.publish(delete_marker);
 
     ROS_INFO("Markers deleted");
 }
@@ -159,11 +197,36 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
 
     for (const auto &waypoint : msg->waypoints)
     {
-        path.push_back(waypoint.point);
+        path.push_back(waypoint.pose.position);
+        //std::cout << "waypoint: " << waypoint.pose.position.x << " " << waypoint.pose.position.y << " " << waypoint.pose.position.z << std::endl;
     }
 
     visualizePath(path, "geodesic_path", 0, 0.0, 1.0, 0.0, 1.0);
     // visualizeWaypointsAxes(msg->waypoints);
+}
+
+void controlpointsCallback(const std_msgs::Float64MultiArray::ConstPtr &msg)
+{
+    std::vector<geometry_msgs::Point> control_points;
+
+    // msg->data는 1차원 배열로 [x1, y1, z1, x2, y2, z2, ...] 형태로 구성되어 있음
+    if (msg->data.size() % 3 != 0)
+    {
+        ROS_ERROR("Received control points data size is not divisible by 3. It must contain x, y, z coordinates.");
+        return;
+    }
+
+    for (size_t i = 0; i < msg->data.size(); i += 3)
+    {
+        geometry_msgs::Point point;
+        point.x = msg->data[i];
+        point.y = msg->data[i + 1];
+        point.z = msg->data[i + 2];
+        //std::cout << "controlpoint:  " << point.x << " " << point.y << " " << point.z << std::endl;
+        control_points.push_back(point);
+    }
+
+    // visualizePoints(control_points, "control_points");
 }
 
 void keyboardCallback(const std_msgs::String::ConstPtr &msg)
@@ -183,9 +246,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "path_visualizer");
     ros::NodeHandle nh;
 
-    marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+    marker_pub1 = nh.advertise<visualization_msgs::Marker>("visualization_marker_path", 10);
+    marker_pub2 = nh.advertise<visualization_msgs::Marker>("visualization_marker_point", 10);
     ros::Subscriber waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, waypointsCallback);
-    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
+    ros::Subscriber controlpoints_sub = nh.subscribe("control_points", 10, controlpointsCallback);
+    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
     ros::spin();
     return 0;
 }

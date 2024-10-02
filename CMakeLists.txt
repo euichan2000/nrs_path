@@ -70,3 +70,12 @@ target_link_libraries(moveit_planner ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(waypoints_interpolator src/waypoints_interpolator.cpp)
 add_dependencies(waypoints_interpolator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(waypoints_interpolator ${catkin_LIBRARIES} ${CGAL_LIBRARIES})
+
+add_executable(path_publisher src/path_publisher.cpp)
+add_dependencies(path_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(path_publisher ${catkin_LIBRARIES})
+
+
+# add_executable(testcode src/testcode.cpp)
+# add_dependencies(testcode ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(testcode ${catkin_LIBRARIES} ${CGAL_LIBRARIES})

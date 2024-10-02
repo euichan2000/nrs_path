@@ -39,34 +39,34 @@
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <geometry>
         <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
       </material>
-    </collision> -->
+    </collision>
   </link> 
 
 
   <link name="workpiece">
     <visual>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/fenda_wrap.stl" />
       </geometry>
       <material name="light_blue">
         <color rgba="0.57 0.81 0.92 0.5" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/lid_wrap.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/fenda_wrap.stl" />
       </geometry>
       <material name="light_blue">
         <color rgba="0.57 0.81 0.92 0.5" />
       </material>
-    </collision>
+    </collision> -->
   </link>
 
   <!-- Define a fixed joint to attach the testbed to the base link -->

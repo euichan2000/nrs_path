@@ -44,9 +44,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "moveit_planner");
     ros::NodeHandle nh;
 
-    ros::Subscriber waypoints_sub = nh.subscribe("waypoints_with_normals", 10, waypointsCallback);
-    //ros::Subscriber interpolated_waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, interpolatedWaypointsCallback);
-    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
+    // ros::Subscriber waypoints_sub = nh.subscribe("waypoints_with_normals", 10, waypointsCallback);
+    ros::Subscriber interpolated_waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, interpolatedWaypointsCallback);
+    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
 
     ros::AsyncSpinner spinner(1);
     spinner.start();
@@ -102,20 +102,20 @@ int main(int argc, char **argv)
                     // Create a RobotTrajectory object from the computed trajectory
                     robot_trajectory::RobotTrajectory robot_trajectory(move_group.getCurrentState()->getRobotModel(), "manipulator");
 
-                    // Convert the moveit_msgs::RobotTrajectory to robot_trajectory::RobotTrajectory
-                    robot_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), trajectory_msg);
+                    // // Convert the moveit_msgs::RobotTrajectory to robot_trajectory::RobotTrajectory
+                    // robot_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), trajectory_msg);
 
-                    // Apply time parameterization to ensure constant speed
-                    trajectory_processing::IterativeSplineParameterization time_param;
-                    bool success = time_param.computeTimeStamps(robot_trajectory);
+                    // // // Apply time parameterization to ensure constant speed
+                    // // trajectory_processing::IterativeSplineParameterization time_param;
+                    // // bool success = time_param.computeTimeStamps(robot_trajectory);
 
-                    if (!success)
-                    {
-                        ROS_WARN("Time parameterization failed");
-                    }
+                    // // if (!success)
+                    // // {
+                    // //     ROS_WARN("Time parameterization failed");
+                    // // }
 
-                    // Convert the robot_trajectory back to a moveit_msgs::RobotTrajectory
-                    robot_trajectory.getRobotTrajectoryMsg(plan.trajectory_);
+                    // // Convert the robot_trajectory back to a moveit_msgs::RobotTrajectory
+                    // robot_trajectory.getRobotTrajectoryMsg(plan.trajectory_);
 
                     move_group.execute(plan);
                     move_group.setJointValueTarget(initial_pose);
@@ -316,21 +316,9 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg)
     for (const auto &waypoint : msg->waypoints)
     {
         geometry_msgs::Pose target_pose;
-        target_pose.position = waypoint.point;
 
-        tf2::Vector3 z_axis(waypoint.normal.x, waypoint.normal.y, waypoint.normal.z);
-        tf2::Vector3 x_axis(1, 0, 0);
-        tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
-        x_axis = y_axis.cross(z_axis).normalized();
-
-        tf2::Matrix3x3 orientation_matrix(
-            x_axis.x(), y_axis.x(), z_axis.x(),
-            x_axis.y(), y_axis.y(), z_axis.y(),
-            x_axis.z(), y_axis.z(), z_axis.z());
-
-        tf2::Quaternion orientation;
-        orientation_matrix.getRotation(orientation);
-        target_pose.orientation = tf2::toMsg(orientation);
+        target_pose.position = waypoint.pose.position;
+        target_pose.orientation = waypoint.pose.orientation;
 
         geometry_msgs::Pose final_pose = applyTooltipTransform(target_pose, tooltip_transform);
         waypoints_poses.push_back(final_pose);
@@ -350,21 +338,8 @@ void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &m
     for (const auto &waypoint : msg->waypoints)
     {
         geometry_msgs::Pose target_pose;
-        target_pose.position = waypoint.point;
-
-        tf2::Vector3 z_axis(waypoint.normal.x, waypoint.normal.y, waypoint.normal.z);
-        tf2::Vector3 x_axis(1, 0, 0);
-        tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
-        x_axis = y_axis.cross(z_axis).normalized();
-
-        tf2::Matrix3x3 orientation_matrix(
-            x_axis.x(), y_axis.x(), z_axis.x(),
-            x_axis.y(), y_axis.y(), z_axis.y(),
-            x_axis.z(), y_axis.z(), z_axis.z());
-
-        tf2::Quaternion orientation;
-        orientation_matrix.getRotation(orientation);
-        target_pose.orientation = tf2::toMsg(orientation);
+        target_pose.position = waypoint.pose.position;
+        target_pose.orientation = waypoint.pose.orientation;
 
         geometry_msgs::Pose final_pose = applyTooltipTransform(target_pose, tooltip_transform);
         interpolated_waypoints_poses.push_back(final_pose);

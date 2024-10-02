@@ -131,7 +131,8 @@
 						113,
 						114,
 						115,
-						116
+						116,
+						117
 					]
 				},
 				{
@@ -310,7 +311,8 @@
 						113,
 						114,
 						115,
-						116
+						116,
+						117
 					]
 				},
 				{
@@ -783,6 +785,13 @@
 					"id" : "path_generator::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-path_generator-Release-fd773199e17ef829a510.json",
 					"name" : "path_generator",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "path_publisher::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-path_publisher-Release-28ea02ba6337ab2c2dbc.json",
+					"name" : "path_publisher",
 					"projectIndex" : 0
 				},
 				{

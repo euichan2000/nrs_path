@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     ros::Subscriber sub = nh.subscribe("/clicked_point", 10, pointCallback);
 
     // 키보드 명령어를 구독하는 Subscriber
-    ros::Subscriber keyboard_sub = nh.subscribe("moveit_command", 10, keyboardCallback);
+    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
 
     ros::spin(); // 콜백 함수 대기
 

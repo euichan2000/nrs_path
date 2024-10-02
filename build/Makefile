@@ -805,6 +805,19 @@ geometry_msgs_generate_messages_eus/fast:
 .PHONY : geometry_msgs_generate_messages_eus/fast
 
 #=============================================================================
+# Target rules for targets named path_publisher
+
+# Build rule for target.
+path_publisher: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 path_publisher
+.PHONY : path_publisher
+
+# fast build rule for target.
+path_publisher/fast:
+	$(MAKE) -f CMakeFiles/path_publisher.dir/build.make CMakeFiles/path_publisher.dir/build
+.PHONY : path_publisher/fast
+
+#=============================================================================
 # Target rules for targets named std_msgs_generate_messages_nodejs
 
 # Build rule for target.
@@ -1769,6 +1782,33 @@ src/path_generator.cpp.s:
 	$(MAKE) -f CMakeFiles/path_generator.dir/build.make CMakeFiles/path_generator.dir/src/path_generator.cpp.s
 .PHONY : src/path_generator.cpp.s
 
+src/path_publisher.o: src/path_publisher.cpp.o
+
+.PHONY : src/path_publisher.o
+
+# target to build an object file
+src/path_publisher.cpp.o:
+	$(MAKE) -f CMakeFiles/path_publisher.dir/build.make CMakeFiles/path_publisher.dir/src/path_publisher.cpp.o
+.PHONY : src/path_publisher.cpp.o
+
+src/path_publisher.i: src/path_publisher.cpp.i
+
+.PHONY : src/path_publisher.i
+
+# target to preprocess a source file
+src/path_publisher.cpp.i:
+	$(MAKE) -f CMakeFiles/path_publisher.dir/build.make CMakeFiles/path_publisher.dir/src/path_publisher.cpp.i
+.PHONY : src/path_publisher.cpp.i
+
+src/path_publisher.s: src/path_publisher.cpp.s
+
+.PHONY : src/path_publisher.s
+
+# target to generate assembly for a file
+src/path_publisher.cpp.s:
+	$(MAKE) -f CMakeFiles/path_publisher.dir/build.make CMakeFiles/path_publisher.dir/src/path_publisher.cpp.s
+.PHONY : src/path_publisher.cpp.s
+
 src/path_visualizer.o: src/path_visualizer.cpp.o
 
 .PHONY : src/path_visualizer.o
@@ -1936,6 +1976,7 @@ help:
 	@echo "... geometry_msgs_generate_messages_cpp"
 	@echo "... moveit_msgs_generate_messages_py"
 	@echo "... geometry_msgs_generate_messages_eus"
+	@echo "... path_publisher"
 	@echo "... std_msgs_generate_messages_nodejs"
 	@echo "... std_msgs_generate_messages_py"
 	@echo "... std_msgs_generate_messages_cpp"
@@ -2016,6 +2057,9 @@ help:
 	@echo "... src/path_generator.o"
 	@echo "... src/path_generator.i"
 	@echo "... src/path_generator.s"
+	@echo "... src/path_publisher.o"
+	@echo "... src/path_publisher.i"
+	@echo "... src/path_publisher.s"
 	@echo "... src/path_visualizer.o"
 	@echo "... src/path_visualizer.i"
 	@echo "... src/path_visualizer.s"
