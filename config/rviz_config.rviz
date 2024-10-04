@@ -175,13 +175,13 @@ Visualization Manager:
       Use Sim Time: false
       Value: false
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /visualization_mesh_edge
       Name: Marker
       Namespaces:
-        mesh_edges: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /visualization_marker_array_hermite
@@ -203,7 +203,7 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        clicked_points: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true

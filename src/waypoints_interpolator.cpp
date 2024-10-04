@@ -21,6 +21,7 @@
 #include <std_msgs/String.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+#include <atomic> // For atomic flag
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -38,6 +39,9 @@ Triangle_mesh mesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
 std::vector<geometry_msgs::Point> original_points;
+
+// 전역 중단 플래그 (Atomic으로 설정)
+std::atomic<bool> reset_flag(false);
 
 // STL 파일을 읽어 Triangle_mesh 객체로 변환하는 함수
 bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh);
@@ -64,6 +68,12 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
 void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh);
 
 void keyboardCallback(const std_msgs::String::ConstPtr &msg);
+
+// 중단 플래그를 체크하며 작업을 중단할지 확인하는 함수
+bool shouldReset()
+{
+    return reset_flag.load();
+}
 
 int main(int argc, char **argv)
 {
@@ -217,8 +227,8 @@ std::vector<geometry_msgs::Point> interpolatePoints(const std::vector<geometry_m
     {
         Eigen::Vector3d p0(points[i - 1].x, points[i - 1].y, points[i - 1].z);
         Eigen::Vector3d p1(points[i].x, points[i].y, points[i].z);
-        // cumulative_distances[i] = cumulative_distances[i - 1] + (p1 - p0).norm();
-        cumulative_distances[i] = cumulative_distances[i - 1] + computeGeodesicDistance(p0, p1, mesh);
+        cumulative_distances[i] = cumulative_distances[i - 1] + (p1 - p0).norm();
+        // cumulative_distances[i] = cumulative_distances[i - 1] + computeGeodesicDistance(p0, p1, mesh);
     }
 
     // 2. 일정한 간격으로 보간된 점들을 추가
@@ -495,6 +505,7 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
         start_approach.y = start_point.y + 0.1 * start_normal.y();
         start_approach.z = start_point.z + 0.1 * start_normal.z();
         std::vector<geometry_msgs::Point> first_segment{start_approach, original_points.front()};
+
         return first_segment;
     }
     else if (option == 2) // retreat
@@ -503,6 +514,7 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
         end_retreat.y = end_point.y + 0.1 * end_normal.y();
         end_retreat.z = end_point.z + 0.1 * end_normal.z();
         std::vector<geometry_msgs::Point> last_segment{original_points.back(), end_retreat};
+
         return last_segment;
     }
     else if (option == 3) // home
@@ -516,6 +528,7 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
         home_position.y = 0.09;
         home_position.z = 0.15;
         std::vector<geometry_msgs::Point> home_segment{end_retreat, home_position};
+
         return home_segment;
     }
 }
@@ -621,7 +634,8 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     saveWayPointsTOFile(control_retreat_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_home_waypoints, file_path, 0.0);
 
-    ROS_INFO("Saved %lu final waypoints", control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
+    ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------", 
+    control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
 
     // 소요 시간 측정 및 출력
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -635,7 +649,11 @@ void keyboardCallback(const std_msgs::String::ConstPtr &msg)
     if (msg->data == "reset")
     {
         original_points.clear();
-
-        ROS_INFO("waypoints cleared");
+        reset_flag.store(true); // 중단 플래그 설정
+        ROS_INFO("Resetting operation, waypoints cleared.");
+    }
+    else
+    {
+        reset_flag.store(false);
     }
 }

@@ -2,16 +2,27 @@
   <!-- Launch RViz with a specified configuration file -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_vision_rviz)/config/rviz_config.rviz" />
 
-  <!-- Visualization nodes -->
-  <node name="visualize_mesh" pkg="nrs_vision_rviz" type="visualize_mesh" output="screen" />
+ 
+
+  <!--mesh의 edge부분을 시각화하는 노드. mesh 자체는 URDF를 통해 로드. edge를 보고 싶지 않다면 주석처리-->
+  <node name="visualize_mesh" pkg="nrs_vision_rviz" type="visualize_mesh" output="screen" /> 
+  <!--Rviz를 통해 클릭한 점을 시각화하기 위한 노드-->
   <node name="point_publisher" pkg="nrs_vision_rviz" type="point_publisher" output="screen" />
+  <!--clicked_point를 Subscribe하여 표면 위의 Geodesic 작업 경로를 생성하는 노드-->
   <node name="path_generator" pkg="nrs_vision_rviz" type="path_generator" output="screen" />
+  <!--Rviz 상에 waypoints_interpolator를 통한 최종 경로를 시각화하기 위한 노드-->
   <node name="path_visualizer" pkg="nrs_vision_rviz" type="path_visualizer" output="screen" />
+<!--터미널 상에서 여러가지 input을 받고, 각 노드로 커맨드를 뿌려주기 위한 노드-->
   <node name="keyboard_listener" pkg="nrs_vision_rviz" type="keyboard_listener" output="screen" />
+<!--moveit을 이용해 rviz 상에서 시뮬레이션해서 시각화하기 위한 노드-->
   <node name="moveit_planner" pkg="nrs_vision_rviz" type="moveit_planner" output="screen" />
+  <!--path_generator를 통해 생성된 작업 경로를 interpolation 및 normal smoothing, 접근,후퇴 경로 추가 등의 후처리하는 노드-->
   <node name="waypoints_interpolator" pkg="nrs_vision_rviz" type="waypoints_interpolator" output="screen" />
+  <!--UR10 제어 PC에 최종적으로 완성된 작업 경로.txt를 전송하기 위한 노드-->
   <node name="path_publisher" pkg="nrs_vision_rviz" type="path_publisher" output="screen" />
-  <!-- <node name="testcode" pkg="nrs_vision_rviz" type="testcode" output="screen" /> -->
+
+
+  <!-- 아래부터는 Moveit을 사용하기 위한 기본적인 설정들 -->
 
   <!-- Static transform publisher -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map"

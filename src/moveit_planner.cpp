@@ -17,7 +17,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nrs_vision_rviz/Waypoints.h>
 #include <nrs_vision_rviz/Waypoint.h>
-#include <fstream> // 파일 입출력 라이브러리
+#include <fstream>
 #include <tf2/LinearMath/Transform.h>
 #include <std_msgs/String.h>
 
@@ -27,7 +27,7 @@ std::vector<geometry_msgs::Pose> interpolated_waypoints_poses;
 bool start_planning = false;
 bool using_interpolated_waypoints = false;
 
-void keyboardCallback(const std_msgs::String::ConstPtr &msg);
+void keyboardCallback(const std_msgs::String::ConstPtr &msg); 
 
 geometry_msgs::Pose applyTooltipTransform(const geometry_msgs::Pose &pose, const tf2::Transform &tooltip_transform);
 
@@ -38,6 +38,11 @@ void saveTCPStatesToFile(const moveit::planning_interface::MoveGroupInterface::P
 void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
 
 void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
+
+/*
+"interpolated_waypoints_with_normals" 토픽을 subscribe하여 moveit 패키지를 이용해 UR10을 시뮬레이션 및 Rviz에 시각화
+"nrs_command" 토픽을 subscribe하여 실행 커맨드가 입력되면 코드를 실행
+*/
 
 int main(int argc, char **argv)
 {
@@ -101,21 +106,6 @@ int main(int argc, char **argv)
 
                     // Create a RobotTrajectory object from the computed trajectory
                     robot_trajectory::RobotTrajectory robot_trajectory(move_group.getCurrentState()->getRobotModel(), "manipulator");
-
-                    // // Convert the moveit_msgs::RobotTrajectory to robot_trajectory::RobotTrajectory
-                    // robot_trajectory.setRobotTrajectoryMsg(*move_group.getCurrentState(), trajectory_msg);
-
-                    // // // Apply time parameterization to ensure constant speed
-                    // // trajectory_processing::IterativeSplineParameterization time_param;
-                    // // bool success = time_param.computeTimeStamps(robot_trajectory);
-
-                    // // if (!success)
-                    // // {
-                    // //     ROS_WARN("Time parameterization failed");
-                    // // }
-
-                    // // Convert the robot_trajectory back to a moveit_msgs::RobotTrajectory
-                    // robot_trajectory.getRobotTrajectoryMsg(plan.trajectory_);
 
                     move_group.execute(plan);
                     move_group.setJointValueTarget(initial_pose);

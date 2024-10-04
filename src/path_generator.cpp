@@ -252,6 +252,9 @@ void keyboardCallback(const std_msgs::String::ConstPtr &msg);
 // 파일에 Waypoints와 Control Points 저장하는 함수
 void saveToTextFile(const std::string &filename);
 
+
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "path_generator");
