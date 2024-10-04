@@ -68,9 +68,9 @@ devel/include/nrs_vision_rviz/Waypoint.h: /opt/ros/noetic/share/gencpp/msg.h.tem
 
 devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 devel/include/nrs_vision_rviz/Waypoints.h: ../msg/Waypoints.msg
-devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
 devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 devel/include/nrs_vision_rviz/Waypoints.h: ../msg/Waypoint.msg
 devel/include/nrs_vision_rviz/Waypoints.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nrs/catkin_ws/src/nrs_vision_rviz/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating C++ code from nrs_vision_rviz/Waypoints.msg"

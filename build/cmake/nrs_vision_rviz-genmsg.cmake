@@ -24,7 +24,7 @@ add_custom_target(_nrs_vision_rviz_generate_messages_check_deps_${_filename}
 
 get_filename_component(_filename "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" NAME_WE)
 add_custom_target(_nrs_vision_rviz_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" "geometry_msgs/Point:geometry_msgs/Quaternion:geometry_msgs/Pose:nrs_vision_rviz/Waypoint"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "nrs_vision_rviz" "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg" "geometry_msgs/Quaternion:geometry_msgs/Pose:geometry_msgs/Point:nrs_vision_rviz/Waypoint"
 )
 
 #
@@ -42,7 +42,7 @@ _generate_msg_cpp(nrs_vision_rviz
 _generate_msg_cpp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -83,7 +83,7 @@ _generate_msg_eus(nrs_vision_rviz
 _generate_msg_eus(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -124,7 +124,7 @@ _generate_msg_lisp(nrs_vision_rviz
 _generate_msg_lisp(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -165,7 +165,7 @@ _generate_msg_nodejs(nrs_vision_rviz
 _generate_msg_nodejs(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/nrs_vision_rviz
 )
 
@@ -206,7 +206,7 @@ _generate_msg_py(nrs_vision_rviz
 _generate_msg_py(nrs_vision_rviz
   "/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Quaternion.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoint.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/nrs_vision_rviz
 )
 

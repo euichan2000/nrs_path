@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/nrs/catkin_ws/src/nrs_vision_rviz/build
 include CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints.dir/progress.make
 
 CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints:
-	catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py nrs_vision_rviz /home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg geometry_msgs/Point:geometry_msgs/Quaternion:geometry_msgs/Pose:nrs_vision_rviz/Waypoint
+	catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py nrs_vision_rviz /home/nrs/catkin_ws/src/nrs_vision_rviz/msg/Waypoints.msg geometry_msgs/Quaternion:geometry_msgs/Pose:geometry_msgs/Point:nrs_vision_rviz/Waypoint
 
 _nrs_vision_rviz_generate_messages_check_deps_Waypoints: CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints
 _nrs_vision_rviz_generate_messages_check_deps_Waypoints: CMakeFiles/_nrs_vision_rviz_generate_messages_check_deps_Waypoints.dir/build.make
