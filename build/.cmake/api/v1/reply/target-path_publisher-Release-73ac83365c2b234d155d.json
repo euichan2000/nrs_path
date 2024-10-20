@@ -814,23 +814,23 @@
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_common_planning_interface_objects.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_common_planning_interface_objects.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_scene_interface.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_scene_interface.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_move_group_interface.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_move_group_interface.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_py_bindings_tools.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_py_bindings_tools.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_warehouse.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_warehouse.so",
 				"role" : "libraries"
 			},
 			{
@@ -842,51 +842,51 @@
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_pick_place_planner.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_pick_place_planner.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_move_group_capabilities_base.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_move_group_capabilities_base.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_rdf_loader.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_rdf_loader.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_kinematics_plugin_loader.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_kinematics_plugin_loader.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_robot_model_loader.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_robot_model_loader.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_constraint_sampler_manager_loader.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_constraint_sampler_manager_loader.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_pipeline.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_pipeline.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_trajectory_execution_manager.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_trajectory_execution_manager.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_plan_execution.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_plan_execution.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_scene_monitor.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_scene_monitor.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_collision_plugin_loader.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_collision_plugin_loader.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_cpp.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_cpp.so",
 				"role" : "libraries"
 			},
 			{
@@ -894,103 +894,103 @@
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_ros_occupancy_map_monitor.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_ros_occupancy_map_monitor.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_exceptions.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_exceptions.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_background_processing.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_background_processing.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_kinematics_base.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_kinematics_base.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_robot_model.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_robot_model.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_transforms.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_transforms.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_robot_state.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_robot_state.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_robot_trajectory.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_robot_trajectory.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_interface.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_interface.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_collision_detection.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_collision_detection.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_collision_detection_fcl.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_collision_detection_fcl.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_collision_detection_bullet.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_collision_detection_bullet.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_kinematic_constraints.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_kinematic_constraints.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_scene.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_scene.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_constraint_samplers.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_constraint_samplers.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_planning_request_adapter.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_planning_request_adapter.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_profiler.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_profiler.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_python_tools.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_python_tools.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_trajectory_processing.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_trajectory_processing.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_distance_field.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_distance_field.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_collision_distance_field.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_collision_distance_field.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_kinematics_metrics.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_kinematics_metrics.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_dynamics_solver.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_dynamics_solver.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_utils.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_utils.so",
 				"role" : "libraries"
 			},
 			{
-				"fragment" : "/home/nrs/catkin_ws/devel/lib/libmoveit_test_utils.so",
+				"fragment" : "/opt/ros/noetic/lib/libmoveit_test_utils.so",
 				"role" : "libraries"
 			},
 			{

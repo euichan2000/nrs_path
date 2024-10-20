@@ -557,7 +557,7 @@ gtest_main_LIB_DEPENDS:STATIC=general;gtest;
 kdl_parser_DIR:PATH=/opt/ros/noetic/share/kdl_parser/cmake
 
 //Path to a library.
-lib:FILEPATH=/home/nrs/catkin_ws/devel/lib/libmoveit_move_group_capabilities_base.so
+lib:FILEPATH=/opt/ros/noetic/lib/libmoveit_move_group_capabilities_base.so
 
 //The directory containing a CMake configuration file for message_filters.
 message_filters_DIR:PATH=/opt/ros/noetic/share/message_filters/cmake

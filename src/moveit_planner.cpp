@@ -119,8 +119,8 @@ int main(int argc, char **argv)
                     // std::string file_path = using_interpolated_waypoints ? "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/interpolated_joint_states.txt" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/joint_states.txt";
                     // saveJointStatesToFile(plan, file_path);
 
-                    // std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/tcp_states.txt";
-                    // saveTCPStatesToFile(plan, file_path2, move_group);
+                    std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/tcp_states.txt";
+                    saveTCPStatesToFile(plan, file_path2, move_group);
                 }
             }
             start_planning = false;

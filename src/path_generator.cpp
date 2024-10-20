@@ -252,9 +252,6 @@ void keyboardCallback(const std_msgs::String::ConstPtr &msg);
 // 파일에 Waypoints와 Control Points 저장하는 함수
 void saveToTextFile(const std::string &filename);
 
-
-
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "path_generator");
@@ -300,10 +297,10 @@ int main(int argc, char **argv)
             }
 
             waypoints_pub.publish(waypoints_msg); // 경로 생성 후 퍼블리시
-            //controlpoints_pub.publish(control_points_msg);
+            // controlpoints_pub.publish(control_points_msg);
 
             // 생성된 웨이포인트 및 컨트롤 포인트 파일로 저장
-            //saveToTextFile(filename);
+            // saveToTextFile(filename);
 
             start_path_generating = false; // 모션 플래닝이 끝난 후 플래그를 false로 설정
             use_spline = false;
@@ -1152,19 +1149,22 @@ std::vector<Eigen::Vector3d> computeGeodesicBezierCurvePoints(
     Eigen::Vector3d v02 = geodesicSubtract(b0, b2, tmesh);
     Eigen::Vector3d v03 = geodesicSubtract(b0, b3, tmesh);
 
+    Eigen::Vector3d q0;
+    Eigen::Vector3d q1;
+    Eigen::Vector3d q2;
+
     for (int i = 0; i < steps; ++i)
     {
 
         double t = static_cast<double>(i) / steps;
 
-        Eigen::Vector3d q0 = geodesicAddVector(b0, v01.normalized(), 3 * (1 - t) * (1 - t) * t * v01.norm(), b0, tmesh, mesh);
+        q0 = geodesicAddVector(b0, v01.normalized(), 3 * (1 - t) * (1 - t) * t * v01.norm(), b0, tmesh, mesh);
 
-        Eigen::Vector3d q1 = geodesicAddVector(b0, v02.normalized(), 3 * (1 - t) * t * t * v02.norm(), q0, tmesh, mesh);
+        q1 = geodesicAddVector(b0, v02.normalized(), 3 * (1 - t) * t * t * v02.norm(), q0, tmesh, mesh);
 
-        Eigen::Vector3d q2 = geodesicAddVector(b0, v03.normalized(), t * t * t * v03.norm(), q1, tmesh, mesh);
+        q2 = geodesicAddVector(b0, v03.normalized(), t * t * t * v03.norm(), q1, tmesh, mesh);
 
         curve_points.push_back(q2);
-
     }
 
     return curve_points;
@@ -1224,6 +1224,7 @@ void generate_Hermite_Spline_path(
 {
     auto start_time = std::chrono::high_resolution_clock::now();
     std::vector<Eigen::Vector3d> hermite_spline;
+
     if (selected_points.size() > 2)
     {
         u_values = calculateInterpolationParameters(selected_points, false);

@@ -2983,7 +2983,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/nrs/catkin_ws/devel/lib/libmoveit_move_group_capabilities_base.so"
+			"value" : "/opt/ros/noetic/lib/libmoveit_move_group_capabilities_base.so"
 		},
 		{
 			"name" : "message_filters_DIR",

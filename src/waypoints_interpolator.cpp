@@ -21,7 +21,8 @@
 #include <std_msgs/String.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
-#include <atomic> // For atomic flag
+#include <atomic>   // For atomic flag
+#include <Eigen/QR> // QR decomposition을 위한 헤더 추가
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -43,6 +44,12 @@ std::vector<geometry_msgs::Point> original_points;
 // 전역 중단 플래그 (Atomic으로 설정)
 std::atomic<bool> reset_flag(false);
 
+struct WaypointsSegment
+{
+    int start_idx;
+    int end_idx;
+};
+
 // STL 파일을 읽어 Triangle_mesh 객체로 변환하는 함수
 bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh);
 
@@ -53,7 +60,11 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
 double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, const Triangle_mesh &mesh);
 
 // 일정한 간격을 가진 웨이포인트 생성 함수
-std::vector<geometry_msgs::Point> interpolatePoints(const std::vector<geometry_msgs::Point> &points, double desired_interval, const Triangle_mesh &mesh);
+std::vector<geometry_msgs::Point> interpolatePoints(
+    const std::vector<geometry_msgs::Point> &points,
+    double desired_interval,
+    const Triangle_mesh &mesh,
+    int option);
 
 // 서피스에서 노멀 벡터를 계산하고 웨이포인트로 변환하는 함수
 nrs_vision_rviz::Waypoints convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const std::vector<geometry_msgs::Point> &reference_points, const Triangle_mesh &mesh, int option);
@@ -83,7 +94,7 @@ int main(int argc, char **argv)
 
     // 웨이포인트 간의 원하는 간격 (예: 0.05m 간격)
     double desired_interval;
-    nh.param("desired_interval", desired_interval, 0.00003); // 파라미터 서버에서 간격을 가져오거나 기본값 0.05 사용
+    nh.param("desired_interval", desired_interval, 0.00009); // 파라미터 서버에서 간격을 가져오거나 기본값 0.05 사용
 
     // Triangle_mesh 로드 또는 생성
     Triangle_mesh mesh;
@@ -216,8 +227,11 @@ double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d 
     return abs(result.first);
 }
 
-// 일정한 간격을 가진 웨이포인트 생성 함수
-std::vector<geometry_msgs::Point> interpolatePoints(const std::vector<geometry_msgs::Point> &points, double desired_interval, const Triangle_mesh &mesh)
+std::vector<geometry_msgs::Point> interpolatePoints(
+    const std::vector<geometry_msgs::Point> &points,
+    double desired_interval,
+    const Triangle_mesh &mesh,
+    int option)
 {
     std::vector<geometry_msgs::Point> interpolated_points;
 
@@ -231,26 +245,78 @@ std::vector<geometry_msgs::Point> interpolatePoints(const std::vector<geometry_m
         // cumulative_distances[i] = cumulative_distances[i - 1] + computeGeodesicDistance(p0, p1, mesh);
     }
 
-    // 2. 일정한 간격으로 보간된 점들을 추가
-    double current_distance = 0.0;
-    size_t j = 1;
-    while (j < points.size())
+    if (option == 1)
     {
-        if (cumulative_distances[j] >= current_distance + desired_interval)
+        // Option 1: 일정한 간격으로 보간
+        double current_distance = 0.0;
+        size_t j = 1;
+        while (j < points.size())
         {
-            double t = (current_distance + desired_interval - cumulative_distances[j - 1]) / (cumulative_distances[j] - cumulative_distances[j - 1]);
+            if (cumulative_distances[j] >= current_distance + desired_interval)
+            {
+                double t = (current_distance + desired_interval - cumulative_distances[j - 1]) / (cumulative_distances[j] - cumulative_distances[j - 1]);
 
-            geometry_msgs::Point interpolated_point;
-            interpolated_point.x = points[j - 1].x + t * (points[j].x - points[j - 1].x);
-            interpolated_point.y = points[j - 1].y + t * (points[j].y - points[j - 1].y);
-            interpolated_point.z = points[j - 1].z + t * (points[j].z - points[j - 1].z);
+                geometry_msgs::Point interpolated_point;
+                interpolated_point.x = points[j - 1].x + t * (points[j].x - points[j - 1].x);
+                interpolated_point.y = points[j - 1].y + t * (points[j].y - points[j - 1].y);
+                interpolated_point.z = points[j - 1].z + t * (points[j].z - points[j - 1].z);
 
-            interpolated_points.push_back(interpolated_point);
-            current_distance += desired_interval;
+                interpolated_points.push_back(interpolated_point);
+                current_distance += desired_interval;
+            }
+            else
+            {
+                ++j;
+            }
         }
-        else
+    }
+    else if (option == 2)
+    {
+        // Option 2: 가변 간격 사용
+        double total_distance = cumulative_distances.back();
+        double transition_length = 0.03; // 3cm
+
+        auto computeVariableInterval = [&](double current_distance) -> double
         {
-            ++j;
+            if (current_distance < transition_length) // 초반 3cm 구간
+            {
+                double scale = 0.5 * (1 - cos((current_distance / transition_length) * M_PI));       // 0에서 π까지의 사인 변화
+                return desired_interval / 12.0 + scale * (desired_interval - desired_interval / 12.0); // 점진적 변화
+            }
+            else if (current_distance > total_distance - transition_length) // 끝부분 3cm 구간
+            {
+                double remaining_distance = total_distance - current_distance;
+                double scale = 0.5 * (1 - cos((remaining_distance / transition_length) * M_PI));     // 끝에서 다시 느려짐
+                return desired_interval / 12.0 + scale * (desired_interval - desired_interval / 12.0); // 점진적 변화
+            }
+            else // 중간 구간은 일정한 간격 유지
+            {
+                return desired_interval;
+            }
+        };
+
+        double current_distance = 0.0;
+        size_t j = 1;
+        while (j < points.size())
+        {
+            double current_interval = computeVariableInterval(current_distance); // 가변적 간격 계산
+
+            if (cumulative_distances[j] >= current_distance + current_interval)
+            {
+                double t = (current_distance + current_interval - cumulative_distances[j - 1]) / (cumulative_distances[j] - cumulative_distances[j - 1]);
+
+                geometry_msgs::Point interpolated_point;
+                interpolated_point.x = points[j - 1].x + t * (points[j].x - points[j - 1].x);
+                interpolated_point.y = points[j - 1].y + t * (points[j].y - points[j - 1].y);
+                interpolated_point.z = points[j - 1].z + t * (points[j].z - points[j - 1].z);
+
+                interpolated_points.push_back(interpolated_point);
+                current_distance += current_interval; // 가변적 간격으로 증가
+            }
+            else
+            {
+                ++j;
+            }
         }
     }
 
@@ -524,9 +590,9 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
         end_retreat.y = end_point.y + 0.1 * end_normal.y();
         end_retreat.z = end_point.z + 0.1 * end_normal.z();
 
-        home_position.x = 0.55;
-        home_position.y = 0.09;
-        home_position.z = 0.15;
+        home_position.x = 0.573;
+        home_position.y = -0.127;
+        home_position.z = 0.25;
         std::vector<geometry_msgs::Point> home_segment{end_retreat, home_position};
 
         return home_segment;
@@ -562,35 +628,43 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     //------------------------------------------------------------------------------------------------------------------
 
     // 시각화용 첫 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.005, mesh);
-
+    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.001, mesh, 1);
+    shouldReset();
     // 두 번째 구간 interpolation (원래 waypoints)
-    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.005, mesh);
-
+    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.001, mesh, 1);
+    shouldReset();
     // 시각화용 세 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.005, mesh);
-
-    // 시각화용 네 번째 구간 interpolation
-    // std::vector<geometry_msgs::Point> visual_home_interpolated = interpolatePoints(home_segment, 0.001, mesh);
+    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.001, mesh, 1);
+    shouldReset();
 
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_approach_waypoints = convertToWaypoints(visual_approach_interpolated, visual_original_interpolated, mesh, 1);
-
+    shouldReset();
     // 두 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(visual_original_interpolated, visual_original_interpolated, mesh, 2);
-
+    shouldReset();
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_retreat_waypoints = convertToWaypoints(visual_retreat_interpolated, visual_original_interpolated, mesh, 3);
-
-    // 네 번째 구간의 quaternion 설정
-    // nrs_vision_rviz::Waypoints visual_home_waypoints = convertToWaypoints(visual_home_interpolated, visual_original_interpolated, mesh, 4);
+    shouldReset();
 
     nrs_vision_rviz::Waypoints visual_final_waypoints;
+    // 첫 번째 구간의 웨이포인트 추가 (approach)
+    visual_final_waypoints.waypoints.insert(
+        visual_final_waypoints.waypoints.end(),
+        visual_approach_waypoints.waypoints.begin(),
+        visual_approach_waypoints.waypoints.end());
 
-    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_approach_waypoints.waypoints.begin(), visual_approach_waypoints.waypoints.end());
-    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_original_waypoints.waypoints.begin(), visual_original_waypoints.waypoints.end());
-    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_retreat_waypoints.waypoints.begin(), visual_retreat_waypoints.waypoints.end());
-    // visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_home_waypoints.waypoints.begin(), visual_home_waypoints.waypoints.end());
+    // 두 번째 구간의 웨이포인트 추가 (original)
+    visual_final_waypoints.waypoints.insert(
+        visual_final_waypoints.waypoints.end(),
+        visual_original_waypoints.waypoints.begin(),
+        visual_original_waypoints.waypoints.end());
+
+    // 세 번째 구간의 웨이포인트 추가 (retreat)
+    visual_final_waypoints.waypoints.insert(
+        visual_final_waypoints.waypoints.end(),
+        visual_retreat_waypoints.waypoints.begin(),
+        visual_retreat_waypoints.waypoints.end());
 
     nrs_vision_rviz::Waypoints visual_waypoints_msg;
     visual_waypoints_msg = visual_final_waypoints;
@@ -599,30 +673,31 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
 
     //-----------------------------------------------------------------------------------------------------------------
     // 제어용 첫 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> control_approach_interpolated = interpolatePoints(approach_segment, desired_interval, mesh);
-
+    std::vector<geometry_msgs::Point> control_approach_interpolated = interpolatePoints(approach_segment, desired_interval, mesh, 2);
+    shouldReset();
     // 제어용 두 번째 구간 interpolation (원래 waypoints)
-    std::vector<geometry_msgs::Point> control_original_interpolated = interpolatePoints(original_points, desired_interval, mesh);
-
+    std::vector<geometry_msgs::Point> control_original_interpolated = interpolatePoints(original_points, desired_interval, mesh, 2);
+    shouldReset();
     // 제어용 세 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> control_retreat_interpolated = interpolatePoints(retreat_segment, desired_interval, mesh);
-
+    std::vector<geometry_msgs::Point> control_retreat_interpolated = interpolatePoints(retreat_segment, desired_interval, mesh, 2);
+    shouldReset();
     // 제어용 네 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh);
-
+    std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh, 2);
+    shouldReset();
     //------------------------------------------------------------------------------------------------------------------
 
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_approach_waypoints = convertToWaypoints(control_approach_interpolated, control_original_interpolated, mesh, 1);
-
+    shouldReset();
     // 두 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_original_waypoints = convertToWaypoints(control_original_interpolated, control_original_interpolated, mesh, 2);
-
+    shouldReset();
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_retreat_waypoints = convertToWaypoints(control_retreat_interpolated, control_original_interpolated, mesh, 3);
-
+    shouldReset();
     // 네 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_home_waypoints = convertToWaypoints(control_home_interpolated, control_original_interpolated, mesh, 4);
+    shouldReset();
 
     // 파일 경로
     std::string file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/final_waypoints.txt";
@@ -630,12 +705,12 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     clearFile(file_path);
 
     saveWayPointsTOFile(control_approach_waypoints, file_path, 0.0);
-    saveWayPointsTOFile(control_original_waypoints, file_path, 5.0);
+    saveWayPointsTOFile(control_original_waypoints, file_path, 10.0);
     saveWayPointsTOFile(control_retreat_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_home_waypoints, file_path, 0.0);
 
-    ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------", 
-    control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
+    ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------",
+             control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
 
     // 소요 시간 측정 및 출력
     auto end_time = std::chrono::high_resolution_clock::now();

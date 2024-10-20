@@ -2,8 +2,6 @@
   <!-- Launch RViz with a specified configuration file -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_vision_rviz)/config/rviz_config.rviz" />
 
- 
-
   <!--mesh의 edge부분을 시각화하는 노드. mesh 자체는 URDF를 통해 로드. edge를 보고 싶지 않다면 주석처리-->
   <node name="visualize_mesh" pkg="nrs_vision_rviz" type="visualize_mesh" output="screen" /> 
   <!--Rviz를 통해 클릭한 점을 시각화하기 위한 노드-->
