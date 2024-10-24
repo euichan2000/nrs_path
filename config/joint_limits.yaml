@@ -2,8 +2,8 @@
 #
 # Sources:
 #
-#  - UR10 User Manual, Universal Robots, UR10/CB3, Version 3.13
-#    https://s3-eu-west-1.amazonaws.com/ur-support-site/69442/99203_UR10_User_Manual_en_Global.pdf
+#  - Universal Robots e-Series, User Manual, UR10e, Version 5.8
+#    https://s3-eu-west-1.amazonaws.com/ur-support-site/69139/99405_UR10e_User_Manual_en_Global.pdf
 #  - Support > Articles > UR articles > Max. joint torques
 #    https://www.universal-robots.com/articles/ur-articles/max-joint-torques
 #    retrieved: 2020-06-16, last modified: 2020-06-09
@@ -25,9 +25,9 @@ joint_limits:
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 330.0
-    max_position: !degrees  0.0
+    max_position: !degrees  360.0
     max_velocity: !degrees  120.0
-    min_position: !degrees -180.0
+    min_position: !degrees -360.0
   elbow_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: false

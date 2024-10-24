@@ -34,6 +34,7 @@
 #include <chrono>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+#include <std_srvs/Empty.h>
 
 // CGAL 관련 타입 정의
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
@@ -249,6 +250,8 @@ void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg);
 
 void keyboardCallback(const std_msgs::String::ConstPtr &msg);
 
+bool trajectoryGenerationCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 // 파일에 Waypoints와 Control Points 저장하는 함수
 void saveToTextFile(const std::string &filename);
 
@@ -256,6 +259,9 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "path_generator");
     ros::NodeHandle nh;
+
+    ros::ServiceServer service = nh.advertiseService("trajectory_generation", trajectoryGenerationCallback);
+
     ros::Subscriber sub = nh.subscribe("/clicked_point", 1000, clickedPointCallback);
     ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
@@ -305,6 +311,8 @@ int main(int argc, char **argv)
             start_path_generating = false; // 모션 플래닝이 끝난 후 플래그를 false로 설정
             use_spline = false;
             use_straight = false;
+
+            
         }
 
         r.sleep();
@@ -1475,6 +1483,16 @@ void keyboardCallback(const std_msgs::String::ConstPtr &msg)
         use_spline = true;
         ROS_INFO("Received start command, initiating generate_Hermite_Spline_path planning.");
     }
+}
+
+bool trajectoryGenerationCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+{
+    // 경로 생성 시작 플래그 설정
+    start_path_generating = true;
+    use_spline = true;
+    // 서비스가 성공적으로 호출되었음을 알리는 메시지
+    ROS_INFO("Service (trajectory_generation) called, starting path generation.");
+    return true;
 }
 
 // 파일에 Waypoints와 Control Points 저장하는 함수

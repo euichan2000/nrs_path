@@ -76,8 +76,7 @@ void saveWayPointsTOFile(const nrs_vision_rviz::Waypoints &waypoints, const std:
 std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Point> &original_points, int option, Triangle_mesh &mesh);
 
 // 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh);
-
+void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh, ros::Publisher &file_pub);
 void keyboardCallback(const std_msgs::String::ConstPtr &msg);
 
 // 중단 플래그를 체크하며 작업을 중단할지 확인하는 함수
@@ -107,11 +106,12 @@ int main(int argc, char **argv)
 
     // 퍼블리셔 선언
     ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("interpolated_waypoints_with_normals", 10);
-
-    // 웨이포인트 구독 및 콜백 함수 설정
+    // 파일 퍼블리셔 선언
+    ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10); 
+     // 웨이포인트 구독 및 콜백 함수 설정
     ros::Subscriber waypoints_sub = nh.subscribe<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10,
-                                                                             boost::bind(waypointsCallback, _1, boost::ref(interpolated_waypoints_pub), desired_interval, boost::cref(mesh)));
-    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
+                                                                               boost::bind(waypointsCallback, _1, boost::ref(interpolated_waypoints_pub), desired_interval, boost::cref(mesh), boost::ref(file_pub)));
+                                                                                ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
     ros::spin();
 
     return 0;
@@ -280,14 +280,14 @@ std::vector<geometry_msgs::Point> interpolatePoints(
         {
             if (current_distance < transition_length) // 초반 3cm 구간
             {
-                double scale = 0.5 * (1 - cos((current_distance / transition_length) * M_PI));       // 0에서 π까지의 사인 변화
-                return desired_interval / 12.0 + scale * (desired_interval - desired_interval / 12.0); // 점진적 변화
+                double scale = 0.5 * (1 - cos((current_distance / transition_length) * M_PI));         // 0에서 π까지의 사인 변화
+                return desired_interval / 6.0 + scale * (desired_interval - desired_interval / 6.0); // 점진적 변화
             }
             else if (current_distance > total_distance - transition_length) // 끝부분 3cm 구간
             {
                 double remaining_distance = total_distance - current_distance;
-                double scale = 0.5 * (1 - cos((remaining_distance / transition_length) * M_PI));     // 끝에서 다시 느려짐
-                return desired_interval / 12.0 + scale * (desired_interval - desired_interval / 12.0); // 점진적 변화
+                double scale = 0.5 * (1 - cos((remaining_distance / transition_length) * M_PI));       // 끝에서 다시 느려짐
+                return desired_interval / 6.0 + scale * (desired_interval - desired_interval / 6.0); // 점진적 변화
             }
             else // 중간 구간은 일정한 간격 유지
             {
@@ -599,8 +599,34 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
     }
 }
 
+void sendFile(const std::string &file_path, ros::Publisher &file_pub)
+{
+    // 파일 열기
+    std::ifstream file(file_path);
+    if (!file.is_open())
+    {
+        ROS_ERROR("Failed to open file: %s", file_path.c_str());
+        return;
+    }
+
+    // 파일 데이터 읽기
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string file_data = buffer.str();
+
+    // 파일을 닫기
+    file.close();
+
+    // 파일 데이터를 퍼블리시
+    std_msgs::String msg;
+    msg.data = file_data;
+    ROS_INFO("Sending file data...");
+    file_pub.publish(msg); // 퍼블리시
+    ROS_INFO("File data sent.");
+}
+
 // 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh)
+void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh, ros::Publisher &file_pub)
 {
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -628,43 +654,32 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     //------------------------------------------------------------------------------------------------------------------
 
     // 시각화용 첫 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.001, mesh, 1);
-    shouldReset();
+    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.003, mesh, 1);
+
     // 두 번째 구간 interpolation (원래 waypoints)
-    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.001, mesh, 1);
-    shouldReset();
+    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.003, mesh, 1);
+
     // 시각화용 세 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.001, mesh, 1);
-    shouldReset();
+    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.003, mesh, 1);
 
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_approach_waypoints = convertToWaypoints(visual_approach_interpolated, visual_original_interpolated, mesh, 1);
-    shouldReset();
+
     // 두 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(visual_original_interpolated, visual_original_interpolated, mesh, 2);
-    shouldReset();
+
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_retreat_waypoints = convertToWaypoints(visual_retreat_interpolated, visual_original_interpolated, mesh, 3);
-    shouldReset();
 
     nrs_vision_rviz::Waypoints visual_final_waypoints;
     // 첫 번째 구간의 웨이포인트 추가 (approach)
-    visual_final_waypoints.waypoints.insert(
-        visual_final_waypoints.waypoints.end(),
-        visual_approach_waypoints.waypoints.begin(),
-        visual_approach_waypoints.waypoints.end());
+    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_approach_waypoints.waypoints.begin(), visual_approach_waypoints.waypoints.end());
 
     // 두 번째 구간의 웨이포인트 추가 (original)
-    visual_final_waypoints.waypoints.insert(
-        visual_final_waypoints.waypoints.end(),
-        visual_original_waypoints.waypoints.begin(),
-        visual_original_waypoints.waypoints.end());
+    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_original_waypoints.waypoints.begin(), visual_original_waypoints.waypoints.end());
 
     // 세 번째 구간의 웨이포인트 추가 (retreat)
-    visual_final_waypoints.waypoints.insert(
-        visual_final_waypoints.waypoints.end(),
-        visual_retreat_waypoints.waypoints.begin(),
-        visual_retreat_waypoints.waypoints.end());
+    visual_final_waypoints.waypoints.insert(visual_final_waypoints.waypoints.end(), visual_retreat_waypoints.waypoints.begin(), visual_retreat_waypoints.waypoints.end());
 
     nrs_vision_rviz::Waypoints visual_waypoints_msg;
     visual_waypoints_msg = visual_final_waypoints;
@@ -674,30 +689,26 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     //-----------------------------------------------------------------------------------------------------------------
     // 제어용 첫 번째 구간 interpolation
     std::vector<geometry_msgs::Point> control_approach_interpolated = interpolatePoints(approach_segment, desired_interval, mesh, 2);
-    shouldReset();
+
     // 제어용 두 번째 구간 interpolation (원래 waypoints)
     std::vector<geometry_msgs::Point> control_original_interpolated = interpolatePoints(original_points, desired_interval, mesh, 2);
-    shouldReset();
+
     // 제어용 세 번째 구간 interpolation
     std::vector<geometry_msgs::Point> control_retreat_interpolated = interpolatePoints(retreat_segment, desired_interval, mesh, 2);
-    shouldReset();
+
     // 제어용 네 번째 구간 interpolation
     std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh, 2);
-    shouldReset();
+
     //------------------------------------------------------------------------------------------------------------------
 
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_approach_waypoints = convertToWaypoints(control_approach_interpolated, control_original_interpolated, mesh, 1);
-    shouldReset();
     // 두 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_original_waypoints = convertToWaypoints(control_original_interpolated, control_original_interpolated, mesh, 2);
-    shouldReset();
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_retreat_waypoints = convertToWaypoints(control_retreat_interpolated, control_original_interpolated, mesh, 3);
-    shouldReset();
     // 네 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_home_waypoints = convertToWaypoints(control_home_interpolated, control_original_interpolated, mesh, 4);
-    shouldReset();
 
     // 파일 경로
     std::string file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/final_waypoints.txt";
@@ -708,6 +719,7 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     saveWayPointsTOFile(control_original_waypoints, file_path, 10.0);
     saveWayPointsTOFile(control_retreat_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_home_waypoints, file_path, 0.0);
+    sendFile(file_path, file_pub); // 퍼블리시 함수를 호출하여 파일을 전송
 
     ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------",
              control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());

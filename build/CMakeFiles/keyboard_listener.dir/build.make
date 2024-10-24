@@ -142,8 +142,8 @@ devel/lib/nrs_vision_rviz/keyboard_listener: /usr/lib/x86_64-linux-gnu/liburdfdo
 devel/lib/nrs_vision_rviz/keyboard_listener: /usr/lib/x86_64-linux-gnu/liburdfdom_world.so
 devel/lib/nrs_vision_rviz/keyboard_listener: /usr/lib/x86_64-linux-gnu/libtinyxml.so
 devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/librosconsole_bridge.so
-devel/lib/nrs_vision_rviz/keyboard_listener: /home/nrs/catkin_ws/devel/lib/libsrdfdom.so
-devel/lib/nrs_vision_rviz/keyboard_listener: /home/nrs/catkin_ws/devel/lib/libgeometric_shapes.so
+devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/libsrdfdom.so
+devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/libgeometric_shapes.so
 devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/liboctomap.so
 devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/liboctomath.so
 devel/lib/nrs_vision_rviz/keyboard_listener: /opt/ros/noetic/lib/librandom_numbers.so

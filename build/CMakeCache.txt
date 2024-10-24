@@ -502,7 +502,7 @@ gennodejs_DIR:PATH=/opt/ros/noetic/share/gennodejs/cmake
 genpy_DIR:PATH=/opt/ros/noetic/share/genpy/cmake
 
 //The directory containing a CMake configuration file for geometric_shapes.
-geometric_shapes_DIR:PATH=/home/nrs/catkin_ws/devel/share/geometric_shapes/cmake
+geometric_shapes_DIR:PATH=/opt/ros/noetic/share/geometric_shapes/cmake
 
 //The directory containing a CMake configuration file for geometry_msgs.
 geometry_msgs_DIR:PATH=/opt/ros/noetic/share/geometry_msgs/cmake
@@ -569,28 +569,28 @@ message_generation_DIR:PATH=/opt/ros/noetic/share/message_generation/cmake
 message_runtime_DIR:PATH=/opt/ros/noetic/share/message_runtime/cmake
 
 //The directory containing a CMake configuration file for moveit_core.
-moveit_core_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_core/cmake
+moveit_core_DIR:PATH=/opt/ros/noetic/share/moveit_core/cmake
 
 //The directory containing a CMake configuration file for moveit_msgs.
-moveit_msgs_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_msgs/cmake
+moveit_msgs_DIR:PATH=/opt/ros/noetic/share/moveit_msgs/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_manipulation.
-moveit_ros_manipulation_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_manipulation/cmake
+moveit_ros_manipulation_DIR:PATH=/opt/ros/noetic/share/moveit_ros_manipulation/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_move_group.
-moveit_ros_move_group_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_move_group/cmake
+moveit_ros_move_group_DIR:PATH=/opt/ros/noetic/share/moveit_ros_move_group/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_occupancy_map_monitor.
-moveit_ros_occupancy_map_monitor_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_occupancy_map_monitor/cmake
+moveit_ros_occupancy_map_monitor_DIR:PATH=/opt/ros/noetic/share/moveit_ros_occupancy_map_monitor/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_planning.
-moveit_ros_planning_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_planning/cmake
+moveit_ros_planning_DIR:PATH=/opt/ros/noetic/share/moveit_ros_planning/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_planning_interface.
-moveit_ros_planning_interface_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_planning_interface/cmake
+moveit_ros_planning_interface_DIR:PATH=/opt/ros/noetic/share/moveit_ros_planning_interface/cmake
 
 //The directory containing a CMake configuration file for moveit_ros_warehouse.
-moveit_ros_warehouse_DIR:PATH=/home/nrs/catkin_ws/devel/share/moveit_ros_warehouse/cmake
+moveit_ros_warehouse_DIR:PATH=/opt/ros/noetic/share/moveit_ros_warehouse/cmake
 
 //Value Computed by CMake
 nrs_vision_rviz_BINARY_DIR:STATIC=/home/nrs/catkin_ws/src/nrs_vision_rviz/build
@@ -653,7 +653,7 @@ sensor_msgs_DIR:PATH=/opt/ros/noetic/share/sensor_msgs/cmake
 shape_msgs_DIR:PATH=/opt/ros/noetic/share/shape_msgs/cmake
 
 //The directory containing a CMake configuration file for srdfdom.
-srdfdom_DIR:PATH=/home/nrs/catkin_ws/devel/share/srdfdom/cmake
+srdfdom_DIR:PATH=/opt/ros/noetic/share/srdfdom/cmake
 
 //The directory containing a CMake configuration file for std_msgs.
 std_msgs_DIR:PATH=/opt/ros/noetic/share/std_msgs/cmake

@@ -57,9 +57,9 @@ void pointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
     marker.pose.position.z = msg->point.z;
 
     // 크기 설정 (지름)
-    marker.scale.x = 0.007;
-    marker.scale.y = 0.007;
-    marker.scale.z = 0.007;
+    marker.scale.x = 0.01;
+    marker.scale.y = 0.01;
+    marker.scale.z = 0.01;
 
     // 색상 설정 (빨간색, 불투명)
     marker.color.r = 1.0;

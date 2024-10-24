@@ -20,6 +20,7 @@
 #include <fstream>
 #include <tf2/LinearMath/Transform.h>
 #include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
 
 std::vector<geometry_msgs::Pose> waypoints_poses;
 std::vector<geometry_msgs::Pose> interpolated_waypoints_poses;
@@ -27,7 +28,7 @@ std::vector<geometry_msgs::Pose> interpolated_waypoints_poses;
 bool start_planning = false;
 bool using_interpolated_waypoints = false;
 
-void keyboardCallback(const std_msgs::String::ConstPtr &msg); 
+void keyboardCallback(const std_msgs::String::ConstPtr &msg);
 
 geometry_msgs::Pose applyTooltipTransform(const geometry_msgs::Pose &pose, const tf2::Transform &tooltip_transform);
 
@@ -39,6 +40,8 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
 
 void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg);
 
+bool predefinedTrajectoryCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
+
 /*
 "interpolated_waypoints_with_normals" 토픽을 subscribe하여 moveit 패키지를 이용해 UR10을 시뮬레이션 및 Rviz에 시각화
 "nrs_command" 토픽을 subscribe하여 실행 커맨드가 입력되면 코드를 실행
@@ -48,6 +51,9 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "moveit_planner");
     ros::NodeHandle nh;
+
+    // ROS 서비스 서버 정의 (predefined_trajectory 서비스 처리)
+    ros::ServiceServer service = nh.advertiseService("motion_simulation", predefinedTrajectoryCallback);
 
     // ros::Subscriber waypoints_sub = nh.subscribe("waypoints_with_normals", 10, waypointsCallback);
     ros::Subscriber interpolated_waypoints_sub = nh.subscribe("interpolated_waypoints_with_normals", 10, interpolatedWaypointsCallback);
@@ -60,12 +66,12 @@ int main(int argc, char **argv)
     move_group.setPlanningTime(45.0);
 
     std::map<std::string, double> initial_pose = {
-        {"shoulder_pan_joint", 10.71 * M_PI / 180},
-        {"shoulder_lift_joint", -55.43 * M_PI / 180},
-        {"elbow_joint", -135.87 * M_PI / 180},
-        {"wrist_1_joint", -74.46 * M_PI / 180},
-        {"wrist_2_joint", 88.39 * M_PI / 180},
-        {"wrist_3_joint", 0.58 * M_PI / 180}};
+        {"shoulder_pan_joint", 10.95 * M_PI / 180},
+        {"shoulder_lift_joint", -73.33 * M_PI / 180},
+        {"elbow_joint", -116.49 * M_PI / 180},
+        {"wrist_1_joint", -80.22 * M_PI / 180},
+        {"wrist_2_joint", 89.60 * M_PI / 180},
+        {"wrist_3_joint", 52.86 * M_PI / 180}};
 
     move_group.setJointValueTarget(initial_pose);
     move_group.move();
@@ -111,16 +117,16 @@ int main(int argc, char **argv)
                     move_group.setJointValueTarget(initial_pose);
                     move_group.move();
 
-                    display_trajectory.trajectory_start = plan.start_state_;
-                    display_trajectory.trajectory.clear();
-                    display_trajectory.trajectory.push_back(plan.trajectory_);
-                    display_publisher.publish(display_trajectory);
+                    // display_trajectory.trajectory_start = plan.start_state_;
+                    // display_trajectory.trajectory.clear();
+                    // display_trajectory.trajectory.push_back(plan.trajectory_);
+                    // display_publisher.publish(display_trajectory);
 
                     // std::string file_path = using_interpolated_waypoints ? "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/interpolated_joint_states.txt" : "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/joint_states.txt";
                     // saveJointStatesToFile(plan, file_path);
 
-                    std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/tcp_states.txt";
-                    saveTCPStatesToFile(plan, file_path2, move_group);
+                    // std::string file_path2 = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/tcp_states.txt";
+                    // saveTCPStatesToFile(plan, file_path2, move_group);
                 }
             }
             start_planning = false;
@@ -320,7 +326,7 @@ void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &m
     interpolated_waypoints_poses.clear();
 
     tf2::Transform tooltip_transform;
-    tooltip_transform.setOrigin(tf2::Vector3(0.0, 0.0, -0.316));
+    tooltip_transform.setOrigin(tf2::Vector3(0.0, 0.0, -0.31));
     tf2::Quaternion tooltip_orientation;
     tooltip_orientation.setRPY(0.0, 0.0, 0.0);
     tooltip_transform.setRotation(tooltip_orientation);
@@ -334,4 +340,16 @@ void interpolatedWaypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &m
         geometry_msgs::Pose final_pose = applyTooltipTransform(target_pose, tooltip_transform);
         interpolated_waypoints_poses.push_back(final_pose);
     }
+}
+
+bool predefinedTrajectoryCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+{
+    // predefined_trajectory 서비스가 호출되면 경로 플래닝 시작
+    start_planning = true;
+
+    // 플래닝 방식 설정 (필요에 따라 인터폴레이션 사용 여부 변경)
+    using_interpolated_waypoints = true; // true: 인터폴레이션 사용, false: 일반 웨이포인트 사용
+    ROS_INFO("Service (predefined_trajectory) called, starting predefined trajectory planning.");
+
+    return true;
 }

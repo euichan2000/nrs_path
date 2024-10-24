@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<robot name="ur10_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="ur10e_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Include the UR10 robot description -->
-  <xacro:include filename="$(find nrs_vision_rviz)/urdf/ur10.xacro" />
+  <xacro:include filename="$(find nrs_vision_rviz)/urdf/ur10e.xacro" />
   <!-- Define the testbed link -->
   <link name="testbed">
     <visual>
@@ -30,10 +30,10 @@
   </link>
 
 
-  <link name="UR_EE_tool">
+  <link name="UR10e_roboworld_tooltip_m">
     <visual>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/UR10e_roboworld_tooltip_m.stl" />
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
@@ -41,7 +41,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://nrs_vision_rviz/mesh/UR_EE_tool.stl" />
+        <mesh filename="package://nrs_vision_rviz/mesh/UR10e_roboworld_tooltip_m.stl" />
       </geometry>
       <material name="tooltip_gray">
         <color rgba="0.5 0.5 0.5 1.0" />
@@ -79,7 +79,7 @@
   <!-- Define a fixed joint to attach the tooltip to the wrist_3_link -->
   <joint name="tooltip_joint" type="fixed">
     <parent link="wrist_3_link" />
-    <child link="UR_EE_tool" />
+    <child link="UR10e_roboworld_tooltip_m" />
     <origin xyz="0 0 0.0" rpy="0 0 0" />
   </joint>
 
