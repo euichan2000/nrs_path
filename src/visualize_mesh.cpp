@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     ros::Publisher marker_pub = nh.advertise<visualization_msgs::Marker>("visualization_mesh_edge", 1);
 
     // 메쉬 파일 로드
-    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
     Triangle_mesh mesh;
 
     std::ifstream input(mesh_file_path, std::ios::binary);

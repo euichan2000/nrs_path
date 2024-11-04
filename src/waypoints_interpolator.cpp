@@ -93,11 +93,11 @@ int main(int argc, char **argv)
 
     // 웨이포인트 간의 원하는 간격 (예: 0.05m 간격)
     double desired_interval;
-    nh.param("desired_interval", desired_interval, 0.00009); // 파라미터 서버에서 간격을 가져오거나 기본값 0.05 사용
+    nh.param("desired_interval", desired_interval, 0.00004); // 파라미터 서버에서 간격을 가져오거나 기본값 0.05 사용
 
     // Triangle_mesh 로드 또는 생성
     Triangle_mesh mesh;
-    std::ifstream stl_file("/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl"); // STL 파일 경로를 설정
+    std::ifstream stl_file("/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl"); // STL 파일 경로를 설정
     if (!stl_file || !read_stl_file(stl_file, mesh))
     {
         ROS_ERROR("Failed to load or process STL file.");
@@ -107,11 +107,11 @@ int main(int argc, char **argv)
     // 퍼블리셔 선언
     ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("interpolated_waypoints_with_normals", 10);
     // 파일 퍼블리셔 선언
-    ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10); 
-     // 웨이포인트 구독 및 콜백 함수 설정
+    ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10);
+    // 웨이포인트 구독 및 콜백 함수 설정
     ros::Subscriber waypoints_sub = nh.subscribe<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10,
-                                                                               boost::bind(waypointsCallback, _1, boost::ref(interpolated_waypoints_pub), desired_interval, boost::cref(mesh), boost::ref(file_pub)));
-                                                                                ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
+                                                                             boost::bind(waypointsCallback, _1, boost::ref(interpolated_waypoints_pub), desired_interval, boost::cref(mesh), boost::ref(file_pub)));
+    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
     ros::spin();
 
     return 0;
@@ -280,13 +280,13 @@ std::vector<geometry_msgs::Point> interpolatePoints(
         {
             if (current_distance < transition_length) // 초반 3cm 구간
             {
-                double scale = 0.5 * (1 - cos((current_distance / transition_length) * M_PI));         // 0에서 π까지의 사인 변화
+                double scale = 0.5 * (1 - cos((current_distance / transition_length) * M_PI));       // 0에서 π까지의 사인 변화
                 return desired_interval / 6.0 + scale * (desired_interval - desired_interval / 6.0); // 점진적 변화
             }
             else if (current_distance > total_distance - transition_length) // 끝부분 3cm 구간
             {
                 double remaining_distance = total_distance - current_distance;
-                double scale = 0.5 * (1 - cos((remaining_distance / transition_length) * M_PI));       // 끝에서 다시 느려짐
+                double scale = 0.5 * (1 - cos((remaining_distance / transition_length) * M_PI));     // 끝에서 다시 느려짐
                 return desired_interval / 6.0 + scale * (desired_interval - desired_interval / 6.0); // 점진적 변화
             }
             else // 중간 구간은 일정한 간격 유지
@@ -496,6 +496,56 @@ nrs_vision_rviz::Waypoints convertToWaypoints(const std::vector<geometry_msgs::P
         }
     }
 
+    else if (option == 5)
+    {
+        for (const auto &point : points)
+        {
+            Kernel::Point_3 cgal_point(point.x, point.y, point.z);
+            face_descriptor face;
+            CGAL::cpp11::array<double, 3> location;
+            // 각 점이 속한 face를 찾아냅니다.
+            if (!locate_face_and_point(cgal_point, face, location, mesh))
+            {
+                ROS_ERROR("Failed to locate face and point for point: [%f, %f, %f]", point.x, point.y, point.z);
+                continue;
+            }
+
+            // face의 법선 벡터를 계산합니다.
+            Kernel::Vector_3 face_normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, mesh);
+
+            // 법선 벡터를 기준으로 z-axis를 정의합니다.
+            tf2::Vector3 z_axis(-face_normal.x(), -face_normal.y(), -face_normal.z());
+            z_axis.normalize();
+
+            // 임의의 x-axis를 설정하고 z-axis에 직교하는 y-axis를 계산합니다.
+            tf2::Vector3 x_axis(-1.0, -1.0, 0.0);
+            tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
+            x_axis = y_axis.cross(z_axis).normalized();
+
+            // 회전 행렬을 계산합니다.
+            tf2::Matrix3x3 orientation_matrix(
+                x_axis.x(), y_axis.x(), z_axis.x(),
+                x_axis.y(), y_axis.y(), z_axis.y(),
+                x_axis.z(), y_axis.z(), z_axis.z());
+
+            tf2::Quaternion orientation;
+            orientation_matrix.getRotation(orientation);
+
+            // 결과를 웨이포인트 형식으로 저장합니다.
+            nrs_vision_rviz::Waypoint waypoint_msg;
+            waypoint_msg.pose.position.x = point.x;
+            waypoint_msg.pose.position.y = point.y;
+            waypoint_msg.pose.position.z = point.z;
+
+            waypoint_msg.pose.orientation.w = orientation.w();
+            waypoint_msg.pose.orientation.x = orientation.x();
+            waypoint_msg.pose.orientation.y = orientation.y();
+            waypoint_msg.pose.orientation.z = orientation.z();
+
+            waypoints.waypoints.push_back(waypoint_msg);
+        }
+    }
+
     return waypoints;
 }
 
@@ -654,22 +704,22 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     //------------------------------------------------------------------------------------------------------------------
 
     // 시각화용 첫 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.003, mesh, 1);
+    std::vector<geometry_msgs::Point> visual_approach_interpolated = interpolatePoints(approach_segment, 0.001, mesh, 1);
 
     // 두 번째 구간 interpolation (원래 waypoints)
-    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.003, mesh, 1);
+    std::vector<geometry_msgs::Point> visual_original_interpolated = interpolatePoints(original_points, 0.001, mesh, 1);
 
     // 시각화용 세 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.003, mesh, 1);
+    std::vector<geometry_msgs::Point> visual_retreat_interpolated = interpolatePoints(retreat_segment, 0.001, mesh, 1);
 
     // 첫 번째 구간의 quaternion 설정
-    nrs_vision_rviz::Waypoints visual_approach_waypoints = convertToWaypoints(visual_approach_interpolated, visual_original_interpolated, mesh, 1);
+    nrs_vision_rviz::Waypoints visual_approach_waypoints = convertToWaypoints(visual_approach_interpolated, original_points, mesh, 1);
 
     // 두 번째 구간의 quaternion 설정
-    nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(visual_original_interpolated, visual_original_interpolated, mesh, 2);
+    nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(original_points, original_points, mesh, 2);
 
     // 세 번째 구간의 quaternion 설정
-    nrs_vision_rviz::Waypoints visual_retreat_waypoints = convertToWaypoints(visual_retreat_interpolated, visual_original_interpolated, mesh, 3);
+    nrs_vision_rviz::Waypoints visual_retreat_waypoints = convertToWaypoints(visual_retreat_interpolated, original_points, mesh, 3);
 
     nrs_vision_rviz::Waypoints visual_final_waypoints;
     // 첫 번째 구간의 웨이포인트 추가 (approach)
@@ -704,7 +754,10 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_approach_waypoints = convertToWaypoints(control_approach_interpolated, control_original_interpolated, mesh, 1);
     // 두 번째 구간의 quaternion 설정
-    nrs_vision_rviz::Waypoints control_original_waypoints = convertToWaypoints(control_original_interpolated, control_original_interpolated, mesh, 2);
+    nrs_vision_rviz::Waypoints control_original_waypoints = convertToWaypoints(original_points, original_points, mesh, 2);
+
+    //nrs_vision_rviz::Waypoints control_original_test_waypoints = convertToWaypoints(original_points, original_points, mesh, 5);
+
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_retreat_waypoints = convertToWaypoints(control_retreat_interpolated, control_original_interpolated, mesh, 3);
     // 네 번째 구간의 quaternion 설정
@@ -712,11 +765,14 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
 
     // 파일 경로
     std::string file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/final_waypoints.txt";
+    //std::string test_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/test_final_waypoints.txt";
 
     clearFile(file_path);
+    //clearFile(test_file_path);
 
-    saveWayPointsTOFile(control_approach_waypoints, file_path, 0.0);
+    // saveWayPointsTOFile(control_approach_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_original_waypoints, file_path, 10.0);
+    //saveWayPointsTOFile(control_original_test_waypoints, test_file_path, 10.0);
     saveWayPointsTOFile(control_retreat_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_home_waypoints, file_path, 0.0);
     sendFile(file_path, file_pub); // 퍼블리시 함수를 호출하여 파일을 전송

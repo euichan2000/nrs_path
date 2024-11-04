@@ -267,7 +267,7 @@ int main(int argc, char **argv)
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
     controlpoints_pub = nh.advertise<std_msgs::Float64MultiArray>("control_points", 10);
 
-    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
 
     // 파일 이름 설정 (웨이포인트와 컨트롤 포인트가 하나의 파일에 저장됨)
     std::string filename = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_and_controlpoints.txt";
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
             // controlpoints_pub.publish(control_points_msg);
 
             // 생성된 웨이포인트 및 컨트롤 포인트 파일로 저장
-            // saveToTextFile(filename);
+            saveToTextFile(filename);
 
             start_path_generating = false; // 모션 플래닝이 끝난 후 플래그를 false로 설정
             use_spline = false;
@@ -988,7 +988,7 @@ std::vector<Eigen::Vector3d> calculateGeodesicTangentVectors(
     const std::vector<double> &u_values,
     const Triangle_mesh &tmesh)
 {
-    float c = 0.6;
+    float c = 0.2;
 
     std::vector<Eigen::Vector3d> tangent_vectors;
 
@@ -1243,7 +1243,7 @@ void generate_Hermite_Spline_path(
         for (const auto &control_points : bezier_control_points)
         {
             std::cout << "generating Spline bewteen point[" << i << "] and point[" << i + 1 << "]" << std::endl;
-            waypoints_distance += computeGeodesicDistance(selected_points[i], selected_points[i + 1], tmesh);
+            waypoints_distance = computeGeodesicDistance(selected_points[i], selected_points[i + 1], tmesh);
             steps = waypoints_distance * 50;
             std::vector<Eigen::Vector3d> curve_points = computeGeodesicBezierCurvePoints(control_points, tmesh, steps);
             hermite_spline.insert(hermite_spline.end(), curve_points.begin(), curve_points.end());
