@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 
     // Triangle_mesh 로드 또는 생성
     Triangle_mesh mesh;
-    std::ifstream stl_file("/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl"); // STL 파일 경로를 설정
+    std::ifstream stl_file("/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl"); // STL 파일 경로를 설정
     if (!stl_file || !read_stl_file(stl_file, mesh))
     {
         ROS_ERROR("Failed to load or process STL file.");

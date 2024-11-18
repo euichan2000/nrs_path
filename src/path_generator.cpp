@@ -267,7 +267,7 @@ int main(int argc, char **argv)
     waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10);
     controlpoints_pub = nh.advertise<std_msgs::Float64MultiArray>("control_points", 10);
 
-    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/lid_wrap.stl";
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
 
     // 파일 이름 설정 (웨이포인트와 컨트롤 포인트가 하나의 파일에 저장됨)
     std::string filename = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/waypoints_and_controlpoints.txt";
