@@ -1,0 +1,15 @@
+reshape_stl_node:
+  source_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
+  target_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name)"
+
+path_generator_node:
+  stl_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
+
+waypoints_interpolator_node:
+  stl_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
+  path_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt"
+  save_complete: false
+
+path_transformer_node:
+  source_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt"
+  target_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/transformed_final_waypoints.txt"
