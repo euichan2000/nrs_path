@@ -1,0 +1,48 @@
+<launch>
+
+    <arg name="file_name" default="reshaped_testbed.stl"/>
+
+    <!-- Static Transform Publisher -->
+    <node pkg="nrs_ver2" type="xacro_tf.py" name="xacro_tf" output="screen">
+        <param name="yaml_file" value="$(find nrs_ver2)/config/params.yaml" />
+        <param name="xacro_file" value="$(find nrs_ver2)/urdf/scan_model.xacro" />
+    </node>
+
+    <!-- RViz 실행 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_ver2)/config/cad_scan_rviz_config.rviz" />
+
+    <node name="path_transformer_node" pkg="nrs_ver2" type="path_transformer" output="screen" />
+
+    <!-- Point 시각화-->
+    <node name="point_visualizer_node" pkg="nrs_ver2" type="point_visualizer" output="screen" />
+    <!--터미널
+    상에서 여러가지 input을 받고, 각 노드로 커맨드를 뿌려주기 위한 노드-->
+    <node name="path_visualizer_node" pkg="nrs_ver2" type="path_visualizer" output="screen" />
+
+    <!--moveit을 이용해 rviz 상에서 시뮬레이션해서 시각화하기 위한 노드-->
+    <node name="moveit_planner_node" pkg="nrs_ver2" type="moveit_planner" output="screen" />
+
+    <!-- Static transform publisher -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_map" args="0 0 0 0 0 0 map base_link" />
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+
+    </node>
+
+    <!-- Joint state publisher -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen">
+        <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+    </node>
+
+    <!-- MoveIt! executable without trajectory execution -->
+    <include file="$(find nrs_ver2)/launch/moveit/move_group.launch">
+        <arg name="allow_trajectory_execution" value="true" />
+        <arg name="fake_execution" value="true" />
+        <arg name="info" value="true" />
+        <arg name="debug" value="false" />
+        <arg name="pipeline" value="ompl" />
+        <arg name="load_robot_description" value="true" />
+        <arg name="file_name" value="$(arg file_name)" />
+    </include>
+
+</launch>

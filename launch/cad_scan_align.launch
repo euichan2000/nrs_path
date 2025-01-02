@@ -1,0 +1,27 @@
+<launch>
+    <!-- YAML 파일 로드 -->
+    <arg name="file_name" default="testbed.stl"/>
+    <rosparam file="$(find nrs_ver2)/config/params.yaml" subst_value="true" command="load" />
+
+    <!-- 노드 실행 -->
+    <node name="stl_to_pcd_node" pkg="nrs_ver2" type="stl2pcd.py" output="screen" />
+
+    <!-- stl2pcd_done 플래그 대기 후  plane_detection 시작-->
+    <node pkg="nrs_ver2" type="wait.py" name="wait_for_stl2pcd" output="screen">
+        <param name="param_name" value="/stl2pcd_done" />
+        <param name="launch_file" value="$(find nrs_ver2)/launch/plane_detection.launch" />
+        <param name="file_name" value="$(arg file_name)" />
+    </node>
+
+        <!-- reshape_done 플래그 대기 -->
+    <node pkg="nrs_ver2" type="wait.py" name="wait_for_plane_detection" output="screen">
+        <param name="param_name" value="/plane_detection_done" />
+        <param name="launch_file" value="$(find nrs_ver2)/launch/registration.launch" />
+        <param name="file_name" value="$(arg file_name)" />
+    </node>
+
+    <!-- <node name="registration_node" pkg="cad_scan_align" type="registration.py" output="screen" />
+
+    <node name="plane_detection_node" pkg="cad_scan_align" type="plane_detection" output="screen" /> -->
+
+</launch>

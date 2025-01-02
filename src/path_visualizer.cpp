@@ -194,6 +194,7 @@ void deleteMarkers()
 
 void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg)
 {
+    path.clear();
 
     for (const auto &waypoint : msg->waypoints)
     {
@@ -248,7 +249,7 @@ int main(int argc, char **argv)
 
     marker_pub1 = nh.advertise<visualization_msgs::Marker>("visualization_marker_path", 10);
     marker_pub2 = nh.advertise<visualization_msgs::Marker>("visualization_marker_point", 10);
-    ros::Subscriber waypoints_sub = nh.subscribe("transformed_waypoints", 10, waypointsCallback);
+    ros::Subscriber waypoints_sub = nh.subscribe("final_waypoints", 10, waypointsCallback);
     ros::Subscriber controlpoints_sub = nh.subscribe("control_points", 10, controlpointsCallback);
     ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
     ros::spin();

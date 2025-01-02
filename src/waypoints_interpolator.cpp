@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     read_stl_file(input, mesh);
 
     // 퍼블리셔 선언
-    ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_ver2::Waypoints>("interpolated_waypoints_with_normals", 10);
+    ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_ver2::Waypoints>("final_waypoints", 10);
     // 파일 퍼블리셔 선언
     ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10);
     // 웨이포인트 구독 및 콜백 함수 설정
@@ -629,18 +629,18 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
 
     if (option == 1) // approach
     {
-        start_approach.x = start_point.x + 0.1 * start_normal.x();
-        start_approach.y = start_point.y + 0.1 * start_normal.y();
-        start_approach.z = start_point.z + 0.1 * start_normal.z();
+        start_approach.x = start_point.x + 0.05 * start_normal.x();
+        start_approach.y = start_point.y + 0.05 * start_normal.y();
+        start_approach.z = start_point.z + 0.05 * start_normal.z();
         std::vector<geometry_msgs::Point> first_segment{start_approach, original_points.front()};
 
         return first_segment;
     }
     else if (option == 2) // retreat
     {
-        end_retreat.x = end_point.x + 0.1 * end_normal.x();
-        end_retreat.y = end_point.y + 0.1 * end_normal.y();
-        end_retreat.z = end_point.z + 0.1 * end_normal.z();
+        end_retreat.x = end_point.x + 0.05 * end_normal.x();
+        end_retreat.y = end_point.y + 0.05 * end_normal.y();
+        end_retreat.z = end_point.z + 0.05 * end_normal.z();
         std::vector<geometry_msgs::Point> last_segment{original_points.back(), end_retreat};
 
         return last_segment;
@@ -648,9 +648,9 @@ std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Po
     else if (option == 3) // home
     {
 
-        end_retreat.x = end_point.x + 0.1 * end_normal.x();
-        end_retreat.y = end_point.y + 0.1 * end_normal.y();
-        end_retreat.z = end_point.z + 0.1 * end_normal.z();
+        end_retreat.x = end_point.x + 0.05 * end_normal.x();
+        end_retreat.y = end_point.y + 0.05 * end_normal.y();
+        end_retreat.z = end_point.z + 0.05 * end_normal.z();
 
         home_position.x = 0.573;
         home_position.y = -0.127;
@@ -747,6 +747,16 @@ void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg, ros::Publisher 
     visual_waypoints_msg = visual_final_waypoints;
     pub.publish(visual_waypoints_msg);
     ROS_INFO("Visualizing + Moveit Path Planning Available");
+   //------------------------------------------------------------------------------------------------------------------
+    // 시각화용 웨이포인트 저장
+    std::string visual_path_file = "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/visual_waypoints.txt";
+    clearFile(visual_path_file);
+
+    saveWayPointsTOFile(visual_approach_waypoints, visual_path_file, 0.0);
+    saveWayPointsTOFile(visual_original_waypoints, visual_path_file, 10.0);
+    saveWayPointsTOFile(visual_retreat_waypoints, visual_path_file, 0.0);
+
+    //------------------------------------------------------------------------------------------------------------------
 
     //-----------------------------------------------------------------------------------------------------------------
     // 제어용 첫 번째 구간 interpolation
@@ -791,11 +801,11 @@ void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg, ros::Publisher 
 
     ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------",
              control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
-    nh.setParam("waypoints_interpolator_node/save_complete", true);
     // 소요 시간 측정 및 출력
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     std::cout << "interpolation & Normal smoothing time: " << duration << " s" << std::endl;
+    // ros::param::set("/cad_path_generation_done", true);
 }
 
 void keyboardCallback(const std_msgs::String::ConstPtr &msg)

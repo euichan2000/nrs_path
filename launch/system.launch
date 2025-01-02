@@ -1,0 +1,43 @@
+<launch>
+  <!-- STL 파일 이름 -->
+  <arg name="file_name" default="white_part_2" />
+  <!-- YAML 파일 로드 -->
+  <rosparam file="$(find nrs_ver2)/config/params.yaml" subst_value="true" command="load" />
+
+  <!--패키지
+  실행-->
+
+  <!--stl
+  파일을 불러와서 reshaping 후 저장하는 노드-->
+  <node name="reshape_stl_node" pkg="nrs_ver2" type="reshape_stl" output="screen" />
+  <!--터미널
+    상에서 여러가지 input을 받고, 각 노드로 커맨드를 뿌려주기 위한 노드-->
+  <node name="keyboard_listener_node" pkg="nrs_ver2" type="keyboard_listener" output="screen" />
+
+  <!-- reshape_done 플래그 대기 -->
+  <node pkg="nrs_ver2" type="wait.py" name="wait_for_reshape" output="screen">
+    <param name="param_name" value="/reshape_done" />
+    <param name="launch_file" value="$(find nrs_ver2)/launch/cad_path_generation.launch" />
+    <param name="file_name" value="reshaped_$(arg file_name)" />
+  </node>
+
+  <node pkg="nrs_ver2" type="kill.py" name="kill_path_visualizer" output="screen">
+    <param name="param_name" value="/cad_path_generation_done" />
+    <param name="node_name" value="/path_visualizer_node" />
+  </node>
+
+  <!-- cad_generation_done 플래그 대기 및 다음 단계 실행 -->
+  <node pkg="nrs_ver2" type="wait.py" name="wait_for_cad_path_generation" output="screen">
+    <param name="param_name" value="/cad_path_generation_done" />
+    <param name="launch_file" value="$(find nrs_ver2)/launch/cad_scan_align.launch" />
+    <param name="file_name" value="$(arg file_name)" />
+  </node>
+
+  <!-- cad_scan_align 플래그 대기 및 다음 단계 실행 -->
+  <node pkg="nrs_ver2" type="wait.py" name="wait_for_cad_scan_align" output="screen">
+    <param name="param_name" value="/registration_done" />
+    <param name="launch_file" value="$(find nrs_ver2)/launch/path_transformer.launch" />
+    <param name="file_name" value="$(arg file_name)" />
+  </node>
+
+</launch>

@@ -1,0 +1,3 @@
+<launch>
+    <node name="plane_detection_node" pkg="nrs_ver2" type="plane_detection" output="screen" />
+</launch>

@@ -1,15 +1,49 @@
-reshape_stl_node:
-  source_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
-  target_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name)"
-
+cad_path_generation_done: false
 path_generator_node:
-  stl_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
-
-waypoints_interpolator_node:
-  stl_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name)"
-  path_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt"
-  save_complete: false
-
+  stl_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name).stl
+path_transformation_done: false
 path_transformer_node:
-  source_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt"
-  target_file: "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/transformed_final_waypoints.txt"
+  control_source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/control_waypoints.txt
+  control_target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/transformed_control_waypoints.txt
+  visual_source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/visual_waypoints.txt
+  visual_target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/transformed_visual_waypoints.txt
+plane_detection_done: false
+plane_detection_node:
+  input_pcd1: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/$(arg file_name).pcd
+  input_pcd2: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/$(arg file_name)_stl.pcd
+  output_ply1: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/Plane_detected_$(arg file_name).ply
+  output_ply2: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/Plane_detected_$(arg file_name)_stl.ply
+publish_tf_done: false
+registration_done: false
+registration_node:
+  source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/Plane_detected_$(arg file_name)_stl.ply
+  target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/Plane_detected_$(arg file_name).ply
+reshape_done: false
+reshape_stl_node:
+  source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name).stl
+  target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name).stl
+stl2pcd_done: false
+stl_to_pcd_node:
+  source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name).stl
+  target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/$(arg file_name)_stl.pcd
+tf_matrix:
+- -0.6836778549374353
+- -0.729732137208468
+- 0.008694745154929327
+- 0.7612783054351273
+- 0.7296519774659834
+- -0.6832791625150196
+- 0.027158384575558456
+- -0.03097931096065283
+- -0.013877407831709987
+- 0.024911724106040496
+- 0.9995933290863528
+- 0.12363673620305149
+- 0.0
+- 0.0
+- 0.0
+- 1.0
+waypoints_interpolator_node:
+  desired_interval: 4.0e-05
+  path_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt
+  stl_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name).stl

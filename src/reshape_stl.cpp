@@ -16,23 +16,13 @@ using Point_3 = K::Point_3;
 
 using Mesh = CGAL::Surface_mesh<Point_3>;
 
-// 문자열 대체 함수
-std::string resolve_template(const std::string &param_value, const std::string &file_name)
-{
-    size_t pos = param_value.find("$(file_name)");
-    if (pos != std::string::npos)
-    {
-        return param_value.substr(0, pos) + file_name + param_value.substr(pos + 12);
-    }
-    return param_value;
-}
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "reshape_stl_node");
     ros::NodeHandle nh;
 
     // Retrieve parameters from params.yaml
+    ros::param::set("/reshape_done", false);
     std::string source_file, target_file;
     if (!nh.getParam("reshape_stl_node/source_file", source_file))
     {
@@ -81,6 +71,7 @@ int main(int argc, char **argv)
     // Save the result
     ROS_INFO("Writing to %s", target_file.c_str());
     CGAL::IO::write_polygon_mesh(target_file, wrap, CGAL::parameters::stream_precision(17));
+    ros::param::set("/reshape_done", true);
 
     return EXIT_SUCCESS;
 }
