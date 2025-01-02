@@ -13,15 +13,18 @@
         <param name="file_name" value="$(arg file_name)" />
     </node>
 
-        <!-- reshape_done 플래그 대기 -->
+    <!-- reshape_done 플래그 대기 -->
     <node pkg="nrs_ver2" type="wait.py" name="wait_for_plane_detection" output="screen">
         <param name="param_name" value="/plane_detection_done" />
         <param name="launch_file" value="$(find nrs_ver2)/launch/registration.launch" />
         <param name="file_name" value="$(arg file_name)" />
     </node>
 
-    <!-- <node name="registration_node" pkg="cad_scan_align" type="registration.py" output="screen" />
-
-    <node name="plane_detection_node" pkg="cad_scan_align" type="plane_detection" output="screen" /> -->
+    <!-- /plane_detection_done 플래그 대기 -->
+    <node pkg="nrs_ver2" type="wait.py" name="wait_for_registration" output="screen">
+        <param name="param_name" value="/registration_done" />
+        <param name="launch_file" value="$(find nrs_ver2)/launch/xacro_tf.launch" />
+        <param name="file_name" value="" />
+    </node>
 
 </launch>

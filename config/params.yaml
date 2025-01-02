@@ -27,23 +27,25 @@ stl_to_pcd_node:
   source_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/$(arg file_name).stl
   target_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/pcd/$(arg file_name)_stl.pcd
 tf_matrix:
-- -0.6836778549374353
-- -0.729732137208468
-- 0.008694745154929327
-- 0.7612783054351273
-- 0.7296519774659834
-- -0.6832791625150196
-- 0.027158384575558456
-- -0.03097931096065283
-- -0.013877407831709987
-- 0.024911724106040496
-- 0.9995933290863528
-- 0.12363673620305149
+- -0.027443996683768852
+- 0.9995614561506088
+- -0.01112305821691985
+- 0.6632968380343811
+- -0.9996225392723507
+- -0.027456382348194173
+- -0.0009623133826154721
+- 0.14823617988307086
+- -0.001267290305285232
+- 0.011092449973990354
+- 0.9999376738221527
+- 0.02038985171070404
 - 0.0
 - 0.0
 - 0.0
 - 1.0
 waypoints_interpolator_node:
+  control_path_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/control_waypoints.txt
   desired_interval: 4.0e-05
-  path_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt
   stl_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/mesh/reshaped_$(arg file_name).stl
+  visual_path_file: /home/nrs_vision/catkin_ws/src/nrs_ver2/data/visual_waypoints.txt
+xacro_tf_done: false

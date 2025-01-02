@@ -1,6 +1,6 @@
 <launch>
   <!-- STL 파일 이름 -->
-  <arg name="file_name" default="white_part_2" />
+  <arg name="file_name" default="testbed" />
   <!-- YAML 파일 로드 -->
   <rosparam file="$(find nrs_ver2)/config/params.yaml" subst_value="true" command="load" />
 
@@ -35,7 +35,7 @@
 
   <!-- cad_scan_align 플래그 대기 및 다음 단계 실행 -->
   <node pkg="nrs_ver2" type="wait.py" name="wait_for_cad_scan_align" output="screen">
-    <param name="param_name" value="/registration_done" />
+    <param name="param_name" value="/xacro_tf_done" />
     <param name="launch_file" value="$(find nrs_ver2)/launch/path_transformer.launch" />
     <param name="file_name" value="$(arg file_name)" />
   </node>

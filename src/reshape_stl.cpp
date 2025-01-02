@@ -5,7 +5,7 @@
 #include <CGAL/Polygon_mesh_processing/bbox.h>
 #include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
 #include <CGAL/Real_timer.h>
-
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -13,8 +13,9 @@ namespace PMP = CGAL::Polygon_mesh_processing;
 
 using K = CGAL::Exact_predicates_inexact_constructions_kernel;
 using Point_3 = K::Point_3;
-
 using Mesh = CGAL::Surface_mesh<Point_3>;
+
+namespace fs = std::filesystem;
 
 int main(int argc, char **argv)
 {
@@ -35,7 +36,13 @@ int main(int argc, char **argv)
         ROS_ERROR("Failed to get 'target_file' parameter.");
         return EXIT_FAILURE;
     }
-
+    // Check if target file already exists
+    if (fs::exists(target_file))
+    {
+        ROS_WARN("Target file '%s' already exists. Exiting.", target_file.c_str());
+        ros::param::set("/reshape_done", true);
+        return EXIT_SUCCESS;
+    }
     Mesh mesh;
     if (!PMP::IO::read_polygon_mesh(source_file, mesh) || is_empty(mesh) || !is_triangle_mesh(mesh))
     {

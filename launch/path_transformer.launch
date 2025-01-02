@@ -3,10 +3,10 @@
     <arg name="file_name" default="reshaped_testbed.stl"/>
 
     <!-- Static Transform Publisher -->
-    <node pkg="nrs_ver2" type="xacro_tf.py" name="xacro_tf" output="screen">
+    <!-- <node pkg="nrs_ver2" type="xacro_tf.py" name="xacro_tf" output="screen">
         <param name="yaml_file" value="$(find nrs_ver2)/config/params.yaml" />
         <param name="xacro_file" value="$(find nrs_ver2)/urdf/scan_model.xacro" />
-    </node>
+    </node> -->
 
     <!-- RViz 실행 -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find nrs_ver2)/config/cad_scan_rviz_config.rviz" />

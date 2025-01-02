@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
-
+#include <filesystem>
 #include <CGAL/Point_set_3.h>
 #include <CGAL/Point_set_3/IO.h>
 #include <CGAL/IO/PLY.h>
@@ -35,6 +35,8 @@ using Region_type = CGAL::Shape_detection::Point_set::Least_squares_plane_fit_re
 using Neighbor_query = CGAL::Shape_detection::Point_set::K_neighbor_query_for_point_set<Point_set>;
 using Sorting = CGAL::Shape_detection::Point_set::Least_squares_plane_fit_sorting_for_point_set<Point_set, Neighbor_query>;
 using Region_growing = CGAL::Shape_detection::Region_growing<Neighbor_query, Region_type>;
+
+namespace fs = std::filesystem;
 
 // Custom output iterator to handle region processing
 struct PlaneDetectionOutputIterator
@@ -315,6 +317,14 @@ int main(int argc, char *argv[])
     nh.getParam("plane_detection_node/input_pcd2", input_pcd2);
     nh.getParam("plane_detection_node/output_ply1", output_ply1);
     nh.getParam("plane_detection_node/output_ply2", output_ply2);
+
+    // Check if target file already exists
+    if (fs::exists(output_ply1) && fs::exists(output_ply2))
+    {
+        ROS_WARN("file '%s' & '%s' already exists. Exiting.", output_ply1.c_str(), output_ply1.c_str());
+        ros::param::set("/plane_detection_done", true);
+        return EXIT_SUCCESS;
+    }
 
     // 첫 번째 파일 처리
     if (!detect_planes(input_pcd1, output_ply1))

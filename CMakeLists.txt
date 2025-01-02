@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(nrs_ver2)
 
+set(CMAKE_CXX_STANDARD 17)       # C++17을 사용하도록 설정
+set(CMAKE_CXX_STANDARD_REQUIRED ON) # C++17 필수 설정
 set(CMAKE_BUILD_TYPE Release)
 
 find_package(catkin REQUIRED COMPONENTS

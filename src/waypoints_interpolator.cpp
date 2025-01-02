@@ -40,8 +40,7 @@ Triangle_mesh mesh;
 Tree *tree;
 Surface_mesh_shortest_path *shortest_paths;
 std::vector<geometry_msgs::Point> original_points;
-std::string path_file;
-
+std::string control_path_file, visual_path_file;
 // 전역 중단 플래그 (Atomic으로 설정)
 std::atomic<bool> reset_flag(false);
 
@@ -102,9 +101,15 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    if (!nh.getParam("waypoints_interpolator_node/path_file", path_file))
+    if (!nh.getParam("waypoints_interpolator_node/control_path_file", control_path_file))
     {
-        ROS_ERROR("Failed to get 'path_file' parameter.");
+        ROS_ERROR("Failed to get 'control_path_file' parameter.");
+        return EXIT_FAILURE;
+    }
+
+    if (!nh.getParam("waypoints_interpolator_node/visual_path_file", visual_path_file))
+    {
+        ROS_ERROR("Failed to get 'visual_path_file' parameter.");
         return EXIT_FAILURE;
     }
     nh.setParam("waypoints_interpolator_node/save_complete", false);
@@ -747,9 +752,8 @@ void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg, ros::Publisher 
     visual_waypoints_msg = visual_final_waypoints;
     pub.publish(visual_waypoints_msg);
     ROS_INFO("Visualizing + Moveit Path Planning Available");
-   //------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------
     // 시각화용 웨이포인트 저장
-    std::string visual_path_file = "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/visual_waypoints.txt";
     clearFile(visual_path_file);
 
     saveWayPointsTOFile(visual_approach_waypoints, visual_path_file, 0.0);
@@ -769,7 +773,7 @@ void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg, ros::Publisher 
     std::vector<geometry_msgs::Point> control_retreat_interpolated = interpolatePoints(retreat_segment, desired_interval, mesh, 2);
 
     // 제어용 네 번째 구간 interpolation
-    std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh, 2);
+    //std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh, 2);
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -783,24 +787,24 @@ void waypointsCallback(const nrs_ver2::Waypoints::ConstPtr &msg, ros::Publisher 
     // 세 번째 구간의 quaternion 설정
     nrs_ver2::Waypoints control_retreat_waypoints = convertToWaypoints(control_retreat_interpolated, control_original_interpolated, mesh, 3);
     // 네 번째 구간의 quaternion 설정
-    nrs_ver2::Waypoints control_home_waypoints = convertToWaypoints(control_home_interpolated, control_original_interpolated, mesh, 4);
+    //nrs_ver2::Waypoints control_home_waypoints = convertToWaypoints(control_home_interpolated, control_original_interpolated, mesh, 4);
 
     // 파일 경로
     // std::string file_path = "/home/nrs_vision/catkin_ws/src/nrs_ver2/data/final_waypoints.txt";
     // std::string test_file_path = "/home/nrs/catkin_ws/src/nrs_ver2/data/test_final_waypoints.txt";
 
-    clearFile(path_file);
+    clearFile(control_path_file);
     // clearFile(test_file_path);
 
-    saveWayPointsTOFile(control_approach_waypoints, path_file, 0.0);
-    saveWayPointsTOFile(control_original_waypoints, path_file, 10.0);
+    saveWayPointsTOFile(control_approach_waypoints, control_path_file, 0.0);
+    saveWayPointsTOFile(control_original_waypoints, control_path_file, 10.0);
     // saveWayPointsTOFile(control_original_test_waypoints, test_file_path, 10.0);
-    saveWayPointsTOFile(control_retreat_waypoints, path_file, 0.0);
-    saveWayPointsTOFile(control_home_waypoints, path_file, 0.0);
-    sendFile(path_file, file_pub); // 퍼블리시 함수를 호출하여 파일을 전송
+    saveWayPointsTOFile(control_retreat_waypoints, control_path_file, 0.0);
+    //saveWayPointsTOFile(control_home_waypoints, control_path_file, 0.0);
+    sendFile(control_path_file, file_pub); // 퍼블리시 함수를 호출하여 파일을 전송
 
     ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------",
-             control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
+             control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size());
     // 소요 시간 측정 및 출력
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
