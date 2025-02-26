@@ -4,149 +4,150 @@
 #include <nrs_vision_rviz/Waypoint.h>
 #include <nrs_vision_rviz/Waypoints.h>
 
-// CGAL 관련 헤더
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Surface_mesh_shortest_path.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_mesh_processing/locate.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
-#include <CGAL/IO/STL_reader.h>
-#include <boost/lexical_cast.hpp>
+#include <CGAL/AABB_tree.h>
+#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_face_graph_triangle_primitive.h>
+#include <CGAL/Ray_3.h>
 
 #include <vector>
+#include <iostream>
 #include <fstream>
+#include <limits>
 #include <cmath>
-#include <map>
-#include <chrono>
 #include <std_msgs/String.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
-#include <atomic>   // For atomic flag
-#include <Eigen/QR> // QR decomposition을 위한 헤더 추가
 
-// CGAL 관련 타입 정의
+// === CGAL 타입 정의 ===
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef CGAL::Surface_mesh<Kernel::Point_3> Triangle_mesh;
 typedef CGAL::Surface_mesh_shortest_path_traits<Kernel, Triangle_mesh> Traits;
 typedef CGAL::Surface_mesh_shortest_path<Traits> Surface_mesh_shortest_path;
 typedef Traits::Point_3 Point_3;
+typedef Kernel::Ray_3 Ray_3;
+typedef Kernel::Vector_3 Vector_3;
 typedef boost::graph_traits<Triangle_mesh>::vertex_descriptor vertex_descriptor;
 typedef boost::graph_traits<Triangle_mesh>::face_descriptor face_descriptor;
 typedef CGAL::AABB_face_graph_triangle_primitive<Triangle_mesh> Primitive;
 typedef CGAL::AABB_traits<Kernel, Primitive> AABB_traits;
-typedef CGAL::AABB_tree<AABB_traits> Tree;
+typedef CGAL::AABB_tree<AABB_traits> AABB_tree;
 
-Triangle_mesh mesh;
-Tree *tree;
-Surface_mesh_shortest_path *shortest_paths;
 std::vector<geometry_msgs::Point> original_points;
 
-// 전역 중단 플래그 (Atomic으로 설정)
-std::atomic<bool> reset_flag(false);
 
-struct WaypointsSegment
-{
-    int start_idx;
-    int end_idx;
-};
+std::vector<Point_3> readWaypoints(const std::string &filename) {
+    std::vector<Point_3> waypoints;
+    std::ifstream infile(filename);
 
-// STL 파일을 읽어 Triangle_mesh 객체로 변환하는 함수
-bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh);
-
-// Find closest [face and barycentric coordinate on Mesh] with points
-bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, Surface_mesh_shortest_path::Barycentric_coordinates &location, const Triangle_mesh &mesh);
-
-// Calculate GeodesicDistance between two points
-double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, const Triangle_mesh &mesh);
-
-// 일정한 간격을 가진 웨이포인트 생성 함수
-std::vector<geometry_msgs::Point> interpolatePoints(
-    const std::vector<geometry_msgs::Point> &points,
-    double desired_interval,
-    const Triangle_mesh &mesh,
-    int option);
-
-// 서피스에서 노멀 벡터를 계산하고 웨이포인트로 변환하는 함수
-nrs_vision_rviz::Waypoints convertToWaypoints(const std::vector<geometry_msgs::Point> &points, const std::vector<geometry_msgs::Point> &reference_points, const Triangle_mesh &mesh, int option);
-
-void clearFile(const std::string &file_path);
-
-void saveWayPointsTOFile(const nrs_vision_rviz::Waypoints &waypoints, const std::string &filename, double force);
-
-std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Point> &original_points, int option, Triangle_mesh &mesh);
-
-// 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh, ros::Publisher &file_pub);
-void keyboardCallback(const std_msgs::String::ConstPtr &msg);
-
-// 중단 플래그를 체크하며 작업을 중단할지 확인하는 함수
-bool shouldReset()
-{
-    return reset_flag.load();
-}
-
-int main(int argc, char **argv)
-{
-
-    ros::init(argc, argv, "waypoints_interpolator");
-    ros::NodeHandle nh;
-
-    // 웨이포인트 간의 원하는 간격 (예: 0.05m 간격)
-    double desired_interval;
-    nh.param("desired_interval", desired_interval, 0.00006); // 파라미터 서버에서 간격을 가져오거나 기본값 0.05 사용
-
-    // Triangle_mesh 로드 또는 생성
-    Triangle_mesh mesh;
-    std::ifstream stl_file("/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl"); // STL 파일 경로를 설정
-    if (!stl_file || !read_stl_file(stl_file, mesh))
-    {
-        ROS_ERROR("Failed to load or process STL file.");
-        return 1;
+    if (!infile.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return waypoints; // 빈 벡터 반환
     }
 
-    // 퍼블리셔 선언
-    ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("interpolated_waypoints_with_normals", 10);
-    // 파일 퍼블리셔 선언
-    ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10);
-    // 웨이포인트 구독 및 콜백 함수 설정
-    ros::Subscriber waypoints_sub = nh.subscribe<nrs_vision_rviz::Waypoints>("waypoints_with_normals", 10,
-                                                                             boost::bind(waypointsCallback, _1, boost::ref(interpolated_waypoints_pub), desired_interval, boost::cref(mesh), boost::ref(file_pub)));
-    ros::Subscriber keyboard_sub = nh.subscribe("nrs_command", 10, keyboardCallback);
-    ros::spin();
+    std::string line;
+    while (std::getline(infile, line)) {
+        if (line.empty()) {
+            continue; // 빈 줄이면 건너뛰기
+        }
 
-    return 0;
-}
+        std::stringstream ss(line);
+        double xVal, yVal, zVal;
 
-// STL 파일을 읽어 Triangle_mesh 객체로 변환하는 함수
-bool read_stl_file(std::ifstream &input, Triangle_mesh &mesh)
-{
-    std::vector<Kernel::Point_3> points;
-    std::vector<std::array<std::size_t, 3>> triangles;
-    if (!CGAL::read_STL(input, points, triangles))
-    {
-        ROS_ERROR("Failed to read STL file.");
-        return false;
-    }
-
-    std::map<std::size_t, vertex_descriptor> index_to_vertex;
-    for (std::size_t i = 0; i < points.size(); ++i)
-    {
-        index_to_vertex[i] = mesh.add_vertex(points[i]);
-    }
-
-    for (const auto &t : triangles)
-    {
-        if (mesh.add_face(index_to_vertex[t[0]], index_to_vertex[t[1]], index_to_vertex[t[2]]) == Triangle_mesh::null_face())
-        {
-            ROS_ERROR("Failed to add face.");
-            return false;
+        // 한 줄에서 x, y, z를 읽어오기
+        if (ss >> xVal >> yVal >> zVal) {
+            Point_3 p{xVal, yVal, zVal+0.1};
+            waypoints.push_back(p);
         }
     }
-    ROS_INFO("Successfully read STL file.");
-    return true;
+
+    infile.close();
+    return waypoints;
 }
 
-// Find closest [face and barycentric coordinate on Mesh] with points
+
+// === AABB Tree 생성 및 메쉬의 최대 z 값 찾는 함수 ===
+double initializeMeshAndGetMaxZ(const std::string &mesh_file_path, Triangle_mesh &mesh, AABB_tree &tree)
+{
+    // STL 파일 로드
+    std::ifstream input(mesh_file_path, std::ios::binary);
+    if (!input || !CGAL::IO::read_STL(input, mesh))
+    {
+        ROS_ERROR("Failed to load mesh file.");
+        exit(-1);
+    }
+
+    // AABB Tree 생성
+    tree = AABB_tree(faces(mesh).begin(), faces(mesh).end(), mesh);
+    tree.accelerate_distance_queries();
+
+    // 메쉬에서 가장 높은 z 값 찾기
+    double max_z = std::numeric_limits<double>::lowest();
+    for (const auto &v : vertices(mesh))
+    {
+        const Point_3 &p = mesh.point(v);
+        if (p.z() > max_z)
+        {
+            max_z = p.z();
+        }
+    }
+
+    return max_z + 0.05; // 가장 높은 z 값보다 5cm 위로 설정
+}
+
+// === 나선형 경로 생성 함수 ===
+std::vector<Point_3> generateSpiralPath(double x_origin, double y_origin, double projection_z, double r_start = 0.06, double r_end = 0.04, int num_points = 100)
+{
+    std::vector<Point_3> path_2D;
+    double theta_max = 10 * M_PI;                     // 5바퀴 (10π rad)
+    double k = std::log(r_end / r_start) / theta_max; // 감쇠 계수
+
+    for (int i = 0; i < num_points; ++i)
+    {
+        double theta = i * (theta_max / num_points);
+        double r = r_start * std::exp(-k * theta); // 반지름 감소
+        double x = x_origin + r * std::cos(theta);
+        double y = y_origin + r * std::sin(theta);
+        path_2D.push_back(Point_3(x, y, projection_z));
+    }
+
+    return path_2D;
+}
+
+// === 2D 경로를 3D 메쉬에 수직 투영하는 함수 ===
+std::vector<Point_3> projectPathOntoMesh(const std::vector<Point_3> &path_2D, AABB_tree &tree)
+{
+    std::vector<Point_3> projected_points;
+
+    for (const auto &p : path_2D)
+    {
+        Ray_3 vertical_ray(p, Vector_3(0, 0, -1)); // z- 방향으로 광선 생성
+
+        // AABB Tree를 사용하여 가장 가까운 교차점 찾기
+        auto intersection = tree.first_intersection(vertical_ray);
+
+        if (intersection)
+        {
+            if (const Point_3 *proj_point = boost::get<Point_3>(&intersection->first))
+            {
+                projected_points.push_back(*proj_point);
+                std::cout << "Projected Point: " << *proj_point << std::endl;
+            }
+        }
+        else
+        {
+            //std::cerr << "No intersection found for point: " << p << std::endl;
+        }
+    }
+
+    return projected_points;
+}
+
 bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, Surface_mesh_shortest_path::Barycentric_coordinates &location, const Triangle_mesh &mesh)
 {
     if (mesh.faces().empty())
@@ -155,7 +156,7 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
         return false;
     }
 
-    Tree tree(mesh.faces().begin(), mesh.faces().end(), mesh);
+    AABB_tree tree(mesh.faces().begin(), mesh.faces().end(), mesh);
     tree.build();
 
     auto result = CGAL::Polygon_mesh_processing::locate_with_AABB_tree(point, tree, mesh);
@@ -171,7 +172,6 @@ bool locate_face_and_point(const Kernel::Point_3 &point, face_descriptor &face, 
     return true;
 }
 
-// getFaceNormal 함수
 Eigen::Vector3d getFaceNormal(const geometry_msgs::Point &ros_point, const Triangle_mesh &mesh)
 {
     // ROS geometry_msgs::Point -> CGAL Point_3 변환
@@ -199,32 +199,52 @@ Eigen::Vector3d getFaceNormal(const geometry_msgs::Point &ros_point, const Trian
     return eigen_normal; // 노멀 벡터 반환
 }
 
-// Calculate GeodesicDistance between two points
-double computeGeodesicDistance(const Eigen::Vector3d &p0, const Eigen::Vector3d &p1, const Triangle_mesh &mesh)
+std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Point> &original_points, int option, const Triangle_mesh &mesh)
 {
+    // 첫 번째 점과 마지막 점에서 face normal vector 구하기
+    geometry_msgs::Point start_point = original_points.front();
+    geometry_msgs::Point end_point = original_points.back();
 
-    Kernel::Point_3 point0(p0.x(), p0.y(), p0.z());
-    Kernel::Point_3 point1(p1.x(), p1.y(), p1.z());
+    // 첫 번째와 마지막 점에서 face의 normal vector 구하기
+    Eigen::Vector3d start_normal = getFaceNormal(start_point, mesh);
+    Eigen::Vector3d end_normal = getFaceNormal(end_point, mesh);
 
-    face_descriptor face0, face1;
-    Surface_mesh_shortest_path::Barycentric_coordinates location0, location1;
+    geometry_msgs::Point start_approach;
+    geometry_msgs::Point end_retreat;
+    geometry_msgs::Point home_position;
 
-    if (!locate_face_and_point(point0, face0, location0, mesh))
+    if (option == 1) // approach
     {
-        throw std::runtime_error("Failed to locate point0 on mesh.");
-    }
+        start_approach.x = start_point.x + 0.1 * start_normal.x();
+        start_approach.y = start_point.y + 0.1 * start_normal.y();
+        start_approach.z = start_point.z + 0.1 * start_normal.z();
+        std::vector<geometry_msgs::Point> first_segment{start_approach, original_points.front()};
 
-    if (!locate_face_and_point(point1, face1, location1, mesh))
+        return first_segment;
+    }
+    else if (option == 2) // retreat
     {
-        throw std::runtime_error("Failed to locate point1 on mesh.");
+        end_retreat.x = end_point.x + 0.1 * end_normal.x();
+        end_retreat.y = end_point.y + 0.1 * end_normal.y();
+        end_retreat.z = end_point.z + 0.1 * end_normal.z();
+        std::vector<geometry_msgs::Point> last_segment{original_points.back(), end_retreat};
+
+        return last_segment;
     }
+    else if (option == 3) // home
+    {
 
-    Surface_mesh_shortest_path shortest_paths(mesh);
-    shortest_paths.add_source_point(face1, location1);
+        end_retreat.x = end_point.x + 0.1 * end_normal.x();
+        end_retreat.y = end_point.y + 0.1 * end_normal.y();
+        end_retreat.z = end_point.z + 0.1 * end_normal.z();
 
-    std::pair<double, Surface_mesh_shortest_path::Source_point_iterator> result = shortest_paths.shortest_distance_to_source_points(face0, location0);
+        home_position.x = 0.573;
+        home_position.y = -0.127;
+        home_position.z = 0.25;
+        std::vector<geometry_msgs::Point> home_segment{end_retreat, home_position};
 
-    return abs(result.first);
+        return home_segment;
+    }
 }
 
 std::vector<geometry_msgs::Point> interpolatePoints(
@@ -601,96 +621,49 @@ void saveWayPointsTOFile(const nrs_vision_rviz::Waypoints &waypoints, const std:
     outfile.close();
 }
 
-std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Point> &original_points, int option, const Triangle_mesh &mesh)
+int main(int argc, char **argv)
 {
-    // 첫 번째 점과 마지막 점에서 face normal vector 구하기
-    geometry_msgs::Point start_point = original_points.front();
-    geometry_msgs::Point end_point = original_points.back();
+    ros::init(argc, argv, "hand_teaching");
+    ros::NodeHandle nh;
+    ros::Duration(5.0).sleep();
 
-    // 첫 번째와 마지막 점에서 face의 normal vector 구하기
-    Eigen::Vector3d start_normal = getFaceNormal(start_point, mesh);
-    Eigen::Vector3d end_normal = getFaceNormal(end_point, mesh);
+    // 웨이포인트 간의 원하는 간격 (예: 0.05m 간격)
+    double desired_interval = 0.00004;
+    // 퍼블리셔 선언
+    ros::Publisher interpolated_waypoints_pub = nh.advertise<nrs_vision_rviz::Waypoints>("interpolated_waypoints_with_normals", 10);
+    // 파일 퍼블리셔 선언
+    ros::Publisher file_pub = nh.advertise<std_msgs::String>("path_publisher", 10);
+    // STL 파일 경로
+    std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/mesh/fenda_wrap.stl";
+    std::string filename = "/home/nrs/catkin_ws/src/nrs_ver3/data/waypoints.txt";
+    Triangle_mesh mesh;
+    AABB_tree tree;
 
-    geometry_msgs::Point start_approach;
-    geometry_msgs::Point end_retreat;
-    geometry_msgs::Point home_position;
-
-    if (option == 1) // approach
-    {
-        start_approach.x = start_point.x + 0.1 * start_normal.x();
-        start_approach.y = start_point.y + 0.1 * start_normal.y();
-        start_approach.z = start_point.z + 0.1 * start_normal.z();
-        std::vector<geometry_msgs::Point> first_segment{start_approach, original_points.front()};
-
-        return first_segment;
-    }
-    else if (option == 2) // retreat
-    {
-        end_retreat.x = end_point.x + 0.1 * end_normal.x();
-        end_retreat.y = end_point.y + 0.1 * end_normal.y();
-        end_retreat.z = end_point.z + 0.1 * end_normal.z();
-        std::vector<geometry_msgs::Point> last_segment{original_points.back(), end_retreat};
-
-        return last_segment;
-    }
-    else if (option == 3) // home
-    {
-
-        end_retreat.x = end_point.x + 0.1 * end_normal.x();
-        end_retreat.y = end_point.y + 0.1 * end_normal.y();
-        end_retreat.z = end_point.z + 0.1 * end_normal.z();
-
-        home_position.x = 0.573;
-        home_position.y = -0.127;
-        home_position.z = 0.25;
-        std::vector<geometry_msgs::Point> home_segment{end_retreat, home_position};
-
-        return home_segment;
-    }
-}
-
-void sendFile(const std::string &file_path, ros::Publisher &file_pub)
-{
-    // 파일 열기
-    std::ifstream file(file_path);
-    if (!file.is_open())
-    {
-        ROS_ERROR("Failed to open file: %s", file_path.c_str());
-        return;
+     // STL 파일 로드
+    std::ifstream input(mesh_file_path, std::ios::binary);
+    if (!input || !CGAL::IO::read_STL(input, mesh)) {
+        ROS_ERROR("Failed to load mesh file.");
+        exit(-1);
     }
 
-    // 파일 데이터 읽기
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string file_data = buffer.str();
+    // AABB Tree 생성
+    tree = AABB_tree(faces(mesh).begin(), faces(mesh).end(), mesh);
+    tree.accelerate_distance_queries();
 
-    // 파일을 닫기
-    file.close();
 
-    // 파일 데이터를 퍼블리시
-    std_msgs::String msg;
-    msg.data = file_data;
-    ROS_INFO("Sending file data...");
-    file_pub.publish(msg); // 퍼블리시
-    ROS_INFO("File data sent.");
-}
+    std::vector<Point_3> paths = readWaypoints(filename);
 
-// 콜백 함수: 웨이포인트 보간, 노멀 계산 및 퍼블리시
-void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Publisher &pub, double desired_interval, const Triangle_mesh &mesh, ros::Publisher &file_pub)
-{
+    // 2D 경로를 3D 메쉬에 투영
+    std::vector<Point_3> projected_points = projectPathOntoMesh(paths, tree);
+
     auto start_time = std::chrono::high_resolution_clock::now();
-
-    // 원래의 포인트들 추출
-
-    for (const auto &waypoint : msg->waypoints)
+    for (const auto &p : projected_points)
     {
-        original_points.push_back(waypoint.pose.position);
-    }
-
-    if (original_points.size() < 2)
-    {
-        ROS_WARN("Not enough waypoints for interpolation");
-        return;
+        geometry_msgs::Point ros_point;
+        ros_point.x = p.x();
+        ros_point.y = p.y();
+        ros_point.z = p.z();
+        original_points.push_back(ros_point);
     }
     // 접근 segment 생성
     std::vector<geometry_msgs::Point> approach_segment = generate_segment(original_points, 1, mesh);
@@ -716,7 +689,7 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     nrs_vision_rviz::Waypoints visual_approach_waypoints = convertToWaypoints(visual_approach_interpolated, original_points, mesh, 1);
 
     // 두 번째 구간의 quaternion 설정
-    nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(visual_original_interpolated, original_points, mesh, 2);
+    nrs_vision_rviz::Waypoints visual_original_waypoints = convertToWaypoints(original_points, original_points, mesh, 2);
 
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints visual_retreat_waypoints = convertToWaypoints(visual_retreat_interpolated, original_points, mesh, 3);
@@ -733,8 +706,6 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
 
     nrs_vision_rviz::Waypoints visual_waypoints_msg;
     visual_waypoints_msg = visual_final_waypoints;
-    pub.publish(visual_waypoints_msg);
-    ROS_INFO("Visualizing + Moveit Path Planning Available");
 
     //-----------------------------------------------------------------------------------------------------------------
     // 제어용 첫 번째 구간 interpolation
@@ -749,33 +720,24 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     // 제어용 네 번째 구간 interpolation
     std::vector<geometry_msgs::Point> control_home_interpolated = interpolatePoints(home_segment, desired_interval, mesh, 2);
 
-    //------------------------------------------------------------------------------------------------------------------
-
     // 첫 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_approach_waypoints = convertToWaypoints(control_approach_interpolated, control_original_interpolated, mesh, 1);
     // 두 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_original_waypoints = convertToWaypoints(control_original_interpolated, original_points, mesh, 2);
-
-    //nrs_vision_rviz::Waypoints control_original_test_waypoints = convertToWaypoints(original_points, original_points, mesh, 5);
-
     // 세 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_retreat_waypoints = convertToWaypoints(control_retreat_interpolated, control_original_interpolated, mesh, 3);
     // 네 번째 구간의 quaternion 설정
     nrs_vision_rviz::Waypoints control_home_waypoints = convertToWaypoints(control_home_interpolated, control_original_interpolated, mesh, 4);
 
     // 파일 경로
-    std::string file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/final_waypoints.txt";
-    //std::string test_file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/test_final_waypoints.txt";
+    std::string file_path = "/home/nrs/catkin_ws/src/nrs_vision_rviz/data/projected_final_waypoints.txt";
 
     clearFile(file_path);
-    //clearFile(test_file_path);
 
     saveWayPointsTOFile(control_approach_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_original_waypoints, file_path, 10.0);
-    //saveWayPointsTOFile(control_original_test_waypoints, test_file_path, 10.0);
     saveWayPointsTOFile(control_retreat_waypoints, file_path, 0.0);
     saveWayPointsTOFile(control_home_waypoints, file_path, 0.0);
-    sendFile(file_path, file_pub); // 퍼블리시 함수를 호출하여 파일을 전송
 
     ROS_INFO("--------------------------------------\n Saved %lu final waypoints \n --------------------------------------",
              control_approach_waypoints.waypoints.size() + control_original_waypoints.waypoints.size() + control_retreat_waypoints.waypoints.size() + control_home_waypoints.waypoints.size());
@@ -784,19 +746,6 @@ void waypointsCallback(const nrs_vision_rviz::Waypoints::ConstPtr &msg, ros::Pub
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
     std::cout << "interpolation & Normal smoothing time: " << duration << " s" << std::endl;
-}
-
-void keyboardCallback(const std_msgs::String::ConstPtr &msg)
-{
-
-    if (msg->data == "reset")
-    {
-        original_points.clear();
-        reset_flag.store(true); // 중단 플래그 설정
-        ROS_INFO("Resetting operation, waypoints cleared.");
-    }
-    else
-    {
-        reset_flag.store(false);
-    }
+    interpolated_waypoints_pub.publish(visual_waypoints_msg);
+    return 0;
 }

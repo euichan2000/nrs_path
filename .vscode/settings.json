@@ -71,7 +71,11 @@
         "variant": "cpp",
         "bit": "cpp",
         "valarray": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp"
     },
 
 }
