@@ -17,7 +17,7 @@ bool nrs_callback::splinePathServiceCallback(std_srvs::Empty::Request &req, std_
     shortest_paths = new Surface_mesh_shortest_path(tmesh);
     // 웨이포인트 메시지 초기화
     waypoints_msg.waypoints.clear();
-
+    selected_points = n_io.loadWaypointsFromFile(selected_waypoints_file_path);
     // 최소 3개 이상의 선택된 점이 필요
     if (selected_points.size() > 2)
     {
@@ -52,7 +52,7 @@ bool nrs_callback::straightPathServiceCallback(std_srvs::Empty::Request &req, st
     tree->accelerate_distance_queries();
     shortest_paths = new Surface_mesh_shortest_path(tmesh);
     waypoints_msg.waypoints.clear();
-
+    selected_points = n_io.loadWaypointsFromFile(selected_waypoints_file_path);
     // 최소 2개 이상의 선택된 점이 필요
     if (selected_points.size() > 1)
     {
@@ -100,7 +100,7 @@ bool nrs_callback::PathInterpolationCallback(std_srvs::Empty::Request &req, std_
     Surface_mesh_shortest_path *shortest_paths = new Surface_mesh_shortest_path(tmesh);
 
     auto start_time_point = std::chrono::high_resolution_clock::now();
-
+    geodesic_path = n_io.loadGeodesicWaypointsFromFile(geodesic_waypoints_file_path);
     // 4. 경로 보간: geodesic_path는 이전에 설정된 전역 또는 클래스 멤버
     nrs_path::Waypoints final_waypoints = n_interpolation.interpolateEnd2End(geodesic_path, desired_interval, tmesh, Fx, Fy, Fz);
 

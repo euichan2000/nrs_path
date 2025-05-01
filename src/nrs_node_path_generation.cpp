@@ -10,7 +10,7 @@
 
 // 전역 변수들
 nrs_callback callback_handler;
-std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_path/mesh/workpiece.stl";
+std::string mesh_file_path = "/home/nrs/catkin_ws/src/nrs_vision/mesh/workpiece.stl";
 Triangle_mesh tmesh;
 
 // [생성] : "/clicked_point" 토픽 콜백 함수 (경로 생성)
@@ -45,8 +45,27 @@ void clickedPointCallback(const geometry_msgs::PointStamped::ConstPtr &msg)
     Kernel::Point_3 projected_point = CGAL::barycenter(v1, location[0], v2, location[1], v3, location[2]);
 
     Eigen::Vector3d projected_point_eigen(projected_point.x(), projected_point.y(), projected_point.z());
+    std::ofstream ofs(
+        callback_handler.selected_waypoints_file_path,
+        std::ios::app);
+    if (!ofs.is_open())
+    {
+        std::cerr << "Cannot open file '"
+                  << callback_handler.selected_waypoints_file_path
+                  << "' for writing." << std::endl;
+        return;
+    }
 
-    callback_handler.selected_points.push_back(projected_point_eigen);
+    ofs << projected_point_eigen.x() << " "
+        << projected_point_eigen.y() << " "
+        << projected_point_eigen.z() << "\n";
+    ofs.close();
+
+    std::cout << "Waypoint saved: ["
+              << projected_point_eigen.x() << ", "
+              << projected_point_eigen.y() << ", "
+              << projected_point_eigen.z() << "]"
+              << std::endl;
 }
 
 // [보간] : "/geodesic_path" 토픽 콜백 함수 (경로 보간)
@@ -60,13 +79,14 @@ void geodesicPathCallback(const nrs_path::Waypoints::ConstPtr &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "nrs_combined_node");
+    ros::init(argc, argv, "nrs_node_path_generation");
     ros::NodeHandle nh;
     nrs_visualization visualizer;
     visualizer.init(nh);
 
     // ===== 경로 생성 (Path Generation) 설정 =====
     callback_handler.mesh_file_path = mesh_file_path;
+    callback_handler.selected_waypoints_file_path = "/home/nrs/catkin_ws/src/nrs_path/data/selected_waypoints.txt";
     callback_handler.geodesic_waypoints_file_path = "/home/nrs/catkin_ws/src/nrs_path/data/geodesic_waypoints.txt";
     callback_handler.geodesic_waypoints_pub = nh.advertise<nrs_path::Waypoints>("geodesic_path", 10);
 
@@ -109,9 +129,8 @@ int main(int argc, char **argv)
     ros::Subscriber geodesic_path_sub = nh.subscribe("/geodesic_path", 1000, geodesicPathCallback);
     // ===== 경로 시각화 (Visualization) 설정 =====
     ros::Subscriber vis_waypoints_sub = nh.subscribe("interpolated_waypoints", 10, &nrs_visualization::waypointsCallback, &visualizer);
-    
-    ros::Subscriber vis_clicked_point_sub = nh.subscribe("/clicked_point", 10, &nrs_visualization::visualizeClickedPoint, &visualizer);
 
+    ros::Subscriber vis_clicked_point_sub = nh.subscribe("/clicked_point", 10, &nrs_visualization::visualizeClickedPoint, &visualizer);
 
     ROS_INFO("Combined nrs node started. Generation, interpolation and visualization functionalities are active.");
 

@@ -22,6 +22,7 @@ public:
 
     /*-------------------------------path generation-------------------------------*/
     std::string mesh_file_path; // path_planning할 때 사용되는 mesh 파일
+    std::string selected_waypoints_file_path; //GUI, Discrete Teaching으로 선택된 waypoint가 저장되는 파일 경로
 
     ros::Publisher geodesic_waypoints_pub;        // geodesic_Waypoints publish할 때 사용되는 publisher
     nrs_path::Waypoints waypoints_msg;          // geodesic_waypoints를 publish할 때 사용되는 msg

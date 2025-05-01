@@ -13,7 +13,7 @@ def rpy_to_zaxis(roll, pitch, yaw):
     return np.array([z_x, z_y, z_z])
 
 # 파일에서 데이터 읽기 (각 행: x, y, z, roll, pitch, yaw)
-file_path = "/home/nrs/catkin_ws/src/nrs_path/data/geodesic_waypoints.txt"
+file_path = "/home/nrs/catkin_ws/src/nrs_path/data/continuous_waypoints.txt"
 data = np.loadtxt(file_path)
 
 # x, y, z 좌표와 rpy 값 분리

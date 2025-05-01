@@ -125,21 +125,21 @@ src/nrs_math.cpp
 
 add_dependencies(nrs_node_path_generation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(nrs_node_simulation
-src/nrs_node_simulation.cpp
+# add_executable(nrs_node_simulation
+# src/nrs_node_simulation.cpp
 
 
-src/nrs_geodesic.cpp
-src/nrs_vec3d.cpp
-src/nrs_interpolation.cpp
-src/nrs_visualization.cpp
+# src/nrs_geodesic.cpp
+# src/nrs_vec3d.cpp
+# src/nrs_interpolation.cpp
+# src/nrs_visualization.cpp
 
 
-src/nrs_callback.cpp
-src/nrs_io.cpp
-src/nrs_math.cpp
-)
-add_dependencies(nrs_node_simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# src/nrs_callback.cpp
+# src/nrs_io.cpp
+# src/nrs_math.cpp
+# )
+# add_dependencies(nrs_node_simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(nrs_node_visualization
