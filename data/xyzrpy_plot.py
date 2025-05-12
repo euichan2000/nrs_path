@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # 3D plot을 위해 필요
 
 # 데이터 파일 경로 (예: "data.txt")
-filename = "/home/nrs/catkin_ws/src/nrs_path/data/geodesic_waypoints.txt"
+filename = "/home/nrs/catkin_ws/src/nrs_path/data/selected_waypoints.txt"
 
 # 공백을 기준으로 txt 파일 읽기 (각 행: x y z roll pitch yaw ...)
 data = np.loadtxt(filename)
