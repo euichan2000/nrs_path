@@ -65,8 +65,8 @@ public:
         const Kernel::Vector_3 &end_normal);
 
     //--------------------------------------------------------
-    // 옵션 5: 각 점마다 개별 orientation 계산
-    nrs_path::Waypoints setToolVectorOriginalIncludeVectorSmoothing(
+
+    nrs_path::Waypoints setToolVectorFaceNormal(
         const std::vector<geometry_msgs::Point> &points,
         const Triangle_mesh &mesh,
         double Fx, double Fy, double Fz);

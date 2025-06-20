@@ -334,8 +334,7 @@ nrs_path::Waypoints nrs_interpolation::setToolVectorHome(
 }
 
 //--------------------------------------------------------
-// 옵션 5: 각 점마다 개별 orientation 계산
-nrs_path::Waypoints nrs_interpolation::setToolVectorOriginalIncludeVectorSmoothing(
+nrs_path::Waypoints nrs_interpolation::setToolVectorFaceNormal(
     const std::vector<geometry_msgs::Point> &points,
     const Triangle_mesh &mesh,
     double Fx, double Fy, double Fz)
@@ -348,35 +347,31 @@ nrs_path::Waypoints nrs_interpolation::setToolVectorOriginalIncludeVectorSmoothi
         CGAL::cpp11::array<double, 3> location;
         if (!n_geodesic.locate_face_and_point(cgal_point, face, location, mesh))
         {
-            ROS_ERROR("Failed to locate face for point: [%f, %f, %f]", point.x, point.y, point.z);
+            ROS_ERROR("Failed to locate face for point: [%f, %f, %f]",
+                      point.x, point.y, point.z);
             continue;
         }
-        tf2::Vector3 z_axis;
-        {
-            // face의 세 정점을 사용하여 보간된 노멀 계산
-            Triangle_mesh::Halfedge_index h = mesh.halfedge(face);
-            vertex_descriptor v0 = mesh.source(h);
-            vertex_descriptor v1 = mesh.target(h);
-            vertex_descriptor v2 = mesh.target(mesh.next(h));
-            Kernel::Vector_3 normal_v0 = CGAL::Polygon_mesh_processing::compute_vertex_normal(v0, mesh);
-            Kernel::Vector_3 normal_v1 = CGAL::Polygon_mesh_processing::compute_vertex_normal(v1, mesh);
-            Kernel::Vector_3 normal_v2 = CGAL::Polygon_mesh_processing::compute_vertex_normal(v2, mesh);
-            Kernel::Vector_3 interpolated_normal = location[0] * normal_v0 +
-                                                   location[1] * normal_v1 +
-                                                   location[2] * normal_v2;
-            z_axis = tf2::Vector3(-interpolated_normal.x(), -interpolated_normal.y(), -interpolated_normal.z());
-            z_axis.normalize();
-        }
+        Kernel::Vector_3 face_normal = CGAL::Polygon_mesh_processing::compute_face_normal(face, mesh);
+
+        // 법선 벡터를 기준으로 z-axis를 정의합니다.
+        tf2::Vector3 z_axis(-face_normal.x(), -face_normal.y(), -face_normal.z());
+        z_axis.normalize();
+
+        // 임의의 x-axis를 설정하고 z-axis에 직교하는 y-axis를 계산합니다.
         tf2::Vector3 x_axis(-1.0, -1.0, 0.0);
-        tf2::Vector3 y_axis = z_axis.cross(x_axis.normalized());
+        tf2::Vector3 y_axis = z_axis.cross(x_axis).normalized();
         x_axis = y_axis.cross(z_axis).normalized();
+
+        // 회전 행렬을 계산합니다.
         tf2::Matrix3x3 orientation_matrix(
             x_axis.x(), y_axis.x(), z_axis.x(),
             x_axis.y(), y_axis.y(), z_axis.y(),
             x_axis.z(), y_axis.z(), z_axis.z());
+
         tf2::Quaternion q;
         orientation_matrix.getRotation(q);
 
+        // Waypoint 생성
         nrs_path::Waypoint wp;
         wp.x = point.x;
         wp.y = point.y;
@@ -396,11 +391,11 @@ nrs_path::Waypoints nrs_interpolation::setToolVectorOriginalIncludeVectorSmoothi
 //--------------------------------------------------------
 // 최종 wrapper 함수: reference_points로부터 시작/끝 노멀 계산 후 옵션에 따라 헬퍼 호출
 nrs_path::Waypoints nrs_interpolation::setToolVector(const std::vector<geometry_msgs::Point> &approach_interpolated,
-                                                       const std::vector<geometry_msgs::Point> &original_interpolated,
-                                                       const std::vector<geometry_msgs::Point> &retreat_interpolated,
-                                                       const std::vector<geometry_msgs::Point> &home_interpolated,
-                                                       const Triangle_mesh &mesh,
-                                                       double Fx, double Fy, double Fz)
+                                                     const std::vector<geometry_msgs::Point> &original_interpolated,
+                                                     const std::vector<geometry_msgs::Point> &retreat_interpolated,
+                                                     const std::vector<geometry_msgs::Point> &home_interpolated,
+                                                     const Triangle_mesh &mesh,
+                                                     double Fx, double Fy, double Fz)
 {
     // reference_points에서 시작점과 끝점을 결정
     Point_3 start_point(original_interpolated.front().x, original_interpolated.front().y, original_interpolated.front().z);
@@ -504,7 +499,7 @@ nrs_path::Waypoints nrs_interpolation::interpolateXYZQF(const nrs_path::Waypoint
 }
 
 nrs_path::Waypoints nrs_interpolation::interpolateEnd2End(const nrs_path::Waypoints &original_waypoints, double desired_interval,
-                                                            const Triangle_mesh &mesh, double Fx, double Fy, double Fz)
+                                                          const Triangle_mesh &mesh, double Fx, double Fy, double Fz)
 {
     std::vector<geometry_msgs::Point> original_points;
     for (const auto &wp : original_waypoints.waypoints)
@@ -521,13 +516,13 @@ nrs_path::Waypoints nrs_interpolation::interpolateEnd2End(const nrs_path::Waypoi
     std::vector<geometry_msgs::Point> home_segment = generate_segment(original_points, 3, mesh);
 
     std::vector<geometry_msgs::Point> approach_interpolated = interpolatePoints(approach_segment, 0.001, 2);
-    std::vector<geometry_msgs::Point> original_interpolated = interpolatePoints(original_points, 0.001, 2);
+    std::vector<geometry_msgs::Point> original_interpolated = interpolatePoints(original_points, 0.001, 1);
     std::vector<geometry_msgs::Point> retreat_interpolated = interpolatePoints(retreat_segment, 0.001, 2);
     std::vector<geometry_msgs::Point> home_interpolated = interpolatePoints(home_segment, 0.001, 2);
 
     nrs_path::Waypoints waypointsXYZQ = setToolVector(approach_interpolated, original_interpolated, retreat_interpolated, home_interpolated, mesh, Fx, Fy, Fz);
     nrs_path::Waypoints waypointsXYZQF = interpolateXYZQF(waypointsXYZQ, desired_interval);
-
+    //return waypointsXYZQ;
     return waypointsXYZQF;
 }
 

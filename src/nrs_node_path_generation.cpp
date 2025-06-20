@@ -107,6 +107,17 @@ int main(int argc, char **argv)
     }
     callback_handler.n_geodesic.load_stl_file(input, tmesh);
 
+    // // === 프로그램 시작 시 기존 파일 초기화 ===
+    // {
+    //     std::ofstream ofs1(callback_handler.selected_waypoints_file_path, std::ios::trunc);
+    //     std::ofstream ofs2(callback_handler.geodesic_waypoints_file_path, std::ios::trunc);
+    //     std::ofstream ofs3(callback_handler.interpolated_waypoints_file_path, std::ios::trunc);
+    //     // 파일이 성공적으로 열렸는지 확인 (선택사항)
+    //     if (!ofs1 || !ofs2 || !ofs3)
+    //         ROS_WARN("One or more waypoint files could not be truncated.");
+    //     // 파일 스트림은 블록을 벗어나며 자동으로 close()
+    // }
+
     // 두 서비스 서버 등록 (spline, straight 경로 생성 서비스)
     ros::ServiceServer spline_service = nh.advertiseService("spline",
                                                             &nrs_callback::splinePathServiceCallback,
