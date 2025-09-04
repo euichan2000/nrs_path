@@ -15,6 +15,12 @@
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/IO/STL_reader.h>
 
+#include <CGAL/AABB_tree.h>
+#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_face_graph_triangle_primitive.h>
+#include <CGAL/Ray_3.h>
+
+
 // Vec3d 등 필요한 헤더
 #include "nrs_vec3d.h"
 
@@ -37,6 +43,13 @@ typedef CGAL::AABB_tree<AABB_traits> Tree;
 typedef boost::graph_traits<Triangle_mesh>::face_descriptor face_descriptor;
 typedef CGAL::Surface_mesh_shortest_path_traits<Kernel, Triangle_mesh> Traits;
 typedef CGAL::Surface_mesh_shortest_path<Traits> Surface_mesh_shortest_path;
+
+
+typedef Kernel::Ray_3 Ray_3;
+typedef CGAL::AABB_face_graph_triangle_primitive<Triangle_mesh> Primitive;
+typedef CGAL::AABB_traits<Kernel, Primitive> AABB_traits;
+typedef CGAL::AABB_tree<AABB_traits> AABB_tree;
+
 
 struct TriangleFace
 {
@@ -178,6 +191,10 @@ public:
     GenerateHermiteSplinePath(std::vector<Eigen::Vector3d> &points, const Triangle_mesh &tmesh);
 
     bool load_stl_file(std::ifstream &input, Triangle_mesh &mesh);
+
+    double initializeMeshAndGetMaxZ(const Triangle_mesh &tmesh);
+
+    std::vector<Point_3> projectPathOntoMesh(const std::vector<Eigen::Vector3d> &path_2D, Triangle_mesh &tmesh);
 };
 
 #endif // NRS_GEODESIC_H

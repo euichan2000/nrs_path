@@ -451,19 +451,57 @@ tf2::Quaternion nrs_interpolation::quaternionSlerp(const tf2::Quaternion &q1, co
     return result;
 }
 
+// 쿼터니언 이동 평균 스무딩 함수
+void nrs_interpolation::smoothQuaternions(nrs_path::Waypoints &wps, int window_size = 1001)
+{
+    const int N = wps.waypoints.size();
+    if (N == 0) return;
+
+    std::vector<tf2::Quaternion> smoothed(N);
+    for (int i = 0; i < N; ++i)
+    {
+        tf2::Quaternion accum(0, 0, 0, 0);
+        int count = 0;
+        for (int j = std::max(0, i - window_size); j <= std::min(N - 1, i + window_size); ++j)
+        {
+            tf2::Quaternion q(wps.waypoints[j].qx, wps.waypoints[j].qy, wps.waypoints[j].qz, wps.waypoints[j].qw);
+            if (accum.dot(q) < 0.0)  // Hemisphere check
+                q = -q;
+            accum += q;
+            ++count;
+        }
+        accum *= (1.0 / count);
+        accum.normalize();
+        smoothed[i] = accum;
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
+        wps.waypoints[i].qx = smoothed[i].x();
+        wps.waypoints[i].qy = smoothed[i].y();
+        wps.waypoints[i].qz = smoothed[i].z();
+        wps.waypoints[i].qw = smoothed[i].w();
+    }
+}
+
+
 // 쿼터니언 기반 보간 함수 구현
 nrs_path::Waypoints nrs_interpolation::interpolateXYZQF(const nrs_path::Waypoints &input, double desired_interval)
 {
+
+    nrs_path::Waypoints smoothed_input = input;
+    smoothQuaternions(smoothed_input,91);  
+
     nrs_path::Waypoints output;
-    if (input.waypoints.empty())
+    if (smoothed_input.waypoints.empty())
         return output;
 
     std::vector<double> cumulative_distances;
     cumulative_distances.push_back(0.0);
-    for (size_t i = 1; i < input.waypoints.size(); i++)
+    for (size_t i = 1; i < smoothed_input.waypoints.size(); i++)
     {
-        const auto &p0 = input.waypoints[i - 1];
-        const auto &p1 = input.waypoints[i];
+        const auto &p0 = smoothed_input.waypoints[i - 1];
+        const auto &p1 = smoothed_input.waypoints[i];
         double dx = p1.x - p0.x;
         double dy = p1.y - p0.y;
         double dz = p1.z - p0.z;
@@ -477,8 +515,8 @@ nrs_path::Waypoints nrs_interpolation::interpolateXYZQF(const nrs_path::Waypoint
         while (i < cumulative_distances.size() && cumulative_distances[i] < d)
             i++;
         double t = (d - cumulative_distances[i - 1]) / (cumulative_distances[i] - cumulative_distances[i - 1]);
-        const auto &p0 = input.waypoints[i - 1];
-        const auto &p1 = input.waypoints[i];
+        const auto &p0 = smoothed_input.waypoints[i - 1];
+        const auto &p1 = smoothed_input.waypoints[i];
         nrs_path::Waypoint interp_wp;
         interp_wp.x = p0.x + t * (p1.x - p0.x);
         interp_wp.y = p0.y + t * (p1.y - p0.y);
@@ -486,6 +524,7 @@ nrs_path::Waypoints nrs_interpolation::interpolateXYZQF(const nrs_path::Waypoint
         tf2::Quaternion q0(p0.qx, p0.qy, p0.qz, p0.qw);
         tf2::Quaternion q1(p1.qx, p1.qy, p1.qz, p1.qw);
         tf2::Quaternion q_interp = quaternionSlerp(q0, q1, t);
+        q_interp.normalize();
         interp_wp.qw = q_interp.getW();
         interp_wp.qx = q_interp.getX();
         interp_wp.qy = q_interp.getY();

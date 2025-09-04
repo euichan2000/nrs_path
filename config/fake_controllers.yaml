@@ -7,12 +7,6 @@ controller_list:
       - wrist_1_joint
       - wrist_2_joint
       - wrist_3_joint
-# initial:  # Define initial robot poses.
-#   - group: manipulator
-#     joint_positions:
-#       shoulder_pan_joint: 0.0
-#       shoulder_lift_joint: -1.57
-#       elbow_joint: 1.57
-#       wrist_1_joint: -1.57
-#       wrist_2_joint: 1.57
-#       wrist_3_joint: 0.0
+initial:  # Define initial robot poses.
+  - group: manipulator
+    pose: home

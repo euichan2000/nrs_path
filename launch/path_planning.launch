@@ -11,13 +11,13 @@
         type="nrs_node_path_generation"
         output="screen" />
 
-
+<!-- 
   <include file="$(find nrs_robot)/launch/load_ur10.launch">
     <arg name="xacro_file" value="path_planning_testbed.xacro"/>
-  </include>
+  </include> -->
   
-  <!-- <node name="nrs_node_simulation" pkg="nrs_path" type="nrs_node_simulation" output="screen" />
- -->
+  <node name="nrs_node_simulation" pkg="nrs_path" type="nrs_node_simulation" output="screen" />
+
 
   <!-- 아래부터는 Moveit을 사용하기 위한 기본적인 설정들 -->
 
@@ -26,10 +26,10 @@
     args="0 0 0 0 0 0 map base_link" />
 
   <!-- Joint state publisher -->
-  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"
     output="screen">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
-  </node> -->
+  </node>
 
   <!-- Robot state publisher -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
@@ -37,14 +37,14 @@
   </node>
 
   <!-- MoveIt! executable without trajectory execution -->
-  <!-- <include file="$(find nrs_path)/launch/moveit/move_group.launch">
+  <include file="$(find nrs_path)/launch/moveit/move_group.launch">
     <arg name="allow_trajectory_execution" value="true" />
     <arg name="fake_execution" value="true" />
     <arg name="info" value="true" />
     <arg name="debug" value="false" />
     <arg name="pipeline" value="ompl" />
     <arg name="load_robot_description" value="true" />
-  </include> -->
+  </include>
 
 
 </launch>

@@ -11,10 +11,10 @@ bool nrs_callback::splinePathServiceCallback(std_srvs::Empty::Request &req, std_
     Triangle_mesh tmesh;
     n_geodesic.load_stl_file(input, tmesh);
     Tree *tree;
-    Surface_mesh_shortest_path *shortest_paths;
+
     tree = new Tree(tmesh.faces().begin(), tmesh.faces().end(), tmesh);
     tree->accelerate_distance_queries();
-    shortest_paths = new Surface_mesh_shortest_path(tmesh);
+
     // 웨이포인트 메시지 초기화
     waypoints_msg.waypoints.clear();
     selected_points = n_io.loadWaypointsFromFile(selected_waypoints_file_path);
@@ -74,6 +74,55 @@ bool nrs_callback::straightPathServiceCallback(std_srvs::Empty::Request &req, st
     }
 }
 
+bool nrs_callback::continuousPathServiceCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+{
+    ROS_INFO("Continuous path service called. Generating Continuous Path...");
+    std::ifstream input(mesh_file_path, std::ios::binary);
+    Triangle_mesh tmesh;
+    n_geodesic.load_stl_file(input, tmesh);
+    std::vector<Point_3> projected_points;
+    nrs_path::Waypoints path_points;
+
+    waypoints_msg.waypoints.clear();
+    continuous_points = n_io.loadWaypointsFromFile(continuous_waypoints_file_path);
+    // 최소 2개 이상의 선택된 점이 필요
+    if (continuous_points.size() > 1)
+    {
+        double max_z = n_geodesic.initializeMeshAndGetMaxZ(tmesh);
+
+        std::vector<Eigen::Vector3d> modified_points;
+        for (const auto &pt : continuous_points)
+        {
+            modified_points.emplace_back(pt.x(), pt.y(), max_z);
+        }
+
+        // Continuous Path 생성 (continuous_points와 tmesh 사용)
+        projected_points = n_geodesic.projectPathOntoMesh(modified_points, tmesh);
+
+        for (size_t i = 0; i < projected_points.size(); i++)
+        {
+            nrs_path::Waypoint wp;
+            wp.x = projected_points[i].x();
+            wp.y = projected_points[i].y();
+            wp.z = projected_points[i].z();
+            path_points.waypoints.push_back(wp);
+        }
+
+        // 생성된 웨이포인트 퍼블리시
+        geodesic_waypoints_pub.publish(path_points);
+
+        ROS_INFO("Published Continuous Path with %zu waypoints", path_points.waypoints.size());
+        n_io.clearFile(geodesic_waypoints_file_path);
+        n_io.saveWaypointsToFile(path_points, geodesic_waypoints_file_path);
+        return true;
+    }
+    else
+    {
+        ROS_WARN("Not enough continuous points for Continuous Path generation.");
+        return false;
+    }
+}
+
 // Waypoints 콜백 함수 구현
 bool nrs_callback::PathInterpolationCallback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
 {
@@ -119,7 +168,7 @@ bool nrs_callback::PathInterpolationCallback(std_srvs::Empty::Request &req, std_
     // 6. 파일 초기화 및 저장
     n_io.clearFile(interpolated_waypoints_file_path);
     n_io.saveWaypointsToFile(final_waypoints, interpolated_waypoints_file_path);
-
+    n_io.sendFile(interpolated_waypoints_file_path, final_waypoints_file_pub); // 퍼블리시 함수를 호출하여 파일을 전송
     auto end_time_point = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time_point - start_time_point).count();
     std::cout << "Interpolation & Normal smoothing time: " << duration << " s" << std::endl;

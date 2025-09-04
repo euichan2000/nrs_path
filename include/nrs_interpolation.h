@@ -74,11 +74,11 @@ public:
     //--------------------------------------------------------
     // 최종 wrapper 함수: reference_points로부터 시작/끝 노멀 계산 후 옵션에 따라 헬퍼 호출
     nrs_path::Waypoints setToolVector(const std::vector<geometry_msgs::Point> &approach_interpolated,
-                                        const std::vector<geometry_msgs::Point> &original_interpolated,
-                                        const std::vector<geometry_msgs::Point> &retreat_interpolated,
-                                        const std::vector<geometry_msgs::Point> &home_interpolated,
-                                        const Triangle_mesh &mesh,
-                                        double Fx, double Fy, double Fz);
+                                      const std::vector<geometry_msgs::Point> &original_interpolated,
+                                      const std::vector<geometry_msgs::Point> &retreat_interpolated,
+                                      const std::vector<geometry_msgs::Point> &home_interpolated,
+                                      const Triangle_mesh &mesh,
+                                      double Fx, double Fy, double Fz);
 
     // 세그먼트(approach, retreat, home 등)를 생성하는 함수
     std::vector<geometry_msgs::Point> generate_segment(std::vector<geometry_msgs::Point> &original_points,
@@ -94,7 +94,7 @@ public:
 
     // SLERP 헬퍼 함수: 두 tf2::Quaternion 사이의 보간 수행
     tf2::Quaternion quaternionSlerp(const tf2::Quaternion &q1, const tf2::Quaternion &q2, double t);
-
+    void smoothQuaternions(nrs_path::Waypoints &wps, int window_size);
     // 쿼터니언 기반 보간 함수: 위치는 선형 보간, orientation은 SLERP를 사용하여 보간 후 Waypoints 메시지 생성
     nrs_path::Waypoints interpolateXYZQF(const nrs_path::Waypoints &input, double desired_interval);
 

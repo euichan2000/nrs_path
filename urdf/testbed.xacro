@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<robot name="ur10e_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="ur10_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Include the UR10 robot description -->
-  <xacro:include filename="$(find nrs_path)/urdf/ur10e.xacro" />
+  <xacro:include filename="$(find nrs_path)/urdf/ur10.xacro" />
   <!-- Define the testbed link -->
   <link name="testbed">
     <visual>

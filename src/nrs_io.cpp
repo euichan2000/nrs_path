@@ -36,6 +36,8 @@ void nrs_io::saveWaypointsToFile(const nrs_path::Waypoints &final_waypoints,
     std::cout << "Waypoints saved to " << file_path << std::endl;
 }
 
+
+
 std::vector<Eigen::Vector3d> nrs_io::loadWaypointsFromFile(const std::string &file_path)
 {
     std::vector<Eigen::Vector3d> waypoints;

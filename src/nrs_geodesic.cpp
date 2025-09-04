@@ -786,7 +786,6 @@ nrs_geodesic::GenerateHermiteSplinePath(std::vector<Eigen::Vector3d> &points, co
 
         std::vector<double> u_values = calculateInterpolationParameters(points, false, tmesh);
 
-
         std::vector<Eigen::Vector3d> tangent_vectors = calculateGeodesicTangentVectors(points, u_values, tmesh);
 
         std::vector<std::vector<Eigen::Vector3d>> bezier_control_points = computeBezierControlPoints(points, u_values, tangent_vectors, tmesh);
@@ -851,4 +850,60 @@ bool nrs_geodesic::load_stl_file(std::ifstream &input, Triangle_mesh &mesh)
     }
     ROS_INFO("Successfully read STL file.");
     return true;
+}
+
+//=== AABB Tree 생성 및 메쉬의 최대 z 값 찾는 함수 ===
+double nrs_geodesic::initializeMeshAndGetMaxZ(const Triangle_mesh &tmesh)
+{
+
+    // AABB Tree 생성
+    AABB_tree tree;
+    tree = AABB_tree(faces(tmesh).begin(), faces(tmesh).end(), tmesh);
+    tree.accelerate_distance_queries();
+
+    // 메쉬에서 가장 높은 z 값 찾기
+    double max_z = std::numeric_limits<double>::lowest();
+    for (const auto &v : vertices(tmesh))
+    {
+        const Point_3 &p = tmesh.point(v);
+        if (p.z() > max_z)
+        {
+            max_z = p.z();
+        }
+    }
+
+    return max_z;
+}
+
+// === 2D 경로를 3D 메쉬에 수직 투영하는 함수 ===
+std::vector<Point_3> nrs_geodesic::projectPathOntoMesh(const std::vector<Eigen::Vector3d> &path_2D, Triangle_mesh &tmesh)
+{
+    std::vector<Point_3> projected_points;
+    Tree tree(tmesh.faces().begin(), tmesh.faces().end(), tmesh);
+    tree.build();
+
+    for (const auto &p : path_2D)
+    {
+        Point_3 query_point(p.x(), p.y(), p.z());
+
+        Ray_3 vertical_ray(query_point, Vector_3(0, 0, -1)); // z- 방향으로 광선 생성
+
+        // AABB Tree를 사용하여 가장 가까운 교차점 찾기
+        auto intersection = tree.first_intersection(vertical_ray);
+
+        if (intersection)
+        {
+            if (const Point_3 *proj_point = boost::get<Point_3>(&intersection->first))
+            {
+                projected_points.push_back(*proj_point);
+                // std::cout << "Projected Point: " << *proj_point << std::endl;
+            }
+        }
+        else
+        {
+            // std::cerr << "No intersection found for point: " << p << std::endl;
+        }
+    }
+
+    return projected_points;
 }

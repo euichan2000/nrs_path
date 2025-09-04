@@ -87,6 +87,7 @@ int main(int argc, char **argv)
     // ===== 경로 생성 (Path Generation) 설정 =====
     callback_handler.mesh_file_path = mesh_file_path;
     callback_handler.selected_waypoints_file_path = "/home/nrs/catkin_ws/src/nrs_path/data/selected_waypoints.txt";
+    callback_handler.continuous_waypoints_file_path = "/home/nrs/catkin_ws/src/nrs_path/data/interpolated_continuous_waypoints.txt";
     callback_handler.geodesic_waypoints_file_path = "/home/nrs/catkin_ws/src/nrs_path/data/geodesic_waypoints.txt";
     callback_handler.geodesic_waypoints_pub = nh.advertise<nrs_path::Waypoints>("geodesic_path", 10);
 
@@ -97,6 +98,7 @@ int main(int argc, char **argv)
     callback_handler.Fy = 0.0;
     callback_handler.Fz = 10.0;
     callback_handler.interpolated_waypoints_pub = nh.advertise<nrs_path::Waypoints>("interpolated_waypoints", 10);
+    callback_handler.final_waypoints_file_pub = nh.advertise<std_msgs::String>("path_publisher", 10);
 
     // mesh 파일 로드
     std::ifstream input(mesh_file_path, std::ios::binary);
@@ -124,6 +126,10 @@ int main(int argc, char **argv)
                                                             &callback_handler);
     ros::ServiceServer straight_service = nh.advertiseService("straight",
                                                               &nrs_callback::straightPathServiceCallback,
+                                                              &callback_handler);
+
+    ros::ServiceServer continuous_service = nh.advertiseService("continuous",
+                                                              &nrs_callback::continuousPathServiceCallback,
                                                               &callback_handler);
     // 보간 서비스 서버 등록
     ros::ServiceServer interpolation_service = nh.advertiseService("interpolate",

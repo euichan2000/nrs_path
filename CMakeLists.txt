@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(nrs_path)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_BUILD_TYPE Release)
@@ -125,21 +125,21 @@ src/nrs_math.cpp
 
 add_dependencies(nrs_node_path_generation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-# add_executable(nrs_node_simulation
-# src/nrs_node_simulation.cpp
+add_executable(nrs_node_simulation
+src/nrs_node_simulation.cpp
 
 
-# src/nrs_geodesic.cpp
-# src/nrs_vec3d.cpp
-# src/nrs_interpolation.cpp
-# src/nrs_visualization.cpp
+src/nrs_geodesic.cpp
+src/nrs_vec3d.cpp
+src/nrs_interpolation.cpp
+src/nrs_visualization.cpp
 
 
-# src/nrs_callback.cpp
-# src/nrs_io.cpp
-# src/nrs_math.cpp
-# )
-# add_dependencies(nrs_node_simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+src/nrs_callback.cpp
+src/nrs_io.cpp
+src/nrs_math.cpp
+)
+add_dependencies(nrs_node_simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(nrs_node_visualization
@@ -160,11 +160,11 @@ add_dependencies(nrs_node_visualization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ca
 
 
 
-catkin_install_python(PROGRAMS
-  data/Ori_path_translation.py
-  data/Ori_path_projection.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# catkin_install_python(PROGRAMS
+#   data/Ori_path_translation.py
+#   data/Ori_path_projection.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 
 # set(LIBIGL_DIR "/home/nrs/libigl")
